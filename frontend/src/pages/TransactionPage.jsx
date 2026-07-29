@@ -163,6 +163,15 @@ export default function TransactionPage() {
               <CheckCircle size={15} /> Подтвердить получение
             </button>
           )}
+          {isSeller && tx.status === 'awaiting_confirmation' && (
+            <button
+              onClick={() => confirmMutation.mutate()}
+              disabled={confirmMutation.isPending}
+              className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+            >
+              <CheckCircle size={15} /> Завершить сделку
+            </button>
+          )}
           {isBuyer && tx.status === 'awaiting_delivery' && (
             <button
               onClick={() => cancelMutation.mutate()}

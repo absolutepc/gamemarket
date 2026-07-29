@@ -199,7 +199,7 @@ router.post('/:id/confirm', authenticate(), async (req, res) => {
     );
     const tx = rows[0];
     if (!tx) return res.status(404).json({ error: 'Transaction not found or wrong status' });
-    if (tx.buyer_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+    if (tx.buyer_id !== req.user.id && tx.seller_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
 
     // Release escrow to seller
     await client.query(
