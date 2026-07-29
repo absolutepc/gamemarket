@@ -26,7 +26,7 @@ export default function Layout() {
               <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
                 <Shield size={16} className="text-white" />
               </div>
-              <span className="font-bold text-lg text-[#5B8CFF] lg:text-white">GameMarket</span>
+              <span className="font-bold text-lg text-[#5B8CFF]">GameMarket</span>
             </Link>
 
             <div className="flex items-center gap-2 lg:order-last shrink-0">

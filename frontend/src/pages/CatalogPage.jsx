@@ -59,31 +59,32 @@ export default function CatalogPage() {
                 <SlidersHorizontal size={16} /> Фильтры
               </div>
               <div className="flex items-center gap-2">
-                {!filtersOpen ? (
-                  <button
-                    type="button"
-                    onClick={() => setFiltersOpen(true)}
-                    className="w-8 h-8 rounded-full border border-dark-600 bg-dark-800
-                               flex items-center justify-center text-dark-200
-                               hover:border-[#2B71F3] hover:text-[#5B8CFF] transition-colors"
-                    aria-label="Показать фильтры"
-                    title="Показать фильтры"
-                  >
-                    <Plus size={16} strokeWidth={2.25} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setFiltersOpen(false)}
-                    className="w-8 h-8 rounded-full border border-dark-600 bg-dark-800
-                               flex items-center justify-center text-dark-200
-                               hover:border-[#2B71F3] hover:text-[#5B8CFF] transition-colors"
-                    aria-label="Скрыть фильтры"
-                    title="Скрыть фильтры"
-                  >
-                    <Minus size={16} strokeWidth={2.25} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(true)}
+                  disabled={filtersOpen}
+                  className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors
+                    ${filtersOpen
+                      ? 'border-dark-700 bg-dark-900 text-dark-500 cursor-default'
+                      : 'border-dark-600 bg-dark-800 text-dark-200 hover:border-[#2B71F3] hover:text-[#5B8CFF]'}`}
+                  aria-label="Показать фильтры"
+                  title="Показать фильтры"
+                >
+                  <Plus size={16} strokeWidth={2.25} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(false)}
+                  disabled={!filtersOpen}
+                  className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors
+                    ${!filtersOpen
+                      ? 'border-dark-700 bg-dark-900 text-dark-500 cursor-default'
+                      : 'border-dark-600 bg-dark-800 text-dark-200 hover:border-[#2B71F3] hover:text-[#5B8CFF]'}`}
+                  aria-label="Скрыть фильтры"
+                  title="Скрыть фильтры"
+                >
+                  <Minus size={16} strokeWidth={2.25} />
+                </button>
               </div>
             </div>
 

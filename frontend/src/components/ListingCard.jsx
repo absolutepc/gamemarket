@@ -56,22 +56,22 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
               </span>
             )}
           </div>
-          {hasDiscount && (
-            <span className="absolute top-2 right-2 badge bg-rose-500 text-white text-[10px] font-bold">
-              -{listing.discount_percent}%
-            </span>
-          )}
         </div>
 
         <div className="px-3 py-3 flex flex-col gap-1.5 flex-1">
-          <div className="flex items-end gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-base sm:text-lg font-bold text-emerald-400 leading-none">
               {formatPrice(listing.price)}
             </span>
             {hasDiscount && (
-              <span className="text-xs text-dark-500 line-through leading-none pb-0.5">
-                {formatPrice(listing.original_price)}
-              </span>
+              <>
+                <span className="badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5">
+                  -{listing.discount_percent}%
+                </span>
+                <span className="text-xs text-dark-500 line-through leading-none">
+                  {formatPrice(listing.original_price)}
+                </span>
+              </>
             )}
           </div>
 
