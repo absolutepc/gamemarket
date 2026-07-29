@@ -100,7 +100,7 @@ export default function HomePage() {
 
       {/* Assortment of games & services — Playerok-style */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg sm:text-xl font-bold">Игры и сервисы</h2>
           <div className="flex items-center gap-2">
             <button
@@ -121,21 +121,22 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+        {/* pt + -mt: room for hover scale so icons are not clipped by overflow-x */}
         <div
           ref={scrollRef}
-          className="flex gap-5 overflow-x-auto pb-4 scroll-smooth"
+          className="flex gap-5 overflow-x-auto pt-3 -mt-1 pb-4 scroll-smooth"
           style={{ scrollbarWidth: 'none' }}
         >
           {ASSORTMENT.map((item) => (
             <Link
               key={item.search + item.name}
               to={`/catalog?search=${encodeURIComponent(item.search)}`}
-              className="shrink-0 w-[84px] sm:w-[92px] group flex flex-col items-center gap-2.5"
+              className="shrink-0 w-[84px] sm:w-[92px] group flex flex-col items-center gap-2.5 relative z-0 hover:z-10"
             >
               <div
-                className={`w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-full bg-gradient-to-br ${item.color}
+                className={`w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-gradient-to-br ${item.color}
                             flex items-center justify-center text-white font-bold text-base sm:text-lg
-                            shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-2 ring-white/8
+                            shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-2 ring-white/10
                             group-hover:scale-105 group-hover:ring-[#2B71F3]/50 transition-all duration-200`}
               >
                 {item.letter}
