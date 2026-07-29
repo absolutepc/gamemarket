@@ -19,7 +19,9 @@ import UserAgreementPage from './pages/UserAgreementPage';
 import ChatsPage from './pages/ChatsPage';
 import ChatPage from './pages/ChatPage';
 import VkCallbackPage from './pages/VkCallbackPage';
+import AdminDisputesPage from './pages/AdminDisputesPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 export default function App() {
   return (
@@ -46,6 +48,9 @@ export default function App() {
           <Route path="wallet" element={<WalletPage />} />
           <Route path="chats" element={<ChatsPage />} />
           <Route path="chats/:id" element={<ChatPage />} />
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="admin/disputes" element={<AdminDisputesPage />} />
         </Route>
       </Route>
     </Routes>

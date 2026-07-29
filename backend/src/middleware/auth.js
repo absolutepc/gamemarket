@@ -18,12 +18,14 @@ function authenticate(required = true) {
     try {
       const payload = jwt.verify(token, JWT_SECRET);
       const { rows } = await pool.query(
-        'SELECT id, username, email, role, is_banned, balance, frozen_balance, avatar_url, rating, sales_count, auth_provider, vk_id FROM users WHERE id = $1',
+        'SELECT id, username, email, role, is_banned, balance, frozen_balance, avatar_url, rating, sales_count, auth_provider, vk_id, last_seen_at FROM users WHERE id = $1',
         [payload.sub]
       );
       if (!rows[0]) return res.status(401).json({ error: 'User not found' });
       if (rows[0].is_banned) return res.status(403).json({ error: 'Account suspended' });
       req.user = rows[0];
+      // Presence heartbeat (throttled by DB cheap update)
+      pool.query('UPDATE users SET last_seen_at=NOW() WHERE id=$1', [rows[0].id]).catch(() => {});
       next();
     } catch (err) {
       if (required) return res.status(401).json({ error: 'Invalid token' });

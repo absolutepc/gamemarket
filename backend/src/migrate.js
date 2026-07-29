@@ -193,9 +193,12 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_id BIGINT UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(20) DEFAULT 'email';
 ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
 UPDATE listings SET status='active' WHERE status='sold';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_transaction_unique ON reviews(transaction_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_one_per_buyer_deal ON reviews(transaction_id, reviewer_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_auto_release ON transactions(auto_release_at) WHERE status='awaiting_confirmation';
+CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status);
 `;
 
 async function migrate({ closePool = false } = {}) {

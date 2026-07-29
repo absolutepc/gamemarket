@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
-import { formatPrice, formatRelative, TX_STATUS } from '../utils/format';
+import { formatPrice, formatRelative, formatDate, TX_STATUS } from '../utils/format';
 
 export default function TransactionPage() {
   const { id } = useParams();
@@ -137,12 +137,34 @@ export default function TransactionPage() {
         {/* Escrow info */}
         <div className="mt-4 flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
           <Shield size={15} className="text-emerald-400 shrink-0 mt-0.5" />
-          <p className="text-dark-300">
-            Средства <strong className="text-white">{formatPrice(tx.amount)}</strong> заморожены в эскроу.
-            Продавец получит <strong className="text-white">{formatPrice(tx.seller_receives)}</strong> только после того,
-            как покупатель подтвердит получение.
-          </p>
+          <div className="text-dark-300 space-y-1">
+            <p>
+              Средства <strong className="text-white">{formatPrice(tx.amount)}</strong> заморожены в эскроу.
+              Продавец получит <strong className="text-white">{formatPrice(tx.seller_receives)}</strong> только после
+              подтверждения получения покупателем.
+            </p>
+            {tx.status === 'awaiting_confirmation' && tx.confirm_deadline_at && (
+              <p>
+                Срок подтверждения: до <strong className="text-white">{formatDate(tx.confirm_deadline_at)}</strong>
+                {' '}(7 дней). Иначе средства уйдут продавцу автоматически.
+              </p>
+            )}
+            {tx.status === 'awaiting_delivery' && isBuyer && (
+              <p>
+                Отмена доступна, если продавец не появится в сети в течение 24 часов с момента оформления сделки.
+              </p>
+            )}
+          </div>
         </div>
+
+        {tx.status === 'disputed' && tx.dispute && (
+          <div className="mt-4 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 text-sm text-yellow-200">
+            Открыт спор. Ожидается решение администрации.
+            {tx.dispute.resolution && (
+              <p className="mt-1 text-dark-300">Решение: {tx.dispute.resolution}</p>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="mt-4 flex flex-wrap gap-2">
@@ -157,7 +179,8 @@ export default function TransactionPage() {
           )}
           {isSeller && tx.status === 'awaiting_confirmation' && (
             <p className="text-sm text-dark-400 w-full">
-              Ожидаем подтверждения получения от покупателя. После этого средства поступят на баланс.
+              Ожидаем подтверждения от покупателя
+              {tx.confirm_deadline_at ? ` до ${formatDate(tx.confirm_deadline_at)}` : ''}.
             </p>
           )}
           {isBuyer && tx.status === 'awaiting_confirmation' && (
@@ -169,14 +192,25 @@ export default function TransactionPage() {
               <CheckCircle size={15} /> Подтвердить получение
             </button>
           )}
-          {isBuyer && tx.status === 'awaiting_delivery' && (
+          {isBuyer && tx.status === 'awaiting_delivery' && tx.can_cancel && (
             <button
-              onClick={() => cancelMutation.mutate()}
+              onClick={() => {
+                if (window.confirm('Отменить сделку и вернуть средства?')) cancelMutation.mutate();
+              }}
               disabled={cancelMutation.isPending}
               className="btn-secondary flex items-center gap-2 hover:border-red-500/50 hover:text-red-400"
             >
               <X size={15} /> Отменить
             </button>
+          )}
+          {isBuyer && tx.status === 'awaiting_delivery' && !tx.can_cancel && (
+            <p className="text-xs text-dark-500 w-full">
+              {tx.cancel_info?.reason === 'seller_was_online'
+                ? 'Отмена недоступна: продавец был в сети после оформления. При проблемах откройте спор.'
+                : tx.cancel_info?.available_at
+                  ? `Отмена станет доступна после ${formatDate(tx.cancel_info.available_at)}, если продавец не появится в сети.`
+                  : 'Отмена пока недоступна.'}
+            </p>
           )}
           {(isBuyer || isSeller) && ['awaiting_delivery', 'awaiting_confirmation'].includes(tx.status) && (
             <button

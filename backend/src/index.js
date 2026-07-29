@@ -57,6 +57,7 @@ app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/chats', require('./routes/chats'));
+app.use('/api/admin', require('./routes/admin'));
 app.use('/api', require('./routes/seo'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
@@ -80,6 +81,7 @@ io.use(async (socket, next) => {
     const { rows } = await pool.query('SELECT id, username FROM users WHERE id=$1', [payload.sub]);
     if (!rows[0]) return next(new Error('User not found'));
     socket.user = rows[0];
+    pool.query('UPDATE users SET last_seen_at=NOW() WHERE id=$1', [rows[0].id]).catch(() => {});
     next();
   } catch {
     next(new Error('Invalid token'));
@@ -152,6 +154,7 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
 const { migrate } = require('./migrate');
+const { startAutoReleaseJob } = require('./services/escrow');
 
 async function start() {
   try {
@@ -161,6 +164,8 @@ async function start() {
     if (err.code) logger.error(`DB error code: ${err.code}`);
     if (err.detail) logger.error(`DB error detail: ${err.detail}`);
   }
+
+  startAutoReleaseJob(60_000);
 
   server.listen(PORT, HOST, () => {
     logger.info(`Server running on http://${HOST}:${PORT}`);

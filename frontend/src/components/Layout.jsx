@@ -39,6 +39,9 @@ export default function Layout() {
           <nav className="hidden md:flex items-center gap-1">
             <Link to="/catalog" className="btn-ghost text-sm">Каталог</Link>
             <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
+            {user?.role === 'admin' && (
+              <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
