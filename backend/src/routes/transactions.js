@@ -224,6 +224,11 @@ router.post('/:id/confirm', authenticate(), async (req, res) => {
        escrow_released_at=NOW(), updated_at=NOW() WHERE id=$1`,
       [req.params.id]
     );
+    // Return listing to active so it can be sold again
+    await client.query(
+      "UPDATE listings SET status='active' WHERE id=$1",
+      [tx.listing_id]
+    );
     await client.query(
       `INSERT INTO messages (transaction_id, sender_id, content, is_system)
        VALUES ($1,$2,'Покупатель подтвердил получение. Сделка завершена!', TRUE)`,
