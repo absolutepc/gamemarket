@@ -65,6 +65,16 @@ app.use('/api/categories', require('./routes/categories'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
+// Serve React SPA when built frontend is present (combined Railway deploy)
+if (hasFrontend) {
+  app.use(express.static(publicDir));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) return next();
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
+  logger.info(`Serving frontend from ${publicDir}`);
+}
+
 // Global error handler
 app.use((err, req, res, next) => {
   logger.error(err);
