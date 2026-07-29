@@ -26,11 +26,19 @@ const SLIDES = [
     tone: 'contest',
   },
   {
-    id: 'how',
+    id: 'escrow',
     eyebrow: 'Безопасные сделки',
+    title: 'Эскроу защищает обе стороны',
+    subtitle:
+      'Оплата удерживается до подтверждения получения товара. Комиссия площадки — 7.5%.',
+    cta: { to: '/faq', label: 'Как это работает' },
+    tone: 'escrow',
+  },
+  {
+    id: 'how',
     title: 'Как работает безопасная сделка',
     tone: 'how',
-    layout: 'route',
+    layout: 'steps',
   },
   {
     id: 'sell',
@@ -75,6 +83,17 @@ function ContestVisual() {
   );
 }
 
+function EscrowVisual() {
+  return (
+    <div className="relative w-full h-full max-w-md mx-auto lg:ml-auto aspect-[4/3] max-h-[220px] sm:max-h-none flex items-center justify-center">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.22),transparent_55%)]" />
+      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shadow-2xl">
+        <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" />
+      </div>
+    </div>
+  );
+}
+
 function SellVisual() {
   return (
     <div className="relative w-full h-full max-w-md mx-auto lg:ml-auto aspect-[4/3] max-h-[220px] sm:max-h-none flex items-center justify-center">
@@ -86,93 +105,43 @@ function SellVisual() {
   );
 }
 
-/** Zig-zag route: 1 TL → 2 TR → 3 BL → 4 BR */
-function HowItWorksRoute() {
-  // Anchor centers in % for SVG path (viewBox 0 0 100 100)
-  const points = [
-    { x: 18, y: 16 },
-    { x: 82, y: 28 },
-    { x: 18, y: 58 },
-    { x: 82, y: 84 },
-  ];
-  const pathD = `
-    M ${points[0].x} ${points[0].y}
-    C 40 ${points[0].y}, 60 ${points[1].y}, ${points[1].x} ${points[1].y}
-    C 70 42, 50 50, ${points[2].x} ${points[2].y}
-    C 40 70, 60 78, ${points[3].x} ${points[3].y}
-  `;
-
-  const placements = [
-    'left-0 top-0 items-start text-left',
-    'right-0 top-[12%] items-end text-right',
-    'left-0 top-[48%] items-start text-left',
-    'right-0 bottom-0 items-end text-right',
-  ];
-
+/** Vertical list of safe-deal steps (as on screenshot) */
+function HowItWorksList() {
   return (
-    <div className="relative w-full flex-1 min-h-[300px] sm:min-h-[320px]">
-      <svg
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
-        <path
-          d={pathD}
-          fill="none"
-          stroke="rgba(43,113,243,0.35)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-        <path
-          d={pathD}
-          fill="none"
-          stroke="#2B71F3"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray="6 8"
-          vectorEffect="non-scaling-stroke"
-          className="animate-[dashMove_18s_linear_infinite]"
-        />
-      </svg>
-
-      {HOW_STEPS.map((step, i) => {
-        const Icon = step.icon;
-        return (
-          <div
-            key={step.title}
-            className={`absolute max-w-[46%] sm:max-w-[42%] flex flex-col gap-1.5 sm:gap-2 ${placements[i]}`}
-          >
-            <div className={`flex ${i % 2 === 1 ? 'flex-row-reverse' : 'flex-row'} items-center gap-2`}>
-              <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#2B71F3]/15 border border-[#2B71F3]/35
-                              text-[#5B8CFF] flex items-center justify-center shrink-0 shadow-lg shadow-black/20">
-                <Icon size={20} />
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#2B71F3] text-white text-[10px] font-bold flex items-center justify-center">
+    <div className="flex-1 flex flex-col items-center justify-center gap-5 sm:gap-6 py-2">
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center leading-tight">
+        Как работает безопасная сделка
+      </h1>
+      <div className="w-full max-w-md flex flex-col gap-5 sm:gap-6">
+        {HOW_STEPS.map((step, i) => {
+          const Icon = step.icon;
+          return (
+            <div key={step.title} className="flex flex-col items-center text-center gap-2">
+              <div className="w-14 h-14 rounded-2xl bg-[#2B71F3]/10 text-[#5B8CFF] flex items-center justify-center relative">
+                <Icon size={24} />
+                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#2B71F3] text-white text-xs font-bold flex items-center justify-center">
                   {i + 1}
                 </span>
               </div>
-              <h3 className="font-semibold text-sm sm:text-base leading-tight">{step.title}</h3>
+              <h3 className="font-semibold text-base">{step.title}</h3>
+              <p className="text-dark-400 text-sm leading-snug max-w-[280px]">{step.desc}</p>
             </div>
-            <p className="text-[11px] sm:text-xs text-dark-300 leading-snug px-0.5">
-              {step.desc}
-            </p>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 const VISUALS = {
   contest: ContestVisual,
+  escrow: EscrowVisual,
   sell: SellVisual,
 };
 
 const TONE_BG = {
   contest: 'from-[#12141c] via-[#161a28] to-[#101214]',
+  escrow: 'from-[#101816] via-[#121a18] to-[#101214]',
   how: 'from-[#10141c] via-[#121a24] to-[#101214]',
   sell: 'from-[#10141c] via-[#121826] to-[#101214]',
 };
@@ -194,7 +163,7 @@ export default function HomeHeroSlider() {
   }, [paused, go, index]);
 
   const slide = SLIDES[index];
-  const isRoute = slide.layout === 'route';
+  const isSteps = slide.layout === 'steps';
   const Visual = VISUALS[slide.tone];
 
   return (
@@ -223,17 +192,8 @@ export default function HomeHeroSlider() {
             </div>
           )}
 
-          {isRoute ? (
-            <div className="flex-1 flex flex-col min-h-0">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2 self-start">
-                <Shield size={14} className="text-emerald-400" />
-                {slide.eyebrow}
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight mb-3 sm:mb-4">
-                {slide.title}
-              </h1>
-              <HowItWorksRoute />
-            </div>
+          {isSteps ? (
+            <HowItWorksList />
           ) : (
             <div className="flex-1 grid lg:grid-cols-2 gap-4 lg:gap-10 items-center">
               <div className="order-2 lg:order-1">
@@ -316,9 +276,6 @@ export default function HomeHeroSlider() {
         @keyframes heroProgress {
           from { width: 0%; }
           to { width: 100%; }
-        }
-        @keyframes dashMove {
-          to { stroke-dashoffset: -120; }
         }
       `}</style>
     </section>
