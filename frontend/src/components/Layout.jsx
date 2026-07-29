@@ -36,15 +36,15 @@ export default function Layout() {
             />
           </form>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
             {user?.role === 'admin' && (
               <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
             )}
           </nav>
 
-          {/* Desktop actions — on mobile these live in the bottom bar */}
-          <div className="hidden md:flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Desktop actions — on mobile/tablet these live in the bottom bar */}
+          <div className="hidden lg:flex items-center gap-1 sm:gap-2 shrink-0">
             {user ? (
               <>
                 <Link to="/listings/create" className="btn-primary text-sm flex items-center gap-1.5">
@@ -78,20 +78,20 @@ export default function Layout() {
             )}
           </div>
 
-          {/* Mobile: compact auth when logged out */}
+          {/* Mobile/tablet: compact auth when logged out */}
           {!user && (
-            <div className="flex md:hidden items-center gap-1 shrink-0">
+            <div className="flex lg:hidden items-center gap-1 shrink-0">
               <Link to="/login" className="btn-ghost text-sm px-2">Войти</Link>
             </div>
           )}
         </div>
       </header>
 
-      <main className="flex-1 pb-24 md:pb-0">
+      <main className="flex-1 pb-28 lg:pb-0">
         <Outlet />
       </main>
 
-      <div className="pb-20 md:pb-0">
+      <div className="pb-24 lg:pb-0">
         <Footer />
       </div>
 
