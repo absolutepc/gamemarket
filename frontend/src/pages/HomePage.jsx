@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useRef } from 'react';
 import {
-  Zap, Lock, CheckCircle2, Search, ArrowRight, ChevronLeft, ChevronRight,
+  Zap, ArrowRight, ChevronLeft, ChevronRight,
   Coins, User, Package, Sparkles, Gift, Wallet, Bot, Share2,
 } from 'lucide-react';
 import api from '../utils/api';
@@ -198,31 +198,6 @@ export default function HomePage() {
               <Link to="/listings/create" className="text-[#2B71F3] hover:underline">создайте первый</Link>
             </div>
           )}
-        </div>
-      </section>
-
-      <section className="border-t border-dark-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl font-bold text-center mb-10">Как работает безопасная сделка</h2>
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { icon: Search, title: 'Найдите товар', desc: 'Выберите лот в каталоге цифровых товаров и услуг' },
-              { icon: Lock, title: 'Оплата в эскроу', desc: 'Средства замораживаются до завершения' },
-              { icon: Zap, title: 'Получите товар', desc: 'Вручную или автовыдачей' },
-              { icon: CheckCircle2, title: 'Подтвердите', desc: 'Деньги уходят продавцу после проверки' },
-            ].map((step, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-[#2B71F3]/10 text-[#2B71F3] flex items-center justify-center relative">
-                  <step.icon size={24} />
-                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#2B71F3] text-white text-xs font-bold flex items-center justify-center">
-                    {i + 1}
-                  </span>
-                </div>
-                <h3 className="font-semibold">{step.title}</h3>
-                <p className="text-dark-400 text-sm">{step.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
     </div>
