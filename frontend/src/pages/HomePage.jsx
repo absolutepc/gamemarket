@@ -2,12 +2,13 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useRef } from 'react';
 import {
-  Shield, Zap, Lock, CheckCircle2, Search, ArrowRight, ChevronLeft, ChevronRight,
+  Zap, Lock, CheckCircle2, Search, ArrowRight, ChevronLeft, ChevronRight,
   Coins, User, Package, Sparkles, Gift, Wallet, Bot, Share2,
 } from 'lucide-react';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
 import Seo from '../components/Seo';
+import HomeHeroSlider from '../components/HomeHeroSlider';
 
 const CATEGORY_ICONS = {
   'game-currency': Coins,
@@ -72,31 +73,7 @@ export default function HomePage() {
         path="/"
       />
 
-      <section className="relative overflow-hidden border-b border-dark-800">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(43,113,243,0.16),_transparent_55%),linear-gradient(180deg,#101214_0%,#16181c_100%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-12 sm:pt-16 sm:pb-14">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 badge-blue mb-4 text-sm px-3 py-1">
-              <Shield size={14} /> Безопасные сделки · комиссия 7.5%
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
-              GameMarket
-            </h1>
-            <p className="text-dark-300 text-base sm:text-lg mb-8 max-w-2xl leading-relaxed">
-              Маркетплейс цифровых товаров и услуг: покупайте и продавайте безопасно.
-              Средства удерживаются в эскроу до подтверждения сделки — защита и для покупателя, и для продавца.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/catalog" className="btn-primary h-12 px-6 inline-flex items-center gap-2">
-                Смотреть каталог <ArrowRight size={16} />
-              </Link>
-              <Link to="/listings/create" className="btn-secondary h-12 px-6 inline-flex items-center">
-                Продать товар
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HomeHeroSlider />
 
       {/* Assortment of games & services — Playerok-style */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2">
@@ -162,8 +139,8 @@ export default function HomePage() {
                      px-5 py-5 hover:border-[#2B71F3]/40 transition-colors group"
         >
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1b2838] to-[#2a475e] flex items-center justify-center font-bold text-lg shadow-lg">
-              S
+            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg ring-1 ring-white/10">
+              <img src="/assortment/steam.png" alt="Steam" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="font-semibold group-hover:text-[#2B71F3] transition-colors">Пополнить Steam</div>
