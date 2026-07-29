@@ -4,6 +4,7 @@ import { Shield, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
+import VkLoginButton from '../components/VkLoginButton';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -38,6 +39,15 @@ export default function RegisterPage() {
         </div>
 
         <div className="card p-6">
+          <VkLoginButton className="mb-4" />
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-dark-700" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-2 bg-dark-900 text-dark-500">или создать аккаунт</span>
+            </div>
+          </div>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div>
               <label className="text-sm font-medium mb-1.5 block">Никнейм</label>

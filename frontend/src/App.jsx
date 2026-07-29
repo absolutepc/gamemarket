@@ -18,6 +18,7 @@ import PrivacyPage from './pages/PrivacyPage';
 import UserAgreementPage from './pages/UserAgreementPage';
 import ChatsPage from './pages/ChatsPage';
 import ChatPage from './pages/ChatPage';
+import VkCallbackPage from './pages/VkCallbackPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="users/:username" element={<ProfilePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="auth/vk/callback" element={<VkCallbackPage />} />
         <Route path="rules" element={<RulesPage />} />
         <Route path="faq" element={<FaqPage />} />
         <Route path="support" element={<SupportPage />} />

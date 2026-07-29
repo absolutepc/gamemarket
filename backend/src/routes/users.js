@@ -27,13 +27,50 @@ router.get('/me/listings', authenticate(), async (req, res) => {
 
 router.put('/me/profile',
   authenticate(),
-  [body('bio').optional().trim().isLength({ max: 500 })],
+  [
+    body('bio').optional({ nullable: true }).trim().isLength({ max: 500 }),
+    body('avatar_url').optional({ nullable: true }).custom((v) => {
+      if (v === null || v === '' || v === undefined) return true;
+      try {
+        const u = new URL(v);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }),
+  ],
   validate,
   async (req, res) => {
-    const { bio } = req.body;
+    const bio = req.body.bio !== undefined ? (req.body.bio || null) : undefined;
+    const avatarUrl = req.body.avatar_url !== undefined
+      ? (req.body.avatar_url || null)
+      : undefined;
+
+    const fields = [];
+    const values = [];
+    let i = 1;
+    if (bio !== undefined) {
+      fields.push(`bio=$${i++}`);
+      values.push(bio);
+    }
+    if (avatarUrl !== undefined) {
+      fields.push(`avatar_url=$${i++}`);
+      values.push(avatarUrl);
+    }
+    if (!fields.length) {
+      return res.json({
+        id: req.user.id,
+        username: req.user.username,
+        bio: req.user.bio,
+        avatar_url: req.user.avatar_url,
+      });
+    }
+    fields.push('updated_at=NOW()');
+    values.push(req.user.id);
     const { rows } = await pool.query(
-      'UPDATE users SET bio=$1, updated_at=NOW() WHERE id=$2 RETURNING id, username, bio, avatar_url',
-      [bio || null, req.user.id]
+      `UPDATE users SET ${fields.join(', ')} WHERE id=$${i}
+       RETURNING id, username, bio, avatar_url, auth_provider`,
+      values
     );
     res.json(rows[0]);
   }

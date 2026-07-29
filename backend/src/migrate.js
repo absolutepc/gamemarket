@@ -190,6 +190,9 @@ const alters = `
 ALTER TABLE users ADD COLUMN IF NOT EXISTS purchases_count INT DEFAULT 0;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS original_price DECIMAL(12,2);
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_id BIGINT UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(20) DEFAULT 'email';
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 `;
 
 async function migrate({ closePool = false } = {}) {

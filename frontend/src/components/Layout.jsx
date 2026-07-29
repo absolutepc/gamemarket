@@ -1,23 +1,20 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Shield, ShoppingBag, LogOut, Plus, Wallet, Search, MessageCircle } from 'lucide-react';
+import { Shield, ShoppingBag, Plus, Wallet, Search, MessageCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { formatPrice } from '../utils/format';
 import Footer from './Footer';
+import ProfileMenuModal from './ProfileMenuModal';
 
 export default function Layout() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) navigate(`/catalog?search=${encodeURIComponent(search.trim())}`);
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
   };
 
   return (
@@ -62,7 +59,12 @@ export default function Layout() {
                 <Link to="/transactions" className="btn-ghost p-2" title="Сделки">
                   <ShoppingBag size={18} />
                 </Link>
-                <Link to={`/users/${user.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(true)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  title="Меню профиля"
+                >
                   {user.avatar_url ? (
                     <img src={user.avatar_url} className="w-8 h-8 rounded-full object-cover" alt="" />
                   ) : (
@@ -70,9 +72,6 @@ export default function Layout() {
                       {user.username[0].toUpperCase()}
                     </div>
                   )}
-                </Link>
-                <button onClick={handleLogout} className="btn-ghost p-2 text-dark-400 hover:text-red-400">
-                  <LogOut size={16} />
                 </button>
               </>
             ) : (
@@ -90,6 +89,7 @@ export default function Layout() {
       </main>
 
       <Footer />
+      <ProfileMenuModal open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 }

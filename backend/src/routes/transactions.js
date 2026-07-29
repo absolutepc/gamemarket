@@ -194,12 +194,32 @@ router.post('/:id/confirm', authenticate(), async (req, res) => {
   try {
     await client.query('BEGIN');
     const { rows } = await client.query(
-      "SELECT * FROM transactions WHERE id=$1 AND status='awaiting_confirmation' FOR UPDATE",
+      "SELECT * FROM transactions WHERE id=$1 AND status IN ('awaiting_delivery','awaiting_confirmation') FOR UPDATE",
       [req.params.id]
     );
     const tx = rows[0];
-    if (!tx) return res.status(404).json({ error: 'Transaction not found or wrong status' });
-    if (tx.buyer_id !== req.user.id && tx.seller_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+    if (!tx) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Transaction not found or wrong status' });
+    }
+    const isBuyer = String(tx.buyer_id) === String(req.user.id);
+    const isSeller = String(tx.seller_id) === String(req.user.id);
+    if (!isBuyer && !isSeller) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    // Buyer can confirm only after seller marked delivery
+    if (isBuyer && !isSeller && tx.status !== 'awaiting_confirmation') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Wait for seller to mark delivery first' });
+    }
+    if (tx.status === 'awaiting_delivery') {
+      await client.query(
+        `UPDATE transactions SET status='awaiting_confirmation', seller_delivered_at=COALESCE(seller_delivered_at, NOW()),
+         updated_at=NOW() WHERE id=$1`,
+        [req.params.id]
+      );
+    }
 
     // Release escrow to seller
     await client.query(
@@ -229,15 +249,23 @@ router.post('/:id/confirm', authenticate(), async (req, res) => {
       "UPDATE listings SET status='active' WHERE id=$1",
       [tx.listing_id]
     );
+    const doneMsg = isSeller
+      ? 'Продавец завершил сделку. Средства переведены.'
+      : 'Покупатель подтвердил получение. Сделка завершена!';
     await client.query(
       `INSERT INTO messages (transaction_id, sender_id, content, is_system)
-       VALUES ($1,$2,'Покупатель подтвердил получение. Сделка завершена!', TRUE)`,
-      [req.params.id, req.user.id]
+       VALUES ($1,$2,$3, TRUE)`,
+      [req.params.id, req.user.id, doneMsg]
     );
+    const notifyUserId = isSeller ? tx.buyer_id : tx.seller_id;
+    const notifyTitle = 'Сделка завершена!';
+    const notifyBody = isSeller
+      ? 'Продавец завершил сделку.'
+      : 'Покупатель подтвердил получение. Средства зачислены на ваш счёт.';
     await client.query(
       `INSERT INTO notifications (user_id, type, title, body, data)
-       VALUES ($1,'sale_complete','Сделка завершена!','Покупатель подтвердил получение. Средства зачислены на ваш счёт.',$2)`,
-      [tx.seller_id, JSON.stringify({ transaction_id: req.params.id })]
+       VALUES ($1,'sale_complete',$2,$3,$4)`,
+      [notifyUserId, notifyTitle, notifyBody, JSON.stringify({ transaction_id: req.params.id })]
     );
     await client.query('COMMIT');
     res.json({ message: 'Transaction completed' });

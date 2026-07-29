@@ -103,8 +103,8 @@ export default function TransactionPage() {
 
   if (!tx) return <div className="text-center py-20 text-dark-400">Сделка не найдена</div>;
 
-  const isBuyer = user?.id === tx.buyer_id;
-  const isSeller = user?.id === tx.seller_id;
+  const isBuyer = String(user?.id) === String(tx.buyer_id);
+  const isSeller = String(user?.id) === String(tx.seller_id);
   const status = TX_STATUS[tx.status] || { label: tx.status, color: 'badge-gray' };
 
   return (
@@ -149,9 +149,22 @@ export default function TransactionPage() {
             <button
               onClick={() => deliverMutation.mutate()}
               disabled={deliverMutation.isPending}
-              className="btn-primary flex items-center gap-2"
+              className="btn-secondary flex items-center gap-2"
             >
               <Package size={15} /> Отметить передачу
+            </button>
+          )}
+          {isSeller && ['awaiting_delivery', 'awaiting_confirmation'].includes(tx.status) && (
+            <button
+              onClick={() => {
+                if (window.confirm('Завершить сделку и получить оплату? Убедитесь, что покупатель получил товар.')) {
+                  confirmMutation.mutate();
+                }
+              }}
+              disabled={confirmMutation.isPending}
+              className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+            >
+              <CheckCircle size={15} /> Завершить сделку
             </button>
           )}
           {isBuyer && tx.status === 'awaiting_confirmation' && (
@@ -161,15 +174,6 @@ export default function TransactionPage() {
               className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
             >
               <CheckCircle size={15} /> Подтвердить получение
-            </button>
-          )}
-          {isSeller && tx.status === 'awaiting_confirmation' && (
-            <button
-              onClick={() => confirmMutation.mutate()}
-              disabled={confirmMutation.isPending}
-              className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
-            >
-              <CheckCircle size={15} /> Завершить сделку
             </button>
           )}
           {isBuyer && tx.status === 'awaiting_delivery' && (
