@@ -70,7 +70,7 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-6 mt-10 text-sm text-dark-400">
             <span className="flex items-center gap-1.5"><CheckCircle2 size={14} className="text-emerald-400" />Гарантия возврата</span>
             <span className="flex items-center gap-1.5"><CheckCircle2 size={14} className="text-emerald-400" />Мгновенные сделки</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 size={14} className="text-emerald-400" />Комиссия 5%</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 size={14} className="text-emerald-400" />Комиссия 7.5%</span>
           </div>
         </div>
       </section>

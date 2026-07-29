@@ -4,7 +4,7 @@ const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { strictLimiter, validate } = require('../middleware/security');
 
-const PLATFORM_FEE_PERCENT = 0.05; // 5%
+const PLATFORM_FEE_PERCENT = 0.075; // 7.5%
 const AUTO_RELEASE_HOURS = 72;
 
 // Create transaction (buy listing)
