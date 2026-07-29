@@ -59,7 +59,9 @@ export default function HomePage() {
   const scrollAssortment = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * 320, behavior: 'smooth' });
+    // Scroll by one full visible page (same count of items as initially shown)
+    const amount = el.clientWidth || el.offsetWidth;
+    el.scrollBy({ left: dir * amount, behavior: 'smooth' });
   };
 
   return (
