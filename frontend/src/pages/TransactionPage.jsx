@@ -149,23 +149,15 @@ export default function TransactionPage() {
             <button
               onClick={() => deliverMutation.mutate()}
               disabled={deliverMutation.isPending}
-              className="btn-secondary flex items-center gap-2"
+              className="btn-primary flex items-center gap-2"
             >
               <Package size={15} /> Отметить передачу
             </button>
           )}
-          {isSeller && ['awaiting_delivery', 'awaiting_confirmation'].includes(tx.status) && (
-            <button
-              onClick={() => {
-                if (window.confirm('Завершить сделку и получить оплату? Убедитесь, что покупатель получил товар.')) {
-                  confirmMutation.mutate();
-                }
-              }}
-              disabled={confirmMutation.isPending}
-              className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
-            >
-              <CheckCircle size={15} /> Завершить сделку
-            </button>
+          {isSeller && tx.status === 'awaiting_confirmation' && (
+            <p className="text-sm text-dark-400 w-full">
+              Ожидаем подтверждения получения от покупателя. После этого средства поступят на баланс.
+            </p>
           )}
           {isBuyer && tx.status === 'awaiting_confirmation' && (
             <button

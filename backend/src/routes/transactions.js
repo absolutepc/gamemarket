@@ -171,8 +171,14 @@ router.post('/:id/deliver', authenticate(), async (req, res) => {
       [req.params.id]
     );
     const tx = rows[0];
-    if (!tx) return res.status(404).json({ error: 'Transaction not found or wrong status' });
-    if (tx.seller_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
+    if (!tx) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Transaction not found or wrong status' });
+    }
+    if (String(tx.seller_id) !== String(req.user.id)) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: 'Forbidden' });
+    }
 
     const { delivery_data } = req.body;
     await client.query(
