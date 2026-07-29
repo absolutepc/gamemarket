@@ -11,15 +11,19 @@ const {
   refundEscrow,
   canBuyerCancel,
 } = require('../services/escrow');
+const { normalizeBuyerFields, validateBuyerData } = require('./listings');
 
 // Create transaction (buy listing)
 router.post('/',
   authenticate(),
   strictLimiter,
-  [body('listing_id').isUUID()],
+  [
+    body('listing_id').isUUID(),
+    body('buyer_data').optional().isObject(),
+  ],
   validate,
   async (req, res) => {
-    const { listing_id } = req.body;
+    const { listing_id, buyer_data } = req.body;
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -36,6 +40,17 @@ router.post('/',
       if (String(listing.seller_id) === String(req.user.id)) {
         await client.query('ROLLBACK');
         return res.status(400).json({ error: 'Cannot buy your own listing' });
+      }
+
+      const buyerFields = normalizeBuyerFields(listing.buyer_fields, listing.delivery_method);
+      let cleanedBuyerData = {};
+      if (listing.delivery_method === 'auto') {
+        const checked = validateBuyerData(buyerFields, buyer_data);
+        if (checked.error) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: checked.error, buyer_fields: buyerFields });
+        }
+        cleanedBuyerData = checked.data;
       }
 
       const buyerBalance = parseFloat(req.user.balance);
@@ -65,20 +80,24 @@ router.post('/',
 
       const { rows } = await client.query(
         `INSERT INTO transactions
-           (listing_id, buyer_id, seller_id, amount, platform_fee, seller_receives, status)
-         VALUES ($1,$2,$3,$4,$5,$6,'awaiting_delivery')
+           (listing_id, buyer_id, seller_id, amount, platform_fee, seller_receives, status, buyer_data)
+         VALUES ($1,$2,$3,$4,$5,$6,'awaiting_delivery',$7)
          RETURNING *`,
-        [listing_id, req.user.id, listing.seller_id, price, fee, sellerReceives]
+        [listing_id, req.user.id, listing.seller_id, price, fee, sellerReceives, JSON.stringify(cleanedBuyerData)]
       );
+
+      let systemMsg = `Сделка создана. Продавец должен передать товар. Отмена возможна, если продавец не появится в сети ${SELLER_OFFLINE_CANCEL_HOURS} ч.`;
+      if (listing.delivery_method === 'auto' && Object.keys(cleanedBuyerData).length) {
+        const attrs = buyerFields
+          .map((f) => `${f.label}: ${cleanedBuyerData[f.key] || '—'}`)
+          .join(', ');
+        systemMsg += ` Данные покупателя для автовыдачи — ${attrs}.`;
+      }
 
       await client.query(
         `INSERT INTO messages (transaction_id, sender_id, content, is_system)
          VALUES ($1,$2,$3, TRUE)`,
-        [
-          rows[0].id,
-          req.user.id,
-          `Сделка создана. Продавец должен передать товар. Отмена возможна, если продавец не появится в сети ${SELLER_OFFLINE_CANCEL_HOURS} ч.`,
-        ]
+        [rows[0].id, req.user.id, systemMsg]
       );
 
       await client.query(
@@ -120,7 +139,7 @@ router.get('/my', authenticate(), async (req, res) => {
 router.get('/:id', authenticate(), async (req, res) => {
   const { rows } = await pool.query(
     `SELECT t.*, l.title AS listing_title, l.description AS listing_description,
-            l.images AS listing_images, l.delivery_method,
+            l.images AS listing_images, l.delivery_method, l.buyer_fields AS listing_buyer_fields,
             bu.username AS buyer_username, bu.avatar_url AS buyer_avatar,
             su.username AS seller_username, su.avatar_url AS seller_avatar,
             su.last_seen_at AS seller_last_seen_at

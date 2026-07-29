@@ -1,15 +1,19 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import Seo from '../components/Seo';
+
+const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
 
 export default function CreateListingPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const [buyerFields, setBuyerFields] = useState([DEFAULT_FIELD]);
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
       listing_type: 'item',
@@ -20,6 +24,7 @@ export default function CreateListingPage() {
 
   const price = watch('price');
   const originalPrice = watch('original_price');
+  const deliveryMethod = watch('delivery_method');
   const discountPreview = originalPrice && price && parseFloat(originalPrice) > parseFloat(price)
     ? Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100)
     : 0;
@@ -48,6 +53,10 @@ export default function CreateListingPage() {
         delivery_method: existing.delivery_method || 'manual',
         delivery_instructions: existing.delivery_instructions || '',
       });
+      const fields = Array.isArray(existing.buyer_fields) && existing.buyer_fields.length
+        ? existing.buyer_fields
+        : [DEFAULT_FIELD];
+      setBuyerFields(fields);
     }
   }, [existing, reset]);
 
@@ -64,12 +73,32 @@ export default function CreateListingPage() {
   });
 
   const onSubmit = (data) => {
+    const fields = deliveryMethod === 'auto'
+      ? buyerFields
+        .map((f) => ({
+          key: f.key || undefined,
+          label: (f.label || '').trim(),
+          required: f.required !== false,
+        }))
+        .filter((f) => f.label)
+      : [];
+
+    if (deliveryMethod === 'auto' && !fields.length) {
+      toast.error('Укажите хотя бы один атрибут для покупателя (например ID / ник)');
+      return;
+    }
+
     mutation.mutate({
       ...data,
       price: parseFloat(data.price),
       original_price: data.original_price ? parseFloat(data.original_price) : null,
       category_id: data.category_id || undefined,
+      buyer_fields: fields,
     });
+  };
+
+  const updateField = (index, patch) => {
+    setBuyerFields((prev) => prev.map((f, i) => (i === index ? { ...f, ...patch } : f)));
   };
 
   return (
@@ -83,7 +112,7 @@ export default function CreateListingPage() {
             <label className="text-sm font-medium mb-1.5 block">Заголовок *</label>
             <input
               className="input"
-              placeholder="Например: ChatGPT Plus 1 месяц / Steam 1000₽ / Telegram Stars"
+              placeholder="Например: Cursor Pro 1 месяц"
               {...register('title', { required: 'Обязательное поле', minLength: { value: 5, message: 'Минимум 5 символов' } })}
             />
             {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message}</p>}
@@ -118,7 +147,7 @@ export default function CreateListingPage() {
             <label className="text-sm font-medium mb-1.5 block">Игра / сервис</label>
             <input
               className="input"
-              placeholder="Steam, Telegram, ChatGPT, TikTok, App Store, Roblox..."
+              placeholder="Название игры или сервиса"
               {...register('game')}
             />
           </div>
@@ -170,6 +199,45 @@ export default function CreateListingPage() {
               <option value="auto">Автовыдача</option>
             </select>
           </div>
+
+          {deliveryMethod === 'auto' && (
+            <div className="rounded-xl border border-dark-700 bg-dark-800/40 p-4 space-y-3">
+              <div>
+                <p className="text-sm font-medium text-white">Атрибуты покупателя *</p>
+                <p className="text-xs text-dark-400 mt-1">
+                  Покупатель укажет эти данные при покупке (например ID или ник в игре).
+                </p>
+              </div>
+              {buyerFields.map((field, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <input
+                    className="input flex-1"
+                    placeholder="Название поля, например: ID / ник"
+                    value={field.label}
+                    onChange={(e) => updateField(index, { label: e.target.value })}
+                  />
+                  {buyerFields.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn-ghost p-2 text-dark-400 hover:text-red-400"
+                      onClick={() => setBuyerFields((prev) => prev.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {buyerFields.length < 5 && (
+                <button
+                  type="button"
+                  className="btn-secondary text-sm inline-flex items-center gap-1.5"
+                  onClick={() => setBuyerFields((prev) => [...prev, { label: '', required: true }])}
+                >
+                  <Plus size={14} /> Добавить поле
+                </button>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="text-sm font-medium mb-1.5 block">Инструкции для покупателя</label>

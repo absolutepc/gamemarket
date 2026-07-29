@@ -7,6 +7,52 @@ const { apiLimiter, strictLimiter, validate } = require('../middleware/security'
 
 const LISTING_TYPES = ['item', 'account', 'currency', 'boosting', 'subscription', 'topup', 'giftcard', 'other'];
 
+const DEFAULT_AUTO_BUYER_FIELDS = [
+  { key: 'player_id', label: 'ID / ник', required: true },
+];
+
+function slugifyKey(label, index) {
+  const base = String(label || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яё]+/gi, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40);
+  return base || `field_${index + 1}`;
+}
+
+function normalizeBuyerFields(raw, deliveryMethod) {
+  if (deliveryMethod !== 'auto') return [];
+  let list = Array.isArray(raw) ? raw : [];
+  if (!list.length) list = DEFAULT_AUTO_BUYER_FIELDS;
+  return list.slice(0, 5).map((f, i) => {
+    const label = String(f.label || f.name || '').trim().slice(0, 80);
+    if (!label) return null;
+    return {
+      key: String(f.key || slugifyKey(label, i)).slice(0, 50),
+      label,
+      required: f.required !== false,
+      placeholder: String(f.placeholder || '').slice(0, 120) || undefined,
+    };
+  }).filter(Boolean);
+}
+
+function validateBuyerData(fields, data) {
+  const values = data && typeof data === 'object' ? data : {};
+  const cleaned = {};
+  for (const field of fields) {
+    const raw = values[field.key];
+    const value = raw == null ? '' : String(raw).trim();
+    if (field.required && value.length < 1) {
+      return { error: `Укажите: ${field.label}` };
+    }
+    if (value.length > 200) {
+      return { error: `Слишком длинное значение: ${field.label}` };
+    }
+    if (value) cleaned[field.key] = value;
+  }
+  return { data: cleaned };
+}
+
 function calcDiscount(price, originalPrice) {
   const p = parseFloat(price);
   const o = originalPrice != null ? parseFloat(originalPrice) : null;
@@ -137,20 +183,25 @@ router.post('/',
   async (req, res) => {
     const {
       title, description, price, original_price, game, listing_type,
-      category_id, delivery_method, delivery_instructions, tags,
+      category_id, delivery_method, delivery_instructions, tags, buyer_fields,
     } = req.body;
+    const method = delivery_method || 'manual';
+    const fields = normalizeBuyerFields(buyer_fields, method);
+    if (method === 'auto' && !fields.length) {
+      return res.status(400).json({ error: 'Для автовыдачи укажите хотя бы один атрибут покупателя (например ID / ник)' });
+    }
     const safeDesc = xss(description);
     const discount = calcDiscount(price, original_price);
     const { rows } = await pool.query(
       `INSERT INTO listings
          (seller_id, category_id, title, description, price, original_price, discount_percent,
-          game, listing_type, delivery_method, delivery_instructions, tags)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+          game, listing_type, delivery_method, delivery_instructions, tags, buyer_fields)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING *`,
       [req.user.id, category_id || null, title, safeDesc, price,
        discount.original_price, discount.discount_percent,
-       game || null, listing_type, delivery_method || 'manual',
-       delivery_instructions || null, tags || []]
+       game || null, listing_type, method,
+       delivery_instructions || null, tags || [], JSON.stringify(fields)]
     );
     res.status(201).json(rows[0]);
   }
@@ -176,12 +227,22 @@ router.put('/:id',
     }
     const {
       title, description, price, original_price, status, game,
-      delivery_instructions, listing_type, delivery_method, category_id,
+      delivery_instructions, listing_type, delivery_method, category_id, buyer_fields,
     } = req.body;
     const safeDesc = description ? xss(description) : null;
     const nextPrice = price != null ? price : existing[0].price;
     const nextOriginal = original_price !== undefined ? original_price : existing[0].original_price;
     const discount = calcDiscount(nextPrice, nextOriginal);
+    const nextMethod = delivery_method || existing[0].delivery_method || 'manual';
+    const fields = buyer_fields !== undefined || delivery_method
+      ? normalizeBuyerFields(
+        buyer_fields !== undefined ? buyer_fields : existing[0].buyer_fields,
+        nextMethod
+      )
+      : undefined;
+    if (nextMethod === 'auto' && fields && !fields.length) {
+      return res.status(400).json({ error: 'Для автовыдачи укажите хотя бы один атрибут покупателя (например ID / ник)' });
+    }
 
     const { rows } = await pool.query(
       `UPDATE listings SET
@@ -196,14 +257,17 @@ router.put('/:id',
          listing_type=COALESCE($9,listing_type),
          delivery_method=COALESCE($10,delivery_method),
          category_id=COALESCE($11,category_id),
+         buyer_fields=COALESCE($12,buyer_fields),
          updated_at=NOW()
-       WHERE id=$12 RETURNING *`,
+       WHERE id=$13 RETURNING *`,
       [
         title || null, safeDesc, price || null,
         discount.original_price, discount.discount_percent,
         status || null, game || null, delivery_instructions || null,
         listing_type || null, delivery_method || null,
-        category_id || null, req.params.id,
+        category_id || null,
+        fields ? JSON.stringify(fields) : null,
+        req.params.id,
       ]
     );
     res.json(rows[0]);
@@ -221,3 +285,6 @@ router.delete('/:id', authenticate(), async (req, res) => {
 });
 
 module.exports = router;
+module.exports.normalizeBuyerFields = normalizeBuyerFields;
+module.exports.validateBuyerData = validateBuyerData;
+module.exports.DEFAULT_AUTO_BUYER_FIELDS = DEFAULT_AUTO_BUYER_FIELDS;

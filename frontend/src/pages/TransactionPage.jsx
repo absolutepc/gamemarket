@@ -134,6 +134,20 @@ export default function TransactionPage() {
           </div>
         </div>
 
+        {tx.buyer_data && Object.keys(tx.buyer_data).length > 0 && (
+          <div className="mt-4 p-3 rounded-xl bg-dark-800/80 border border-dark-700 text-sm">
+            <p className="font-medium text-white mb-2">Данные для автовыдачи</p>
+            <div className="space-y-1.5">
+              {(tx.listing_buyer_fields || Object.keys(tx.buyer_data).map((key) => ({ key, label: key }))).map((field) => (
+                <div key={field.key} className="flex gap-2">
+                  <span className="text-dark-400">{field.label}:</span>
+                  <span className="text-white font-medium break-all">{tx.buyer_data[field.key] || '—'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Escrow info */}
         <div className="mt-4 flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
           <Shield size={15} className="text-emerald-400 shrink-0 mt-0.5" />
