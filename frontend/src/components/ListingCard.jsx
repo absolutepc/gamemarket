@@ -75,18 +75,27 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
             )}
           </div>
 
-          <div className="flex items-center gap-2 pt-1.5 border-t border-dark-800 mt-auto">
-            <div className="w-5 h-5 rounded-full bg-[#2B71F3]/20 text-[#2B71F3] flex items-center justify-center text-[10px] font-semibold">
-              {listing.seller_username?.[0]?.toUpperCase()}
-            </div>
-            <span className="text-[11px] text-dark-400 flex-1 truncate">{listing.seller_username}</span>
-            {(listing.seller_rating > 0 || listing.seller_reviews > 0) && (
-              <span className="flex items-center gap-0.5 text-[11px] text-yellow-400">
-                <Star size={11} fill="currentColor" />
+          {(listing.seller_rating > 0 || listing.seller_reviews > 0) && (
+            <div className="flex items-center gap-1.5 pt-1.5 border-t border-dark-800 mt-auto">
+              <div className="flex items-center gap-0.5 text-yellow-400">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const rating = parseFloat(listing.seller_rating || 0);
+                  const filled = i < Math.round(rating);
+                  return (
+                    <Star
+                      key={i}
+                      size={11}
+                      fill={filled ? 'currentColor' : 'none'}
+                      className={filled ? '' : 'text-dark-600'}
+                    />
+                  );
+                })}
+              </div>
+              <span className="text-[11px] text-yellow-400 font-medium tabular-nums">
                 {parseFloat(listing.seller_rating || 0).toFixed(1)}
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </Link>
 
