@@ -22,26 +22,26 @@ const CATEGORY_ICONS = {
   other: Package,
 };
 
-/** Playerok-style horizontal game/service assortment */
+/** Playerok-style horizontal game/service assortment — icons from official app artwork */
 const ASSORTMENT = [
-  { name: 'Arena Breakout', search: 'Arena Breakout', color: 'from-[#2d3a2e] to-[#1a221b]', letter: 'AB' },
-  { name: 'App Store', search: 'App Store', color: 'from-[#147EFB] to-[#0a5ec4]', letter: 'A' },
-  { name: 'Roblox', search: 'Roblox', color: 'from-[#E2231A] to-[#a31812]', letter: 'R' },
-  { name: 'PUBG Mobile', search: 'PUBG', color: 'from-[#F2A900] to-[#c48400]', letter: 'P' },
-  { name: 'Brawl Stars', search: 'Brawl Stars', color: 'from-[#F7C948] to-[#e8910f]', letter: 'BS' },
-  { name: 'Telegram', search: 'Telegram', color: 'from-[#229ED9] to-[#1a7fb0]', letter: 'T' },
-  { name: 'Steam', search: 'Steam', color: 'from-[#1b2838] to-[#2a475e]', letter: 'S' },
-  { name: 'Valorant', search: 'Valorant', color: 'from-[#FF4655] to-[#b82e3a]', letter: 'V' },
-  { name: 'Genshin', search: 'Genshin', color: 'from-[#4A90D9] to-[#2d5f96]', letter: 'GI' },
-  { name: 'Fortnite', search: 'Fortnite', color: 'from-[#9D4DFF] to-[#6b2fb3]', letter: 'F' },
-  { name: 'Minecraft', search: 'Minecraft', color: 'from-[#5D9C3F] to-[#3d6b2a]', letter: 'M' },
-  { name: 'TikTok', search: 'TikTok', color: 'from-[#111111] to-[#333333]', letter: '♪' },
-  { name: 'ChatGPT', search: 'ChatGPT', color: 'from-[#10A37F] to-[#0d7a5f]', letter: 'G' },
-  { name: 'Claude', search: 'Claude', color: 'from-[#D97757] to-[#b45a3d]', letter: 'C' },
-  { name: 'Discord', search: 'Discord', color: 'from-[#5865F2] to-[#3c45a8]', letter: 'D' },
-  { name: 'PlayStation', search: 'PlayStation', color: 'from-[#003791] to-[#00215a]', letter: 'PS' },
-  { name: 'Spotify', search: 'Spotify', color: 'from-[#1DB954] to-[#14833b]', letter: '♪' },
-  { name: 'Mobile Legends', search: 'Mobile Legends', color: 'from-[#1a3a6b] to-[#0d1f3c]', letter: 'ML' },
+  { name: 'Arena Breakout', search: 'Arena Breakout', icon: '/assortment/arena-breakout.png' },
+  { name: 'App Store', search: 'App Store', icon: '/assortment/app-store.png' },
+  { name: 'Roblox', search: 'Roblox', icon: '/assortment/roblox.png' },
+  { name: 'PUBG Mobile', search: 'PUBG', icon: '/assortment/pubg-mobile.png' },
+  { name: 'Brawl Stars', search: 'Brawl Stars', icon: '/assortment/brawl-stars.png' },
+  { name: 'Telegram', search: 'Telegram', icon: '/assortment/telegram.png' },
+  { name: 'Steam', search: 'Steam', icon: '/assortment/steam.png' },
+  { name: 'Valorant', search: 'Valorant', icon: '/assortment/valorant.png' },
+  { name: 'Genshin', search: 'Genshin', icon: '/assortment/genshin.png' },
+  { name: 'Fortnite', search: 'Fortnite', icon: '/assortment/fortnite.png' },
+  { name: 'Minecraft', search: 'Minecraft', icon: '/assortment/minecraft.png' },
+  { name: 'TikTok', search: 'TikTok', icon: '/assortment/tiktok.png' },
+  { name: 'ChatGPT', search: 'ChatGPT', icon: '/assortment/chatgpt.png' },
+  { name: 'Claude', search: 'Claude', icon: '/assortment/claude.png' },
+  { name: 'Discord', search: 'Discord', icon: '/assortment/discord.png' },
+  { name: 'PlayStation', search: 'PlayStation', icon: '/assortment/playstation.png' },
+  { name: 'Spotify', search: 'Spotify', icon: '/assortment/spotify.png' },
+  { name: 'Mobile Legends', search: 'Mobile Legends', icon: '/assortment/mobile-legends.png' },
 ];
 
 export default function HomePage() {
@@ -134,12 +134,17 @@ export default function HomePage() {
               className="shrink-0 w-[84px] sm:w-[92px] group flex flex-col items-center gap-2.5 relative z-0 hover:z-10"
             >
               <div
-                className={`w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl bg-gradient-to-br ${item.color}
-                            flex items-center justify-center text-white font-bold text-base sm:text-lg
-                            shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-2 ring-white/10
-                            group-hover:scale-105 group-hover:ring-[#2B71F3]/50 transition-all duration-200`}
+                className="w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-2xl overflow-hidden
+                            bg-dark-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-1 ring-white/10
+                            group-hover:scale-105 group-hover:ring-[#2B71F3]/50 transition-all duration-200"
               >
-                {item.letter}
+                <img
+                  src={item.icon}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  draggable={false}
+                />
               </div>
               <span className="text-[11px] sm:text-xs text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full transition-colors">
                 {item.name}
