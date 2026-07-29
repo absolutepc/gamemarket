@@ -169,6 +169,7 @@ router.get('/:id', authenticate(), async (req, res) => {
     review: reviewRows[0] || null,
     dispute: disputeRows[0] || null,
     can_cancel: cancelInfo.allowed && String(tx.buyer_id) === String(req.user.id),
+    can_seller_cancel: tx.status === 'awaiting_delivery' && String(tx.seller_id) === String(req.user.id),
     cancel_info: cancelInfo,
     confirm_deadline_at: tx.auto_release_at || null,
     buyer_confirm_days: BUYER_CONFIRM_DAYS,
@@ -297,7 +298,7 @@ router.post('/:id/dispute',
   }
 );
 
-// Cancel: buyer only if seller offline 24h since deal creation
+// Cancel: buyer (offline 24h rule) or seller (out of stock) while awaiting delivery
 router.post('/:id/cancel', authenticate(), async (req, res) => {
   const client = await pool.connect();
   try {
@@ -316,13 +317,14 @@ router.post('/:id/cancel', authenticate(), async (req, res) => {
       return res.status(404).json({ error: 'Cannot cancel at this stage' });
     }
     const isBuyer = String(tx.buyer_id) === String(req.user.id);
+    const isSeller = String(tx.seller_id) === String(req.user.id);
     const isAdmin = req.user.role === 'admin';
-    if (!isBuyer && !isAdmin) {
+    if (!isBuyer && !isSeller && !isAdmin) {
       await client.query('ROLLBACK');
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    if (!isAdmin) {
+    if (isBuyer && !isAdmin) {
       const info = canBuyerCancel(tx, tx.seller_last_seen_at);
       if (!info.allowed) {
         await client.query('ROLLBACK');
@@ -338,12 +340,29 @@ router.post('/:id/cancel', authenticate(), async (req, res) => {
       }
     }
 
-    await refundEscrow(client, tx, {
-      reason: req.body.reason || (isAdmin ? 'Cancelled by admin' : 'Cancelled by buyer (seller offline 24h)'),
-      systemMessage: isAdmin
-        ? 'Сделка отменена администратором. Средства возвращены покупателю.'
-        : 'Сделка отменена: продавец не появлялся в сети 24 часа. Средства возвращены покупателю.',
-    });
+    let reason;
+    let systemMessage;
+    if (isAdmin && !isBuyer && !isSeller) {
+      reason = req.body.reason || 'Cancelled by admin';
+      systemMessage = 'Сделка отменена администратором. Средства возвращены покупателю.';
+    } else if (isSeller) {
+      reason = req.body.reason || 'Cancelled by seller: out of stock';
+      systemMessage = 'Продавец отменил сделку (товар закончился). Средства возвращены покупателю.';
+    } else {
+      reason = req.body.reason || 'Cancelled by buyer (seller offline 24h)';
+      systemMessage = 'Сделка отменена: продавец не появлялся в сети 24 часа. Средства возвращены покупателю.';
+    }
+
+    await refundEscrow(client, tx, { reason, systemMessage });
+
+    if (isSeller) {
+      await client.query(
+        `INSERT INTO notifications (user_id, type, title, body, data)
+         VALUES ($1,'deal_cancelled','Сделка отменена','Продавец отменил сделку. Средства возвращены на баланс.',$2)`,
+        [tx.buyer_id, JSON.stringify({ transaction_id: tx.id })]
+      );
+    }
+
     await client.query('COMMIT');
     res.json({ message: 'Transaction cancelled, funds refunded' });
   } catch (err) {

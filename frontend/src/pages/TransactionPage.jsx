@@ -67,7 +67,7 @@ export default function TransactionPage() {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: () => api.post(`/transactions/${id}/cancel`, { reason: 'Cancelled by buyer' }),
+    mutationFn: (reason) => api.post(`/transactions/${id}/cancel`, { reason }),
     onSuccess: () => { toast.success('Сделка отменена, средства возвращены'); qc.invalidateQueries(['transaction', id]); },
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
   });
