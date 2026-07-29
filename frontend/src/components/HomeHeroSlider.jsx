@@ -31,7 +31,7 @@ const SLIDES = [
     title: 'Эскроу защищает обе стороны',
     subtitle:
       'Оплата удерживается до подтверждения получения товара. Комиссия площадки — 7.5%.',
-    cta: { to: '/faq', label: 'Как это работает' },
+    cta: { label: 'Как это работает', action: 'next' },
     tone: 'escrow',
   },
   {
@@ -210,9 +210,19 @@ export default function HomeHeroSlider() {
                 </p>
 
                 <div className="flex flex-wrap gap-2.5 sm:gap-3">
-                  <Link to={slide.cta.to} className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base">
-                    {slide.cta.label} <ArrowRight size={16} />
-                  </Link>
+                  {slide.cta.action === 'next' ? (
+                    <button
+                      type="button"
+                      onClick={() => go(1)}
+                      className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base"
+                    >
+                      {slide.cta.label} <ArrowRight size={16} />
+                    </button>
+                  ) : (
+                    <Link to={slide.cta.to} className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base">
+                      {slide.cta.label} <ArrowRight size={16} />
+                    </Link>
+                  )}
                   {slide.secondary && (
                     <Link to={slide.secondary.to} className="btn-secondary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center text-sm sm:text-base">
                       {slide.secondary.label}
