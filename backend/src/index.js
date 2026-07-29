@@ -1,6 +1,4 @@
 require('dotenv').config();
-const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -17,13 +15,10 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 const server = http.createServer(app);
-const publicDir = path.join(__dirname, '..', 'public');
-const hasFrontend = fs.existsSync(path.join(publicDir, 'index.html'));
-const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 const io = new Server(server, {
   cors: {
-    origin: hasFrontend ? true : frontendOrigin,
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
 });
@@ -36,14 +31,13 @@ app.use(helmet({
       imgSrc: ["'self'", 'data:', 'https:'],
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", 'https:', 'wss:'],
     },
   },
   crossOriginEmbedderPolicy: false,
 }));
 
 app.use(cors({
-  origin: hasFrontend ? true : frontendOrigin,
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
 }));
 
