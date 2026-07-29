@@ -139,7 +139,8 @@ export default function TransactionPage() {
           <Shield size={15} className="text-emerald-400 shrink-0 mt-0.5" />
           <p className="text-dark-300">
             Средства <strong className="text-white">{formatPrice(tx.amount)}</strong> заморожены в эскроу.
-            Продавец получит <strong className="text-white">{formatPrice(tx.seller_receives)}</strong> после подтверждения.
+            Продавец получит <strong className="text-white">{formatPrice(tx.seller_receives)}</strong> только после того,
+            как покупатель подтвердит получение.
           </p>
         </div>
 
