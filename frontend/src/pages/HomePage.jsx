@@ -79,7 +79,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg sm:text-xl font-bold">Игры и сервисы</h2>
-          <div className="flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             <button
               type="button"
               onClick={() => scrollAssortment(-1)}

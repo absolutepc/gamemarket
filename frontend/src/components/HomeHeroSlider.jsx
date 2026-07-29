@@ -209,7 +209,7 @@ export default function HomeHeroSlider() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => go(-1)}

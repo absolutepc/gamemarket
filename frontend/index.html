@@ -16,6 +16,18 @@
     <meta name="twitter:title" content="GameMarket — Торговая площадка игровых товаров" />
     <meta name="twitter:description" content="Безопасные сделки с эскроу для аккаунтов, валюты и игровых предметов." />
     <title>GameMarket — Торговая площадка игровых товаров</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('gm_theme');
+          if (t === 'light') {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
