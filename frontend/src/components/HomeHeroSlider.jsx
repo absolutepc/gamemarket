@@ -52,22 +52,20 @@ function ContestVisual() {
           draggable={false}
         />
 
-        {/* Centered on MacBook display — high enough to clear the headline below */}
-        <div className="absolute left-1/2 top-[22%] sm:top-[24%] -translate-x-1/2 z-20 flex flex-col items-center gap-2 w-max max-w-[90%]">
-          <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
-            <Store size={14} className="text-[#2B71F3] shrink-0" />
-            <span className="text-xs font-medium whitespace-nowrap">1× продавцам</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
-            <ShoppingBag size={14} className="text-emerald-400 shrink-0" />
-            <span className="text-xs font-medium whitespace-nowrap">1× покупателям</span>
-          </div>
-        </div>
-
-        <div className="mt-3 text-center">
+        <div className="mt-3 flex flex-col items-center gap-2">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-3 py-1 text-[11px] text-dark-200 backdrop-blur-sm">
             <Trophy size={12} className="text-amber-300" />
             MacBook Air 15″ · 256 ГБ · 2 приза / месяц
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
+              <Store size={14} className="text-[#2B71F3] shrink-0" />
+              <span className="text-xs font-medium whitespace-nowrap">1× продавцам</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
+              <ShoppingBag size={14} className="text-emerald-400 shrink-0" />
+              <span className="text-xs font-medium whitespace-nowrap">1× покупателям</span>
+            </div>
           </div>
         </div>
       </div>
