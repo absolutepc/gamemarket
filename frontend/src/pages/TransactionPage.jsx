@@ -1,0 +1,253 @@
+import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useRef } from 'react';
+import { Shield, Send, AlertTriangle, CheckCircle, Package, X } from 'lucide-react';
+import { io } from 'socket.io-client';
+import toast from 'react-hot-toast';
+import api from '../utils/api';
+import useAuthStore from '../store/authStore';
+import { formatPrice, formatRelative, TX_STATUS } from '../utils/format';
+
+export default function TransactionPage() {
+  const { id } = useParams();
+  const qc = useQueryClient();
+  const { user, accessToken } = useAuthStore();
+  const [msg, setMsg] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [dispute, setDispute] = useState({ reason: 'not_received', description: '' });
+  const msgEndRef = useRef(null);
+  const socketRef = useRef(null);
+
+  const { data: tx, isLoading } = useQuery({
+    queryKey: ['transaction', id],
+    queryFn: () => api.get(`/transactions/${id}`).then((r) => r.data),
+  });
+
+  useEffect(() => {
+    if (tx?.messages) setMessages(tx.messages);
+  }, [tx?.messages]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    const socket = io('/', { auth: { token: accessToken } });
+    socketRef.current = socket;
+    socket.emit('join_transaction', id);
+    socket.on('new_message', (m) => {
+      setMessages((prev) => {
+        if (prev.find((p) => p.id === m.id)) return prev;
+        return [...prev, m];
+      });
+    });
+    return () => socket.disconnect();
+  }, [id, accessToken]);
+
+  useEffect(() => {
+    msgEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!msg.trim() || !socketRef.current) return;
+    socketRef.current.emit('send_message', { transaction_id: id, content: msg.trim() });
+    setMsg('');
+  };
+
+  const deliverMutation = useMutation({
+    mutationFn: () => api.post(`/transactions/${id}/deliver`, {}),
+    onSuccess: () => { toast.success('Передача отмечена!'); qc.invalidateQueries(['transaction', id]); },
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+  });
+
+  const confirmMutation = useMutation({
+    mutationFn: () => api.post(`/transactions/${id}/confirm`),
+    onSuccess: () => { toast.success('Сделка завершена!'); qc.invalidateQueries(['transaction', id]); },
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => api.post(`/transactions/${id}/cancel`, { reason: 'Cancelled by buyer' }),
+    onSuccess: () => { toast.success('Сделка отменена, средства возвращены'); qc.invalidateQueries(['transaction', id]); },
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+  });
+
+  const disputeMutation = useMutation({
+    mutationFn: () => api.post(`/transactions/${id}/dispute`, dispute),
+    onSuccess: () => {
+      toast.success('Спор открыт');
+      setShowDisputeForm(false);
+      qc.invalidateQueries(['transaction', id]);
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+  });
+
+  if (isLoading) return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="card h-96 animate-pulse" />
+    </div>
+  );
+
+  if (!tx) return <div className="text-center py-20 text-dark-400">Сделка не найдена</div>;
+
+  const isBuyer = user?.id === tx.buyer_id;
+  const isSeller = user?.id === tx.seller_id;
+  const status = TX_STATUS[tx.status] || { label: tx.status, color: 'badge-gray' };
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      {/* Header */}
+      <div className="card p-5 mb-4">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <p className="text-dark-400 text-xs mb-1">Сделка #{tx.id.slice(0, 8)}</p>
+            <h1 className="font-bold text-lg leading-snug">{tx.listing_title}</h1>
+          </div>
+          <span className={status.color + ' shrink-0'}>{status.label}</span>
+        </div>
+
+        <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-dark-400">Покупатель:</span>
+            <span className="font-medium">{tx.buyer_username}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-dark-400">Продавец:</span>
+            <span className="font-medium">{tx.seller_username}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-dark-400">Сумма:</span>
+            <span className="font-bold text-white">{formatPrice(tx.amount)}</span>
+          </div>
+        </div>
+
+        {/* Escrow info */}
+        <div className="mt-4 flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
+          <Shield size={15} className="text-emerald-400 shrink-0 mt-0.5" />
+          <p className="text-dark-300">
+            Средства <strong className="text-white">{formatPrice(tx.amount)}</strong> заморожены в эскроу.
+            Продавец получит <strong className="text-white">{formatPrice(tx.seller_receives)}</strong> после подтверждения.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {isSeller && tx.status === 'awaiting_delivery' && (
+            <button
+              onClick={() => deliverMutation.mutate()}
+              disabled={deliverMutation.isPending}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Package size={15} /> Отметить передачу
+            </button>
+          )}
+          {isBuyer && tx.status === 'awaiting_confirmation' && (
+            <button
+              onClick={() => confirmMutation.mutate()}
+              disabled={confirmMutation.isPending}
+              className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+            >
+              <CheckCircle size={15} /> Подтвердить получение
+            </button>
+          )}
+          {isBuyer && tx.status === 'awaiting_delivery' && (
+            <button
+              onClick={() => cancelMutation.mutate()}
+              disabled={cancelMutation.isPending}
+              className="btn-secondary flex items-center gap-2 hover:border-red-500/50 hover:text-red-400"
+            >
+              <X size={15} /> Отменить
+            </button>
+          )}
+          {(isBuyer || isSeller) && ['awaiting_delivery', 'awaiting_confirmation'].includes(tx.status) && (
+            <button
+              onClick={() => setShowDisputeForm(!showDisputeForm)}
+              className="btn-secondary flex items-center gap-2 hover:border-yellow-500/50 hover:text-yellow-400"
+            >
+              <AlertTriangle size={15} /> Открыть спор
+            </button>
+          )}
+        </div>
+
+        {/* Dispute form */}
+        {showDisputeForm && (
+          <div className="mt-4 p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5 animate-slide-up">
+            <h3 className="font-semibold mb-3 text-yellow-300">Открытие спора</h3>
+            <select
+              className="input mb-3 text-sm"
+              value={dispute.reason}
+              onChange={(e) => setDispute((d) => ({ ...d, reason: e.target.value }))}
+            >
+              <option value="not_received">Товар не получен</option>
+              <option value="not_as_described">Не соответствует описанию</option>
+              <option value="fraud">Мошенничество</option>
+              <option value="other">Другое</option>
+            </select>
+            <textarea
+              className="input text-sm resize-none mb-3"
+              rows={3}
+              placeholder="Подробно опишите проблему..."
+              value={dispute.description}
+              onChange={(e) => setDispute((d) => ({ ...d, description: e.target.value }))}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => disputeMutation.mutate()}
+                disabled={disputeMutation.isPending || dispute.description.length < 20}
+                className="btn-primary text-sm bg-yellow-600 hover:bg-yellow-700"
+              >
+                Отправить
+              </button>
+              <button onClick={() => setShowDisputeForm(false)} className="btn-ghost text-sm">Отмена</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Chat */}
+      <div className="card flex flex-col" style={{ height: '420px' }}>
+        <div className="p-4 border-b border-dark-800 font-medium text-sm">Чат сделки</div>
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+          {messages.map((m) => {
+            const isMe = m.sender_id === user?.id;
+            if (m.is_system) {
+              return (
+                <div key={m.id} className="text-center">
+                  <span className="text-xs text-dark-500 bg-dark-800 px-3 py-1 rounded-full">{m.content}</span>
+                </div>
+              );
+            }
+            return (
+              <div key={m.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                <div className="w-7 h-7 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-semibold shrink-0">
+                  {m.sender_username?.[0]?.toUpperCase()}
+                </div>
+                <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
+                  {!isMe && <span className="text-xs text-dark-400">{m.sender_username}</span>}
+                  <div className={`px-3 py-2 rounded-2xl text-sm ${isMe ? 'bg-brand-500 text-white rounded-tr-sm' : 'bg-dark-800 text-dark-100 rounded-tl-sm'}`}>
+                    {m.content}
+                  </div>
+                  <span className="text-xs text-dark-500">{formatRelative(m.created_at)}</span>
+                </div>
+              </div>
+            );
+          })}
+          <div ref={msgEndRef} />
+        </div>
+        {['awaiting_delivery', 'awaiting_confirmation', 'disputed'].includes(tx.status) && (
+          <form onSubmit={sendMessage} className="p-3 border-t border-dark-800 flex gap-2">
+            <input
+              className="input flex-1 text-sm"
+              placeholder="Написать сообщение..."
+              value={msg}
+              onChange={(e) => setMsg(e.target.value)}
+              maxLength={2000}
+            />
+            <button type="submit" disabled={!msg.trim()} className="btn-primary p-2.5">
+              <Send size={16} />
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
