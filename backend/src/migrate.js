@@ -156,7 +156,7 @@ INSERT INTO categories (name, slug, icon) VALUES
 ON CONFLICT (slug) DO NOTHING;
 `;
 
-async function migrate() {
+async function migrate({ closePool = false } = {}) {
   const client = await pool.connect();
   try {
     console.log('Running migrations...');
@@ -167,8 +167,12 @@ async function migrate() {
     throw err;
   } finally {
     client.release();
-    await pool.end();
+    if (closePool) await pool.end();
   }
 }
 
-migrate().catch(() => process.exit(1));
+module.exports = { migrate, schema };
+
+if (require.main === module) {
+  migrate({ closePool: true }).catch(() => process.exit(1));
+}

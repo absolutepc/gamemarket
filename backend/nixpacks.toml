@@ -5,4 +5,4 @@ nixPkgs = ["nodejs_20"]
 cmds = ["npm install --omit=dev"]
 
 [start]
-cmd = "node src/migrate.js && node src/index.js"
+cmd = "node src/index.js"

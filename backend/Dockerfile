@@ -12,4 +12,4 @@ USER nodejs
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "node src/migrate.js && node src/index.js"]
+CMD ["node", "src/index.js"]

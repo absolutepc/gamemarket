@@ -115,8 +115,21 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-});
+const HOST = '0.0.0.0';
+const { migrate } = require('./migrate');
+
+async function start() {
+  try {
+    await migrate();
+  } catch (err) {
+    logger.error('Migration failed (server will still start):', err.message || err);
+  }
+
+  server.listen(PORT, HOST, () => {
+    logger.info(`Server running on http://${HOST}:${PORT}`);
+  });
+}
+
+start();
 
 module.exports = { app, server };
