@@ -1,12 +1,14 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
 import Seo from '../components/Seo';
+import ProfileMenuModal from '../components/ProfileMenuModal';
 import useAuthStore from '../store/authStore';
-import { formatDate } from '../utils/format';
+import { formatDate, formatPrice } from '../utils/format';
 
 function StarRow({ rating }) {
   return (
@@ -29,6 +31,7 @@ export default function ProfilePage() {
   const qc = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
   const isOwn = currentUser?.username === username;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', username],
@@ -69,6 +72,7 @@ export default function ProfilePage() {
   if (!profile) return <div className="text-center py-20 text-dark-400">Пользователь не найден</div>;
 
   const rating = parseFloat(profile.rating) || 0;
+  const avatarUrl = isOwn ? (currentUser?.avatar_url || profile.avatar_url) : profile.avatar_url;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -76,13 +80,27 @@ export default function ProfilePage() {
 
       <div className="card p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          <div className="w-20 h-20 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold shrink-0">
-            {profile.username[0].toUpperCase()}
-          </div>
-          <div className="flex-1">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="w-20 h-20 rounded-2xl object-cover shrink-0 border border-dark-700" />
+          ) : (
+            <div className="w-20 h-20 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold shrink-0">
+              {profile.username[0].toUpperCase()}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{profile.username}</h1>
               {profile.is_verified && <BadgeCheck size={18} className="text-brand-400" />}
+              {isOwn && (
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-sm text-brand-400 hover:text-brand-300 font-medium ml-1"
+                >
+                  <Pencil size={14} />
+                  Редактировать
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-dark-400">
               <span className="flex items-center gap-1.5">
@@ -102,11 +120,18 @@ export default function ProfilePage() {
             </div>
             {profile.bio && <p className="mt-3 text-dark-300 text-sm">{profile.bio}</p>}
           </div>
-          {!isOwn && currentUser && (
-            <button onClick={startChat} className="btn-secondary flex items-center gap-2">
-              <MessageCircle size={16} /> Написать
-            </button>
-          )}
+          <div className="flex flex-col sm:items-end gap-2 shrink-0">
+            {isOwn && currentUser && (
+              <Link to="/wallet" className="rounded-xl bg-brand-500/15 border border-brand-500/30 px-4 py-2 text-brand-300 font-semibold text-sm">
+                {formatPrice(currentUser.balance)}
+              </Link>
+            )}
+            {!isOwn && currentUser && (
+              <button onClick={startChat} className="btn-secondary flex items-center gap-2">
+                <MessageCircle size={16} /> Написать
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -167,6 +192,10 @@ export default function ProfilePage() {
           <div className="card p-8 text-center text-dark-400 text-sm">Пока нет отзывов</div>
         )}
       </div>
+
+      {isOwn && (
+        <ProfileMenuModal open={menuOpen} onClose={() => setMenuOpen(false)} />
+      )}
     </div>
   );
 }

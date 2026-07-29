@@ -4,6 +4,7 @@ import { X, MessageCircle, LogOut, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
+import NotificationsModal from './NotificationsModal';
 
 const SOCIALS = [
   { label: 'Telegram', href: 'https://t.me/', color: '#2AABEE', path: 'M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z' },
@@ -12,33 +13,39 @@ const SOCIALS = [
   { label: 'TikTok', href: 'https://tiktok.com/', color: '#111111', path: 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z' },
 ];
 
+function prefsSummary() {
+  try {
+    const p = JSON.parse(localStorage.getItem('gm_notification_prefs') || '{}');
+    if (p.telegram || p.push || p.vk || p.email) return 'Вкл.';
+    return 'Выкл.';
+  } catch {
+    return 'Выкл.';
+  }
+}
+
 export default function ProfileMenuModal({ open, onClose }) {
   const navigate = useNavigate();
   const { user, setUser, logout } = useAuthStore();
-  const [notificationsOn, setNotificationsOn] = useState(() => {
-    try { return localStorage.getItem('gm_notifications') !== 'off'; } catch { return true; }
-  });
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifLabel, setNotifLabel] = useState(prefsSummary);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    if (!open) {
+      setShowNotifications(false);
+      return;
+    }
+    setNotifLabel(prefsSummary());
+    const onKey = (e) => { if (e.key === 'Escape' && !showNotifications) onClose(); };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [open, onClose]);
+  }, [open, onClose, showNotifications]);
 
   if (!open || !user) return null;
-
-  const toggleNotifications = () => {
-    const next = !notificationsOn;
-    setNotificationsOn(next);
-    try { localStorage.setItem('gm_notifications', next ? 'on' : 'off'); } catch {}
-    toast.success(next ? 'Уведомления включены' : 'Уведомления выключены');
-  };
 
   const changePhoto = async () => {
     const url = window.prompt('Ссылка на новое фото (URL)', user.avatar_url || '');
@@ -70,101 +77,112 @@ export default function ProfileMenuModal({ open, onClose }) {
     ? 'Вы вошли с VK ID'
     : 'Вы вошли по email';
 
+  const closeAll = () => {
+    setShowNotifications(false);
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <button type="button" className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-label="Закрыть" onClick={onClose} />
-      <div className="relative w-full max-w-sm rounded-2xl bg-dark-900 border border-dark-800 shadow-2xl animate-slide-up overflow-hidden">
-        <div className="flex items-center justify-center relative px-4 py-4 border-b border-dark-800">
-          <h2 className="font-semibold text-lg">Меню</h2>
-          <button type="button" onClick={onClose} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-dark-800 text-dark-400 hover:text-white">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="px-6 pt-6 pb-4 flex flex-col items-center text-center">
-          {user.avatar_url ? (
-            <img src={user.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover border border-dark-700" />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold border border-dark-700">
-              {user.username?.[0]?.toUpperCase()}
+    <>
+      {!showNotifications && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <button type="button" className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-label="Закрыть" onClick={onClose} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-dark-900 border border-dark-800 shadow-2xl animate-slide-up overflow-hidden">
+            <div className="flex items-center justify-center relative px-4 py-4 border-b border-dark-800">
+              <h2 className="font-semibold text-lg">Меню</h2>
+              <button type="button" onClick={onClose} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-dark-800 text-dark-400 hover:text-white">
+                <X size={18} />
+              </button>
             </div>
-          )}
-          <button
-            type="button"
-            onClick={changePhoto}
-            disabled={avatarBusy}
-            className="mt-3 text-sm text-brand-400 hover:text-brand-300 font-medium"
-          >
-            Изменить фото
-          </button>
-          <p className="mt-2 text-sm text-dark-300">{authLabel}</p>
-          <Link
-            to={`/users/${user.username}`}
-            onClick={onClose}
-            className="mt-1 text-xs text-dark-500 hover:text-dark-300"
-          >
-            @{user.username}
-          </Link>
-        </div>
 
-        <div className="mx-4 border-y border-dark-800">
-          <button
-            type="button"
-            onClick={toggleNotifications}
-            className="w-full flex items-center justify-between gap-3 py-4 px-1 text-left hover:bg-dark-800/40 transition-colors"
-          >
-            <div>
-              <div className="text-sm font-medium text-white">Уведомления</div>
-              <div className="text-xs text-dark-400 mt-0.5">Новые сообщения</div>
-            </div>
-            <span className="flex items-center gap-1 text-sm text-dark-300">
-              {notificationsOn ? 'Вкл.' : 'Выкл.'}
-              <ChevronRight size={16} className="text-dark-500" />
-            </span>
-          </button>
-        </div>
-
-        <div className="px-5 py-4 flex flex-col gap-3">
-          <Link
-            to="/support"
-            onClick={onClose}
-            className="flex items-center gap-2.5 text-brand-400 hover:text-brand-300 text-sm font-medium"
-          >
-            <MessageCircle size={18} />
-            Написать в поддержку
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-2.5 text-red-400 hover:text-red-300 text-sm font-medium"
-          >
-            <LogOut size={18} />
-            Выйти из профиля
-          </button>
-        </div>
-
-        <div className="px-5 pb-6 pt-2 border-t border-dark-800">
-          <p className="text-xs text-dark-500 mb-3">Наши социальные сети</p>
-          <div className="flex items-center gap-2.5">
-            {SOCIALS.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                title={s.label}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-white"
-                style={{ backgroundColor: s.color }}
+            <div className="px-6 pt-6 pb-4 flex flex-col items-center text-center">
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover border border-dark-700" />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold border border-dark-700">
+                  {user.username?.[0]?.toUpperCase()}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={changePhoto}
+                disabled={avatarBusy}
+                className="mt-3 text-sm text-brand-400 hover:text-brand-300 font-medium"
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden>
-                  <path d={s.path} />
-                </svg>
-              </a>
-            ))}
+                Изменить фото
+              </button>
+              <p className="mt-2 text-sm text-dark-300">{authLabel}</p>
+            </div>
+
+            <div className="mx-4 border-y border-dark-800">
+              <button
+                type="button"
+                onClick={() => setShowNotifications(true)}
+                className="w-full flex items-center justify-between gap-3 py-4 px-1 text-left hover:bg-dark-800/40 transition-colors"
+              >
+                <div>
+                  <div className="text-sm font-medium text-white">Уведомления</div>
+                  <div className="text-xs text-dark-400 mt-0.5">Новые сообщения</div>
+                </div>
+                <span className="flex items-center gap-1 text-sm text-dark-300">
+                  {notifLabel}
+                  <ChevronRight size={16} className="text-dark-500" />
+                </span>
+              </button>
+            </div>
+
+            <div className="px-5 py-4 flex flex-col gap-3">
+              <Link
+                to="/support"
+                onClick={onClose}
+                className="flex items-center gap-2.5 text-brand-400 hover:text-brand-300 text-sm font-medium"
+              >
+                <MessageCircle size={18} />
+                Написать в поддержку
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2.5 text-red-400 hover:text-red-300 text-sm font-medium"
+              >
+                <LogOut size={18} />
+                Выйти из профиля
+              </button>
+            </div>
+
+            <div className="px-5 pb-6 pt-2 border-t border-dark-800">
+              <p className="text-xs text-dark-500 mb-3">Наши социальные сети</p>
+              <div className="flex items-center gap-2.5">
+                {SOCIALS.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    title={s.label}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-white"
+                    style={{ backgroundColor: s.color }}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden>
+                      <path d={s.path} />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      <NotificationsModal
+        open={showNotifications}
+        onBack={() => {
+          setShowNotifications(false);
+          setNotifLabel(prefsSummary());
+        }}
+        onClose={closeAll}
+      />
+    </>
   );
 }
