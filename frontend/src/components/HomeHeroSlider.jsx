@@ -39,10 +39,10 @@ const SLIDES = [
 
 function ContestVisual() {
   return (
-    <div className="relative w-full max-w-lg mx-auto lg:mx-0 lg:ml-auto aspect-[4/3] flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_40%,rgba(43,113,243,0.35),transparent_55%)]" />
-      <div className="absolute -right-4 top-6 w-28 h-28 rounded-full bg-amber-400/20 blur-2xl" />
-      <div className="absolute left-2 bottom-8 w-24 h-24 rounded-full bg-[#2B71F3]/25 blur-2xl" />
+    <div className="relative w-full max-w-lg mx-auto lg:mx-0 lg:ml-auto flex flex-col items-center justify-center">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_40%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
+      <div className="absolute -right-4 top-6 w-28 h-28 rounded-full bg-amber-400/20 blur-2xl pointer-events-none" />
+      <div className="absolute left-2 bottom-8 w-24 h-24 rounded-full bg-[#2B71F3]/25 blur-2xl pointer-events-none" />
 
       <div className="relative z-10 w-[92%] max-w-[420px]">
         <img
@@ -51,22 +51,24 @@ function ContestVisual() {
           className="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.55)] select-none pointer-events-none"
           draggable={false}
         />
+
+        {/* Centered on MacBook display — high enough to clear the headline below */}
+        <div className="absolute left-1/2 top-[22%] sm:top-[24%] -translate-x-1/2 z-20 flex flex-col items-center gap-2 w-max max-w-[90%]">
+          <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
+            <Store size={14} className="text-[#2B71F3] shrink-0" />
+            <span className="text-xs font-medium whitespace-nowrap">1× продавцам</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
+            <ShoppingBag size={14} className="text-emerald-400 shrink-0" />
+            <span className="text-xs font-medium whitespace-nowrap">1× покупателям</span>
+          </div>
+        </div>
+
         <div className="mt-3 text-center">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-3 py-1 text-[11px] text-dark-200 backdrop-blur-sm">
             <Trophy size={12} className="text-amber-300" />
             MacBook Air 15″ · 256 ГБ · 2 приза / месяц
           </div>
-        </div>
-      </div>
-
-      <div className="absolute left-0 bottom-2 z-20 flex flex-col gap-2">
-        <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
-          <Store size={14} className="text-[#2B71F3]" />
-          <span className="text-xs font-medium">1× продавцам</span>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
-          <ShoppingBag size={14} className="text-emerald-400" />
-          <span className="text-xs font-medium">1× покупателям</span>
         </div>
       </div>
     </div>
@@ -142,31 +144,28 @@ export default function HomeHeroSlider() {
         />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 lg:py-12">
+          {slide.tone === 'contest' && (
+            <div className="flex justify-center lg:justify-start mb-5 sm:mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200">
+                <Trophy size={14} className="text-amber-300" />
+                Ежемесячный конкурс
+              </div>
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-center min-h-[280px] sm:min-h-[320px]">
             <div className="order-2 lg:order-1">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-4">
-                {slide.tone === 'contest' ? <Trophy size={14} className="text-amber-300" /> : null}
-                {slide.eyebrow}
-              </div>
+              {slide.tone !== 'contest' && (
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-4">
+                  {slide.eyebrow}
+                </div>
+              )}
               <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight leading-tight mb-3 sm:mb-4">
                 {slide.title}
               </h1>
               <p className="text-dark-300 text-sm sm:text-base leading-relaxed max-w-xl mb-6">
                 {slide.subtitle}
               </p>
-
-              {slide.tone === 'contest' && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-dark-900/80 border border-dark-700 px-3 py-2 text-xs sm:text-sm">
-                    <Store size={14} className="text-[#2B71F3]" />
-                    Среди продавцов — MacBook Air 15″
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-dark-900/80 border border-dark-700 px-3 py-2 text-xs sm:text-sm">
-                    <ShoppingBag size={14} className="text-emerald-400" />
-                    Среди покупателей — MacBook Air 15″
-                  </span>
-                </div>
-              )}
 
               <div className="flex flex-wrap gap-3">
                 <Link to={slide.cta.to} className="btn-primary h-11 sm:h-12 px-5 inline-flex items-center gap-2">
