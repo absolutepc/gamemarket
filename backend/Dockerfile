@@ -1,15 +1,13 @@
-FROM node:20-alpine AS base
+FROM node:20-alpine
 WORKDIR /app
 
-FROM base AS deps
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+COPY package.json ./
+RUN npm install --omit=dev
 
-FROM base
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 \
+  && chown -R nodejs:nodejs /app
 USER nodejs
 
 EXPOSE 5000
