@@ -20,10 +20,11 @@ router.post('/',
   [
     body('listing_id').isUUID(),
     body('buyer_data').optional().isObject(),
+    body('buyer_comment').optional({ nullable: true }).isString().trim().isLength({ max: 500 }),
   ],
   validate,
   async (req, res) => {
-    const { listing_id, buyer_data } = req.body;
+    const { listing_id, buyer_data, buyer_comment } = req.body;
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -52,6 +53,9 @@ router.post('/',
         }
         cleanedBuyerData = checked.data;
       }
+
+      const comment = typeof buyer_comment === 'string' ? buyer_comment.trim().slice(0, 500) : '';
+      if (comment) cleanedBuyerData._comment = comment;
 
       const buyerBalance = parseFloat(req.user.balance);
       const price = parseFloat(listing.price);
@@ -87,12 +91,13 @@ router.post('/',
       );
 
       let systemMsg = `Сделка создана. Продавец должен передать товар. Отмена возможна, если продавец не появится в сети ${SELLER_OFFLINE_CANCEL_HOURS} ч.`;
-      if (listing.delivery_method === 'auto' && Object.keys(cleanedBuyerData).length) {
+      if (listing.delivery_method === 'auto') {
         const attrs = buyerFields
           .map((f) => `${f.label}: ${cleanedBuyerData[f.key] || '—'}`)
           .join(', ');
-        systemMsg += ` Данные покупателя для автовыдачи — ${attrs}.`;
+        if (attrs) systemMsg += ` Данные покупателя для автовыдачи — ${attrs}.`;
       }
+      if (comment) systemMsg += ` Комментарий покупателя: ${comment}`;
 
       await client.query(
         `INSERT INTO messages (transaction_id, sender_id, content, is_system)

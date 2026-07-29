@@ -1,11 +1,12 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Star, Eye, Clock, AlertCircle, MessageCircle, Pencil, Trash2, Zap } from 'lucide-react';
+import { Shield, Star, Eye, Clock, MessageCircle, Pencil, Trash2, Zap } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
+import BuyCheckoutModal from '../components/BuyCheckoutModal';
 import { formatPrice, formatDate } from '../utils/format';
 
 const PLACEHOLDER = 'https://placehold.co/600x450/1a1a27/6083ff?text=GameMarket';
@@ -15,9 +16,9 @@ export default function ListingPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const [imgIdx, setImgIdx] = useState(0);
-  const [showBuyConfirm, setShowBuyConfirm] = useState(false);
-  const [buyerData, setBuyerData] = useState({});
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
@@ -31,24 +32,25 @@ export default function ListingPage() {
     : [];
 
   const buyMutation = useMutation({
-    mutationFn: () => api.post('/transactions', {
+    mutationFn: ({ buyerData, comment }) => api.post('/transactions', {
       listing_id: id,
       buyer_data: listing.delivery_method === 'auto' ? buyerData : undefined,
+      buyer_comment: comment || undefined,
     }),
-    onSuccess: (res) => {
-      toast.success('Сделка создана!');
+    onSuccess: async (res) => {
+      toast.success('Оплата прошла, сделка создана!');
+      setCheckoutOpen(false);
+      try {
+        const { data: me } = await api.get('/auth/me');
+        setUser(me);
+      } catch {
+        /* balance refresh best-effort */
+      }
+      qc.invalidateQueries({ queryKey: ['listing', id] });
       navigate(`/transactions/${res.data.id}`);
     },
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка при создании сделки'),
   });
-
-  const canSubmitBuy = () => {
-    if (!listing || listing.delivery_method !== 'auto') return true;
-    return buyerFields.every((f) => {
-      if (f.required === false) return true;
-      return String(buyerData[f.key] || '').trim().length > 0;
-    });
-  };
 
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/listings/${id}`),
@@ -117,6 +119,22 @@ export default function ListingPage() {
               </span>
             )}
           </div>
+          {images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto">
+              {images.map((src, i) => (
+                <button
+                  key={src + i}
+                  type="button"
+                  onClick={() => setImgIdx(i)}
+                  className={`w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 ${
+                    imgIdx === i ? 'border-brand-500' : 'border-transparent'
+                  }`}
+                >
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-4">
@@ -161,63 +179,18 @@ export default function ListingPage() {
               </button>
             </div>
           ) : canBuy ? (
-            showBuyConfirm ? (
-              <div className="card p-4 border-brand-500/40">
-                <p className="font-medium mb-2">Подтвердите покупку</p>
-                <p className="text-sm text-dark-300 mb-1">Сумма: <span className="text-white font-semibold">{formatPrice(listing.price)}</span></p>
-                <p className="text-sm text-dark-300 mb-4">Ваш баланс: <span className="text-white font-semibold">{formatPrice(user.balance)}</span></p>
-                {listing.delivery_method === 'auto' && (
-                  <div className="mb-4 space-y-3">
-                    <p className="text-sm text-dark-400">Для автовыдачи укажите данные:</p>
-                    {buyerFields.map((field) => (
-                      <div key={field.key}>
-                        <label className="text-sm font-medium mb-1.5 block">
-                          {field.label}{field.required !== false ? ' *' : ''}
-                        </label>
-                        <input
-                          className="input"
-                          placeholder={field.placeholder || field.label}
-                          value={buyerData[field.key] || ''}
-                          onChange={(e) => setBuyerData((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                          maxLength={200}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {parseFloat(user.balance) < parseFloat(listing.price) && (
-                  <p className="text-red-400 text-sm mb-3 flex items-center gap-1.5">
-                    <AlertCircle size={14} /> Недостаточно средств.{' '}
-                    <Link to="/wallet" className="underline">Пополнить</Link>
-                  </p>
-                )}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      if (!canSubmitBuy()) {
-                        toast.error('Заполните обязательные поля');
-                        return;
-                      }
-                      buyMutation.mutate();
-                    }}
-                    disabled={buyMutation.isPending || parseFloat(user.balance) < parseFloat(listing.price)}
-                    className="btn-primary flex-1"
-                  >
-                    {buyMutation.isPending ? 'Обработка...' : 'Купить'}
-                  </button>
-                  <button onClick={() => setShowBuyConfirm(false)} className="btn-secondary">Отмена</button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <button onClick={() => setShowBuyConfirm(true)} className="btn-primary h-12 text-base flex-1">
-                  Купить за {formatPrice(listing.price)}
-                </button>
-                <button onClick={startChat} className="btn-secondary h-12 px-4" title="Написать продавцу">
-                  <MessageCircle size={18} />
-                </button>
-              </div>
-            )
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCheckoutOpen(true)}
+                className="btn-primary h-12 text-base flex-1"
+              >
+                Купить за {formatPrice(listing.price)}
+              </button>
+              <button onClick={startChat} className="btn-secondary h-12 px-4" title="Написать продавцу">
+                <MessageCircle size={18} />
+              </button>
+            </div>
           ) : !user ? (
             <Link to="/login" className="btn-primary h-12 text-base text-center flex items-center justify-center">
               Войдите для покупки
@@ -258,6 +231,16 @@ export default function ListingPage() {
           {listing.description?.replace(/<[^>]+>/g, '')}
         </div>
       </div>
+
+      <BuyCheckoutModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        listing={listing}
+        buyerFields={buyerFields}
+        user={user}
+        isPending={buyMutation.isPending}
+        onConfirm={({ buyerData, comment }) => buyMutation.mutate({ buyerData, comment })}
+      />
     </div>
   );
 }
