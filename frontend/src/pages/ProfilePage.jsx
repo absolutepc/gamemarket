@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil } from 'lucide-react';
+import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
