@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, MessageCircle, LogOut, ChevronRight } from 'lucide-react';
+import { X, MessageCircle, LogOut, ChevronRight, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import NotificationsModal from './NotificationsModal';
+import { formatPrice } from '../utils/format';
 
 const SOCIALS = [
   { label: 'Telegram', href: 'https://t.me/', color: '#2AABEE', path: 'M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z' },
@@ -112,6 +113,17 @@ export default function ProfileMenuModal({ open, onClose }) {
                 Изменить фото
               </button>
               <p className="mt-2 text-sm text-dark-300">{authLabel}</p>
+              <Link
+                to="/wallet"
+                onClick={onClose}
+                className="mt-4 w-full flex items-center justify-between gap-3 rounded-xl bg-brand-500/15 border border-brand-500/30 px-4 py-3 hover:bg-brand-500/25 transition-colors"
+              >
+                <span className="flex items-center gap-2 text-sm font-medium text-brand-300">
+                  <Wallet size={16} />
+                  Кошелёк
+                </span>
+                <span className="font-semibold text-white">{formatPrice(user.balance)}</span>
+              </Link>
             </div>
 
             <div className="mx-4 border-y border-dark-800">

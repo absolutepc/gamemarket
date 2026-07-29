@@ -122,7 +122,11 @@ export default function ProfilePage() {
           </div>
           <div className="flex flex-col sm:items-end gap-2 shrink-0">
             {isOwn && currentUser && (
-              <Link to="/wallet" className="rounded-xl bg-brand-500/15 border border-brand-500/30 px-4 py-2 text-brand-300 font-semibold text-sm">
+              <Link
+                to="/wallet"
+                className="rounded-xl bg-brand-500/15 border border-brand-500/30 px-4 py-3 text-brand-300 font-semibold text-sm hover:bg-brand-500/25 transition-colors inline-flex items-center gap-2"
+              >
+                <Wallet size={16} />
                 {formatPrice(currentUser.balance)}
               </Link>
             )}

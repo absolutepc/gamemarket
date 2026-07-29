@@ -1,8 +1,7 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Shield, ShoppingBag, Plus, Wallet, Search, MessageCircle } from 'lucide-react';
+import { Shield, ShoppingBag, Plus, Search, MessageCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
-import { formatPrice } from '../utils/format';
 import Footer from './Footer';
 
 export default function Layout() {
@@ -37,7 +36,6 @@ export default function Layout() {
           </form>
 
           <nav className="hidden md:flex items-center gap-1">
-            <Link to="/catalog" className="btn-ghost text-sm">Каталог</Link>
             <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
             {user?.role === 'admin' && (
               <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
@@ -49,10 +47,6 @@ export default function Layout() {
               <>
                 <Link to="/listings/create" className="btn-primary text-sm hidden sm:flex items-center gap-1.5">
                   <Plus size={15} /> Продать
-                </Link>
-                <Link to="/wallet" className="btn-secondary text-sm hidden sm:flex items-center gap-1.5">
-                  <Wallet size={15} />
-                  {formatPrice(user.balance)}
                 </Link>
                 <Link to="/chats" className="btn-ghost p-2" title="Чаты">
                   <MessageCircle size={18} />
