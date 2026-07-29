@@ -169,13 +169,28 @@ export default function TransactionPage() {
         {/* Actions */}
         <div className="mt-4 flex flex-wrap gap-2">
           {isSeller && tx.status === 'awaiting_delivery' && (
-            <button
-              onClick={() => deliverMutation.mutate()}
-              disabled={deliverMutation.isPending}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Package size={15} /> Отметить передачу
-            </button>
+            <>
+              <button
+                onClick={() => deliverMutation.mutate()}
+                disabled={deliverMutation.isPending}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Package size={15} /> Отметить передачу
+              </button>
+              {tx.can_seller_cancel && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Товар закончился? Сделка будет отменена, деньги вернутся покупателю.')) {
+                      cancelMutation.mutate('Cancelled by seller: out of stock');
+                    }
+                  }}
+                  disabled={cancelMutation.isPending}
+                  className="btn-secondary flex items-center gap-2 hover:border-red-500/50 hover:text-red-400"
+                >
+                  <X size={15} /> Отменить (нет товара)
+                </button>
+              )}
+            </>
           )}
           {isSeller && tx.status === 'awaiting_confirmation' && (
             <p className="text-sm text-dark-400 w-full">
@@ -195,7 +210,9 @@ export default function TransactionPage() {
           {isBuyer && tx.status === 'awaiting_delivery' && tx.can_cancel && (
             <button
               onClick={() => {
-                if (window.confirm('Отменить сделку и вернуть средства?')) cancelMutation.mutate();
+                if (window.confirm('Отменить сделку и вернуть средства?')) {
+                  cancelMutation.mutate('Cancelled by buyer (seller offline 24h)');
+                }
               }}
               disabled={cancelMutation.isPending}
               className="btn-secondary flex items-center gap-2 hover:border-red-500/50 hover:text-red-400"
