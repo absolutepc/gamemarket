@@ -39,28 +39,27 @@ const SLIDES = [
 
 function ContestVisual() {
   return (
-    <div className="relative w-full max-w-md mx-auto lg:mx-0 lg:ml-auto aspect-[4/3] flex items-center justify-center">
+    <div className="relative w-full max-w-lg mx-auto lg:mx-0 lg:ml-auto aspect-[4/3] flex items-center justify-center">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_40%,rgba(43,113,243,0.35),transparent_55%)]" />
       <div className="absolute -right-4 top-6 w-28 h-28 rounded-full bg-amber-400/20 blur-2xl" />
       <div className="absolute left-2 bottom-8 w-24 h-24 rounded-full bg-[#2B71F3]/25 blur-2xl" />
 
-      {/* Laptop silhouette */}
-      <div className="relative z-10 w-[88%] max-w-[340px] animate-[fadeIn_0.5s_ease-out]">
-        <div className="rounded-2xl bg-gradient-to-b from-[#3a3a42] to-[#1c1c22] p-2 shadow-2xl shadow-black/50 ring-1 ring-white/10">
-          <div className="rounded-xl bg-gradient-to-br from-[#1a1a22] via-[#12141a] to-[#0c0e14] aspect-[16/10] flex flex-col items-center justify-center gap-2 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_40%)]" />
-            <Trophy className="text-amber-300 relative z-10" size={36} />
-            <div className="relative z-10 text-center px-4">
-              <div className="text-sm font-bold tracking-wide">MacBook Air 15″</div>
-              <div className="text-[11px] text-dark-300 mt-0.5">256 ГБ · 2 приза / месяц</div>
-            </div>
+      <div className="relative z-10 w-[92%] max-w-[420px]">
+        <img
+          src="/banners/macbook-air-15.webp"
+          alt="MacBook Air 15″ — приз конкурса"
+          className="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.55)] select-none pointer-events-none"
+          draggable={false}
+        />
+        <div className="mt-3 text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-3 py-1 text-[11px] text-dark-200 backdrop-blur-sm">
+            <Trophy size={12} className="text-amber-300" />
+            MacBook Air 15″ · 256 ГБ · 2 приза / месяц
           </div>
         </div>
-        <div className="mx-auto mt-0.5 h-2 w-[92%] rounded-b-xl bg-gradient-to-b from-[#2a2a32] to-[#15151a] shadow-lg" />
-        <div className="mx-auto h-1 w-[40%] rounded-b-md bg-[#0f0f14]" />
       </div>
 
-      <div className="absolute left-0 bottom-4 z-20 flex flex-col gap-2">
+      <div className="absolute left-0 bottom-2 z-20 flex flex-col gap-2">
         <div className="flex items-center gap-2 rounded-xl bg-dark-900/90 border border-dark-700 px-3 py-2 backdrop-blur-sm shadow-lg">
           <Store size={14} className="text-[#2B71F3]" />
           <span className="text-xs font-medium">1× продавцам</span>
