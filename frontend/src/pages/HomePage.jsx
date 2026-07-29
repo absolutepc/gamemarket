@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Shield, Zap, Lock, CheckCircle2, Search, ArrowRight, Coins, User, Package } from 'lucide-react';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
+import Seo from '../components/Seo';
 
 const CATEGORY_ICONS = {
   'game-currency': Coins,
@@ -32,6 +33,11 @@ export default function HomePage() {
 
   return (
     <div>
+      <Seo
+        title="Торговая площадка игровых товаров"
+        description="GameMarket — покупайте и продавайте игровые аккаунты, валюту и предметы безопасно. Эскроу-защита сделок."
+        path="/"
+      />
       {/* Hero */}
       <section className="relative overflow-hidden py-20 sm:py-28">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-950/50 via-dark-950 to-dark-950" />

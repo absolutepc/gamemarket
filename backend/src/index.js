@@ -56,6 +56,7 @@ app.use('/api/listings', require('./routes/listings'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
+app.use('/api', require('./routes/seo'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 

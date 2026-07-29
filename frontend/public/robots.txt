@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /wallet
+Disallow: /transactions
+Disallow: /listings/create
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://gamemarket-production-92a3.up.railway.app/sitemap.xml
+Sitemap: https://gamemarket-production.up.railway.app/api/sitemap.xml

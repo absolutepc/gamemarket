@@ -1,0 +1,60 @@
+import { Link } from 'react-router-dom';
+import Seo from '../components/Seo';
+
+const FAQ = [
+  {
+    q: 'Как работает безопасная сделка?',
+    a: 'После покупки деньги резервируются на площадке. Продавец передаёт товар, покупатель проверяет и подтверждает получение — только после этого продавец получает оплату.',
+  },
+  {
+    q: 'Какая комиссия у площадки?',
+    a: 'Комиссия платформы составляет 5% от суммы сделки и удерживается при выплате продавцу.',
+  },
+  {
+    q: 'Что делать, если товар не получен?',
+    a: 'Откройте спор в карточке сделки и опишите проблему. До решения спора средства остаются в эскроу.',
+  },
+  {
+    q: 'Как пополнить баланс?',
+    a: 'В разделе «Кошелёк» можно пополнить баланс. В демо-режиме пополнение тестовое; в продакшене подключается платёжный шлюз.',
+  },
+  {
+    q: 'Можно ли вернуть деньги?',
+    a: 'Да, до передачи товара покупатель может отменить сделку. После открытия спора решение принимает модерация.',
+  },
+  {
+    q: 'Как стать продавцом?',
+    a: 'Зарегистрируйтесь, пополните баланс при необходимости и нажмите «Продать», чтобы создать лот.',
+  },
+];
+
+export default function FaqPage() {
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+      <Seo
+        title="FAQ"
+        description="Частые вопросы о GameMarket: эскроу, комиссия, споры, пополнение баланса и продажи."
+        path="/faq"
+      />
+      <h1 className="text-3xl font-bold mb-2">Частые вопросы</h1>
+      <p className="text-dark-400 mb-8">Ответы на популярные вопросы о работе площадки</p>
+
+      <div className="flex flex-col gap-3">
+        {FAQ.map((item) => (
+          <details key={item.q} className="card p-5 group">
+            <summary className="font-semibold cursor-pointer list-none flex items-center justify-between gap-3">
+              <span>{item.q}</span>
+              <span className="text-dark-500 group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+            </summary>
+            <p className="mt-3 text-dark-300 leading-relaxed text-sm">{item.a}</p>
+          </details>
+        ))}
+      </div>
+
+      <p className="mt-8 text-sm text-dark-400">
+        Не нашли ответ? Напишите в <Link to="/support" className="text-brand-400 hover:underline">поддержку</Link>
+        {' '}или изучите <Link to="/rules" className="text-brand-400 hover:underline">правила</Link>.
+      </p>
+    </div>
+  );
+}

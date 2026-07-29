@@ -43,6 +43,7 @@ export default function Layout() {
 
           <nav className="hidden md:flex items-center gap-1">
             <Link to="/catalog" className="btn-ghost text-sm">Каталог</Link>
+            <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -96,9 +97,10 @@ export default function Layout() {
               <span className="text-dark-400 text-sm">— безопасные сделки</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-dark-400">
-              <span>© 2024 GameMarket</span>
-              <a href="#" className="hover:text-white transition-colors">Правила</a>
-              <a href="#" className="hover:text-white transition-colors">Поддержка</a>
+              <span>© 2026 GameMarket</span>
+              <Link to="/rules" className="hover:text-white transition-colors">Правила</Link>
+              <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
+              <Link to="/support" className="hover:text-white transition-colors">Поддержка</Link>
             </div>
           </div>
         </div>

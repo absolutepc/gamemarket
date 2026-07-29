@@ -10,6 +10,9 @@ import TransactionPage from './pages/TransactionPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import WalletPage from './pages/WalletPage';
+import RulesPage from './pages/RulesPage';
+import FaqPage from './pages/FaqPage';
+import SupportPage from './pages/SupportPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -22,6 +25,9 @@ export default function App() {
         <Route path="users/:username" element={<ProfilePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="rules" element={<RulesPage />} />
+        <Route path="faq" element={<FaqPage />} />
+        <Route path="support" element={<SupportPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="listings/create" element={<CreateListingPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
