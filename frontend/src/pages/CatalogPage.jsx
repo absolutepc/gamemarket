@@ -1,7 +1,7 @@
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SlidersHorizontal, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
 import Seo from '../components/Seo';
@@ -15,6 +15,10 @@ export default function CatalogPage() {
     maxPrice: params.get('maxPrice') || '',
     sort: params.get('sort') || 'newest',
     page: parseInt(params.get('page') || '1'),
+  });
+  const [filtersOpen, setFiltersOpen] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.matchMedia('(min-width: 1024px)').matches;
   });
 
   const { data, isLoading } = useQuery({
@@ -50,65 +54,100 @@ export default function CatalogPage() {
         {/* Sidebar filters */}
         <aside className="lg:w-56 shrink-0">
           <div className="card p-4 flex flex-col gap-5 sticky top-20">
-            <div className="flex items-center gap-2 font-semibold">
-              <SlidersHorizontal size={16} /> Фильтры
-            </div>
-
-            <div>
-              <label className="text-xs text-dark-400 font-medium mb-2 block">Категория</label>
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => setFilter('category', '')}
-                  className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${!filters.category ? 'bg-brand-500/20 text-brand-300' : 'hover:bg-dark-800 text-dark-300'}`}
-                >
-                  Все категории
-                </button>
-                {categories?.map((c) => (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 font-semibold">
+                <SlidersHorizontal size={16} /> Фильтры
+              </div>
+              <div className="flex items-center gap-2">
+                {!filtersOpen ? (
                   <button
-                    key={c.id}
-                    onClick={() => setFilter('category', c.slug)}
-                    className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${filters.category === c.slug ? 'bg-brand-500/20 text-brand-300' : 'hover:bg-dark-800 text-dark-300'}`}
+                    type="button"
+                    onClick={() => setFiltersOpen(true)}
+                    className="w-8 h-8 rounded-full border border-dark-600 bg-dark-800
+                               flex items-center justify-center text-dark-200
+                               hover:border-[#2B71F3] hover:text-[#5B8CFF] transition-colors"
+                    aria-label="Показать фильтры"
+                    title="Показать фильтры"
                   >
-                    {c.name}
+                    <Plus size={16} strokeWidth={2.25} />
                   </button>
-                ))}
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setFiltersOpen(false)}
+                    className="w-8 h-8 rounded-full border border-dark-600 bg-dark-800
+                               flex items-center justify-center text-dark-200
+                               hover:border-[#2B71F3] hover:text-[#5B8CFF] transition-colors"
+                    aria-label="Скрыть фильтры"
+                    title="Скрыть фильтры"
+                  >
+                    <Minus size={16} strokeWidth={2.25} />
+                  </button>
+                )}
               </div>
             </div>
 
-            <div>
-              <label className="text-xs text-dark-400 font-medium mb-2 block">Цена (₽)</label>
-              <div className="flex gap-2">
-                <input
-                  className="input text-sm py-2 px-3"
-                  placeholder="От"
-                  type="number"
-                  value={filters.minPrice}
-                  onChange={(e) => setFilter('minPrice', e.target.value)}
-                />
-                <input
-                  className="input text-sm py-2 px-3"
-                  placeholder="До"
-                  type="number"
-                  value={filters.maxPrice}
-                  onChange={(e) => setFilter('maxPrice', e.target.value)}
-                />
-              </div>
-            </div>
+            {filtersOpen && (
+              <>
+                <div>
+                  <label className="text-xs text-dark-400 font-medium mb-2 block">Категория</label>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setFilter('category', '')}
+                      className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${!filters.category ? 'bg-brand-500/20 text-brand-300' : 'hover:bg-dark-800 text-dark-300'}`}
+                    >
+                      Все категории
+                    </button>
+                    {categories?.map((c) => (
+                      <button
+                        type="button"
+                        key={c.id}
+                        onClick={() => setFilter('category', c.slug)}
+                        className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${filters.category === c.slug ? 'bg-brand-500/20 text-brand-300' : 'hover:bg-dark-800 text-dark-300'}`}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div>
-              <label className="text-xs text-dark-400 font-medium mb-2 block">Сортировка</label>
-              <select
-                className="input text-sm py-2"
-                value={filters.sort}
-                onChange={(e) => setFilter('sort', e.target.value)}
-              >
-                <option value="newest">Новые</option>
-                <option value="oldest">Старые</option>
-                <option value="price_asc">Цена: по возрастанию</option>
-                <option value="price_desc">Цена: по убыванию</option>
-                <option value="popular">Популярные</option>
-              </select>
-            </div>
+                <div>
+                  <label className="text-xs text-dark-400 font-medium mb-2 block">Цена (₽)</label>
+                  <div className="flex gap-2">
+                    <input
+                      className="input text-sm py-2 px-3"
+                      placeholder="От"
+                      type="number"
+                      value={filters.minPrice}
+                      onChange={(e) => setFilter('minPrice', e.target.value)}
+                    />
+                    <input
+                      className="input text-sm py-2 px-3"
+                      placeholder="До"
+                      type="number"
+                      value={filters.maxPrice}
+                      onChange={(e) => setFilter('maxPrice', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-dark-400 font-medium mb-2 block">Сортировка</label>
+                  <select
+                    className="input text-sm py-2"
+                    value={filters.sort}
+                    onChange={(e) => setFilter('sort', e.target.value)}
+                  >
+                    <option value="newest">Новые</option>
+                    <option value="oldest">Старые</option>
+                    <option value="price_asc">Цена: по возрастанию</option>
+                    <option value="price_desc">Цена: по убыванию</option>
+                    <option value="popular">Популярные</option>
+                  </select>
+                </div>
+              </>
+            )}
           </div>
         </aside>
 
@@ -144,6 +183,7 @@ export default function CatalogPage() {
           {data?.pages > 1 && (
             <div className="flex items-center justify-center gap-3 mt-8">
               <button
+                type="button"
                 onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
                 disabled={filters.page <= 1}
                 className="btn-secondary p-2 disabled:opacity-40"
@@ -154,6 +194,7 @@ export default function CatalogPage() {
                 {filters.page} / {data.pages}
               </span>
               <button
+                type="button"
                 onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
                 disabled={filters.page >= data.pages}
                 className="btn-secondary p-2 disabled:opacity-40"
