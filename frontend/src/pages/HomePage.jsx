@@ -1,5 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Shield, Zap, Lock, CheckCircle2, Search, ArrowRight,
@@ -22,25 +21,7 @@ const CATEGORY_ICONS = {
   other: Package,
 };
 
-const POPULAR = [
-  { name: 'Steam', color: 'from-sky-600 to-blue-800', slug: 'Steam' },
-  { name: 'Telegram', color: 'from-sky-400 to-blue-600', slug: 'Telegram' },
-  { name: 'ChatGPT', color: 'from-emerald-500 to-teal-700', slug: 'ChatGPT' },
-  { name: 'Claude', color: 'from-orange-500 to-amber-700', slug: 'Claude' },
-  { name: 'TikTok', color: 'from-fuchsia-500 to-pink-700', slug: 'TikTok' },
-  { name: 'App Store', color: 'from-blue-400 to-indigo-600', slug: 'App Store' },
-  { name: 'Roblox', color: 'from-red-500 to-rose-700', slug: 'Roblox' },
-  { name: 'PUBG', color: 'from-yellow-500 to-orange-700', slug: 'PUBG' },
-  { name: 'Valorant', color: 'from-rose-500 to-red-800', slug: 'Valorant' },
-  { name: 'Minecraft', color: 'from-green-500 to-emerald-800', slug: 'Minecraft' },
-  { name: 'PlayStation', color: 'from-indigo-500 to-blue-900', slug: 'PlayStation' },
-  { name: 'Spotify', color: 'from-green-400 to-emerald-700', slug: 'Spotify' },
-];
-
 export default function HomePage() {
-  const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-
   const { data: listings } = useQuery({
     queryKey: ['listings', 'featured'],
     queryFn: () => api.get('/listings?limit=12&sort=popular').then((r) => r.data),
@@ -50,22 +31,17 @@ export default function HomePage() {
     queryFn: () => api.get('/categories').then((r) => r.data),
   });
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (search.trim()) navigate(`/catalog?search=${encodeURIComponent(search.trim())}`);
-  };
-
   return (
     <div>
       <Seo
         title="Торговая площадка цифровых товаров"
-        description="GameMarket — подписки ИИ, Telegram Stars, TikTok монеты, Steam, App Store, аккаунты и игровая валюта. Безопасные сделки с эскроу."
+        description="GameMarket — маркетплейс цифровых товаров и услуг с безопасными сделками через эскроу."
         path="/"
       />
 
       <section className="relative overflow-hidden border-b border-dark-800">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(59,91,255,0.18),_transparent_55%),linear-gradient(180deg,#12121a_0%,#18181f_100%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-12 sm:pt-16 sm:pb-14">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 badge-blue mb-4 text-sm px-3 py-1">
               <Shield size={14} /> Безопасные сделки · комиссия 7.5%
@@ -73,43 +49,24 @@ export default function HomePage() {
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
               GameMarket
             </h1>
-            <p className="text-dark-300 text-base sm:text-lg mb-6 max-w-2xl">
-              Подписки ИИ, звёзды Telegram, монеты TikTok, Steam, App Store, аккаунты и игровая валюта — в одном месте.
+            <p className="text-dark-300 text-base sm:text-lg mb-8 max-w-2xl leading-relaxed">
+              Маркетплейс цифровых товаров и услуг: покупайте и продавайте безопасно.
+              Средства удерживаются в эскроу до подтверждения сделки — защита и для покупателя, и для продавца.
             </p>
-            <form onSubmit={handleSearch} className="flex gap-3 max-w-xl">
-              <div className="relative flex-1">
-                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
-                <input
-                  className="input pl-10 h-12 text-base"
-                  placeholder="Поиск игр, подписок и приложений"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <button type="submit" className="btn-primary h-12 px-6">Найти</button>
-            </form>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/catalog" className="btn-primary h-12 px-6 inline-flex items-center gap-2">
+                Смотреть каталог <ArrowRight size={16} />
+              </Link>
+              <Link to="/listings/create" className="btn-secondary h-12 px-6 inline-flex items-center">
+                Продать товар
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-          {POPULAR.map((item) => (
-            <Link
-              key={item.slug}
-              to={`/catalog?search=${encodeURIComponent(item.slug)}`}
-              className={`shrink-0 w-28 h-28 rounded-2xl bg-gradient-to-br ${item.color}
-                          flex items-end p-3 font-bold text-sm shadow-lg shadow-black/20
-                          hover:scale-[1.03] transition-transform`}
-            >
-              {item.name}
-            </Link>
-          ))}
-        </div>
-      </section>
-
       {categories?.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-4">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-2">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {categories.map((cat) => {
               const Icon = CATEGORY_ICONS[cat.slug] || Package;
@@ -146,7 +103,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-bold text-center mb-10">Как работает безопасная сделка</h2>
           <div className="grid md:grid-cols-4 gap-6">
             {[
-              { icon: Search, title: 'Найдите товар', desc: 'Игры, ИИ, соцсети, подарочные карты' },
+              { icon: Search, title: 'Найдите товар', desc: 'Выберите лот в каталоге цифровых товаров и услуг' },
               { icon: Lock, title: 'Оплата в эскроу', desc: 'Средства замораживаются до завершения' },
               { icon: Zap, title: 'Получите товар', desc: 'Вручную или автовыдачей' },
               { icon: CheckCircle2, title: 'Подтвердите', desc: 'Деньги уходят продавцу после проверки' },
