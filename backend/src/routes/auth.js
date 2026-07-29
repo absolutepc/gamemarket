@@ -53,7 +53,7 @@ router.post('/register',
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: REFRESH_EXPIRES_DAYS * 86400000,
       });
       res.status(201).json({ accessToken, user });
@@ -94,7 +94,7 @@ router.post('/login',
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: REFRESH_EXPIRES_DAYS * 86400000,
     });
     res.json({
@@ -137,7 +137,7 @@ router.post('/refresh', async (req, res) => {
   res.cookie('refreshToken', newRefresh, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: REFRESH_EXPIRES_DAYS * 86400000,
   });
   res.json({ accessToken });
