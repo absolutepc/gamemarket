@@ -22,7 +22,16 @@ router.get('/sitemap.xml', async (req, res) => {
        LIMIT 5000`
     );
 
-    const staticPages = ['', '/catalog', '/rules', '/faq', '/support'];
+    const staticPages = [
+      '',
+      '/catalog',
+      '/rules',
+      '/faq',
+      '/support',
+      '/terms-of-sale',
+      '/privacy',
+      '/user-agreement',
+    ];
     const urls = [
       ...staticPages.map((path, i) => ({
         loc: `${siteUrl}${path || '/'}`,

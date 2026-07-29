@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Shield, ShoppingBag, LogOut, Plus, Wallet, Search, MessageCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { formatPrice } from '../utils/format';
+import Footer from './Footer';
 
 export default function Layout() {
   const { user, logout } = useAuthStore();
@@ -88,26 +89,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-dark-800 py-8 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-brand-500 rounded flex items-center justify-center">
-                <Shield size={12} className="text-white" />
-              </div>
-              <span className="font-semibold">GameMarket</span>
-              <span className="text-dark-400 text-sm">— безопасные сделки</span>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-dark-400">
-              <span>© 2026 GameMarket</span>
-              <Link to="/rules" className="hover:text-white transition-colors">Правила</Link>
-              <Link to="/terms-of-sale" className="hover:text-white transition-colors">Условия продажи</Link>
-              <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
-              <Link to="/support" className="hover:text-white transition-colors">Поддержка</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

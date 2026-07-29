@@ -14,6 +14,8 @@ import RulesPage from './pages/RulesPage';
 import FaqPage from './pages/FaqPage';
 import SupportPage from './pages/SupportPage';
 import TermsOfSalePage from './pages/TermsOfSalePage';
+import PrivacyPage from './pages/PrivacyPage';
+import UserAgreementPage from './pages/UserAgreementPage';
 import ChatsPage from './pages/ChatsPage';
 import ChatPage from './pages/ChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="faq" element={<FaqPage />} />
         <Route path="support" element={<SupportPage />} />
         <Route path="terms-of-sale" element={<TermsOfSalePage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
+        <Route path="user-agreement" element={<UserAgreementPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="listings/create" element={<CreateListingPage />} />
           <Route path="listings/:id/edit" element={<CreateListingPage />} />
