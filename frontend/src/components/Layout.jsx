@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Shield, ShoppingBag, Plus, Search, MessageCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import Footer from './Footer';
+import MobileBottomNav from './MobileBottomNav';
 
 export default function Layout() {
   const { user } = useAuthStore();
@@ -42,10 +43,11 @@ export default function Layout() {
             )}
           </nav>
 
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Desktop actions — on mobile these live in the bottom bar */}
+          <div className="hidden md:flex items-center gap-1 sm:gap-2 shrink-0">
             {user ? (
               <>
-                <Link to="/listings/create" className="btn-primary text-sm hidden sm:flex items-center gap-1.5">
+                <Link to="/listings/create" className="btn-primary text-sm flex items-center gap-1.5">
                   <Plus size={15} /> Продать
                 </Link>
                 <Link to="/chats" className="btn-ghost p-2" title="Чаты">
@@ -75,14 +77,25 @@ export default function Layout() {
               </>
             )}
           </div>
+
+          {/* Mobile: compact auth when logged out */}
+          {!user && (
+            <div className="flex md:hidden items-center gap-1 shrink-0">
+              <Link to="/login" className="btn-ghost text-sm px-2">Войти</Link>
+            </div>
+          )}
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pb-24 md:pb-0">
         <Outlet />
       </main>
 
-      <Footer />
+      <div className="pb-20 md:pb-0">
+        <Footer />
+      </div>
+
+      <MobileBottomNav />
     </div>
   );
 }
