@@ -1,26 +1,31 @@
 const { Pool } = require('pg');
 
 function buildPoolConfig() {
-  // Railway often provides DATABASE_URL
+  // Prefer Railway DATABASE_URL when present
   if (process.env.DATABASE_URL) {
+    const needsSsl =
+      process.env.DB_SSL === 'true' ||
+      process.env.DATABASE_URL.includes('rlwy.net') ||
+      process.env.DATABASE_URL.includes('railway.app');
+
     return {
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+      ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
     };
   }
 
   return {
     host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
+    port: Number(process.env.DB_PORT || 5432),
     database: process.env.DB_NAME || 'gamemarket',
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
+    connectionTimeoutMillis: 10000,
   };
 }
 

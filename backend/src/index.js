@@ -122,7 +122,9 @@ async function start() {
   try {
     await migrate();
   } catch (err) {
-    logger.error('Migration failed (server will still start):', err.message || err);
+    logger.error(`Migration failed: ${err.message || err}`);
+    if (err.code) logger.error(`DB error code: ${err.code}`);
+    if (err.detail) logger.error(`DB error detail: ${err.detail}`);
   }
 
   server.listen(PORT, HOST, () => {
