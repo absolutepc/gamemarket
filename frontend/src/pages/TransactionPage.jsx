@@ -16,6 +16,7 @@ export default function TransactionPage() {
   const [messages, setMessages] = useState([]);
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [dispute, setDispute] = useState({ reason: 'not_received', description: '' });
+  const [review, setReview] = useState({ rating: 5, comment: '' });
   const msgEndRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -76,6 +77,19 @@ export default function TransactionPage() {
     onSuccess: () => {
       toast.success('Спор открыт');
       setShowDisputeForm(false);
+      qc.invalidateQueries(['transaction', id]);
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: () => api.post('/users/reviews', {
+      transaction_id: id,
+      rating: review.rating,
+      comment: review.comment || undefined,
+    }),
+    onSuccess: () => {
+      toast.success('Отзыв отправлен!');
       qc.invalidateQueries(['transaction', id]);
     },
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
@@ -202,6 +216,38 @@ export default function TransactionPage() {
           </div>
         )}
       </div>
+
+      {isBuyer && tx.status === 'completed' && (
+        <div className="card p-5 mb-4">
+          <h3 className="font-semibold mb-3">Оставить отзыв продавцу</h3>
+          <div className="flex gap-2 mb-3">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setReview((r) => ({ ...r, rating: n }))}
+                className={`text-2xl ${n <= review.rating ? 'text-yellow-400' : 'text-dark-600'}`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <textarea
+            className="input text-sm resize-none mb-3"
+            rows={3}
+            placeholder="Комментарий (необязательно)"
+            value={review.comment}
+            onChange={(e) => setReview((r) => ({ ...r, comment: e.target.value }))}
+          />
+          <button
+            onClick={() => reviewMutation.mutate()}
+            disabled={reviewMutation.isPending}
+            className="btn-primary text-sm"
+          >
+            Отправить отзыв
+          </button>
+        </div>
+      )}
 
       {/* Chat */}
       <div className="card flex flex-col" style={{ height: '420px' }}>

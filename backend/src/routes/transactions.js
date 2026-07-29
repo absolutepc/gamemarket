@@ -211,6 +211,10 @@ router.post('/:id/confirm', authenticate(), async (req, res) => {
       [tx.seller_receives, tx.seller_id]
     );
     await client.query(
+      `UPDATE users SET purchases_count = COALESCE(purchases_count, 0) + 1 WHERE id=$1`,
+      [tx.buyer_id]
+    );
+    await client.query(
       `INSERT INTO wallet_transactions (user_id, type, amount, balance_after, description, reference_id)
        SELECT $1, 'sale_credit', $2, balance, 'Sale proceeds released', $3 FROM users WHERE id=$1`,
       [tx.seller_id, tx.seller_receives, tx.id]

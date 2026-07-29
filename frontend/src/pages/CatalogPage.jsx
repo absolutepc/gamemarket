@@ -1,9 +1,10 @@
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
+import Seo from '../components/Seo';
 
 export default function CatalogPage() {
   const [params, setParams] = useSearchParams();
@@ -40,6 +41,11 @@ export default function CatalogPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <Seo
+        title={filters.search ? `Поиск: ${filters.search}` : 'Каталог'}
+        description="Каталог цифровых товаров GameMarket: игры, подписки ИИ, Telegram, TikTok, Steam, App Store и другое."
+        path="/catalog"
+      />
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar filters */}
         <aside className="lg:w-56 shrink-0">

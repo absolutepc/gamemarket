@@ -1,8 +1,11 @@
-import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Star, Package, Calendar } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
+import Seo from '../components/Seo';
+import useAuthStore from '../store/authStore';
 import { formatDate } from '../utils/format';
 
 function StarRow({ rating }) {
@@ -22,11 +25,34 @@ function StarRow({ rating }) {
 
 export default function ProfilePage() {
   const { username } = useParams();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const currentUser = useAuthStore((s) => s.user);
+  const isOwn = currentUser?.username === username;
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', username],
     queryFn: () => api.get(`/users/${username}`).then((r) => r.data),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/listings/${id}`),
+    onSuccess: () => {
+      toast.success('Лот удалён');
+      qc.invalidateQueries(['profile', username]);
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка удаления'),
+  });
+
+  const startChat = async () => {
+    if (!currentUser) return navigate('/login');
+    try {
+      const { data } = await api.post('/chats', { partner_id: profile.id });
+      navigate(`/chats/${data.id}`);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Не удалось открыть чат');
+    }
+  };
 
   if (isLoading) return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-pulse">
@@ -42,48 +68,84 @@ export default function ProfilePage() {
 
   if (!profile) return <div className="text-center py-20 text-dark-400">Пользователь не найден</div>;
 
+  const rating = parseFloat(profile.rating) || 0;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      {/* Profile header */}
+      <Seo title={profile.username} description={`Профиль продавца ${profile.username} на GameMarket`} path={`/users/${profile.username}`} />
+
       <div className="card p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div className="w-20 h-20 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold shrink-0">
             {profile.username[0].toUpperCase()}
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">{profile.username}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-bold">{profile.username}</h1>
+              {profile.is_verified && <BadgeCheck size={18} className="text-brand-400" />}
+            </div>
             <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-dark-400">
-              {profile.rating > 0 && (
-                <span className="flex items-center gap-1.5">
-                  <StarRow rating={Math.round(profile.rating)} />
-                  <span className="font-medium text-white">{parseFloat(profile.rating).toFixed(1)}</span>
-                  <span>({profile.reviews_count} отзывов)</span>
-                </span>
-              )}
-              <span className="flex items-center gap-1"><Package size={13} />{profile.sales_count} продаж</span>
-              <span className="flex items-center gap-1"><Calendar size={13} />С {formatDate(profile.created_at)}</span>
+              <span className="flex items-center gap-1.5">
+                <StarRow rating={Math.round(rating) || 0} />
+                <span className="font-medium text-white">{rating.toFixed(1)}</span>
+                <span>({profile.reviews_count || 0} отзывов)</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <ShoppingBag size={13} />{profile.deals_count || 0} сделок
+              </span>
+              <span className="flex items-center gap-1">
+                <Package size={13} />{profile.sales_count || 0} продаж
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar size={13} />С {formatDate(profile.created_at)}
+              </span>
             </div>
             {profile.bio && <p className="mt-3 text-dark-300 text-sm">{profile.bio}</p>}
           </div>
+          {!isOwn && currentUser && (
+            <button onClick={startChat} className="btn-secondary flex items-center gap-2">
+              <MessageCircle size={16} /> Написать
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Active listings */}
-      {profile.listings?.length > 0 && (
-        <div className="mb-8">
-          <h2 className="font-bold text-lg mb-4">Активные лоты ({profile.listings.length})</h2>
+      <div className="mb-8">
+        <h2 className="font-bold text-lg mb-4">Активные лоты ({profile.listings?.length || 0})</h2>
+        {profile.listings?.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {profile.listings.map((l) => (
-              <ListingCard key={l.id} listing={{ ...l, seller_username: profile.username, seller_rating: profile.rating }} />
+              <ListingCard
+                key={l.id}
+                listing={{
+                  ...l,
+                  seller_username: profile.username,
+                  seller_rating: profile.rating,
+                  seller_reviews: profile.reviews_count,
+                }}
+                showOwnerActions={isOwn}
+                onEdit={(listing) => navigate(`/listings/${listing.id}/edit`)}
+                onDelete={(listing) => {
+                  if (window.confirm('Удалить лот?')) deleteMutation.mutate(listing.id);
+                }}
+              />
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="card p-8 text-center text-dark-400 text-sm">
+            Нет активных лотов
+            {isOwn && (
+              <div className="mt-3">
+                <Link to="/listings/create" className="btn-primary text-sm">Создать лот</Link>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-      {/* Reviews */}
-      {profile.reviews?.length > 0 && (
-        <div>
-          <h2 className="font-bold text-lg mb-4">Отзывы</h2>
+      <div>
+        <h2 className="font-bold text-lg mb-4">Отзывы ({profile.reviews_count || 0})</h2>
+        {profile.reviews?.length > 0 ? (
           <div className="flex flex-col gap-3">
             {profile.reviews.map((r, i) => (
               <div key={i} className="card p-4">
@@ -101,8 +163,10 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="card p-8 text-center text-dark-400 text-sm">Пока нет отзывов</div>
+        )}
+      </div>
     </div>
   );
 }

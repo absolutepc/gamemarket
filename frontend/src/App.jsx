@@ -13,6 +13,9 @@ import WalletPage from './pages/WalletPage';
 import RulesPage from './pages/RulesPage';
 import FaqPage from './pages/FaqPage';
 import SupportPage from './pages/SupportPage';
+import TermsOfSalePage from './pages/TermsOfSalePage';
+import ChatsPage from './pages/ChatsPage';
+import ChatPage from './pages/ChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -28,11 +31,15 @@ export default function App() {
         <Route path="rules" element={<RulesPage />} />
         <Route path="faq" element={<FaqPage />} />
         <Route path="support" element={<SupportPage />} />
+        <Route path="terms-of-sale" element={<TermsOfSalePage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="listings/create" element={<CreateListingPage />} />
+          <Route path="listings/:id/edit" element={<CreateListingPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="transactions/:id" element={<TransactionPage />} />
           <Route path="wallet" element={<WalletPage />} />
+          <Route path="chats" element={<ChatsPage />} />
+          <Route path="chats/:id" element={<ChatPage />} />
         </Route>
       </Route>
     </Routes>

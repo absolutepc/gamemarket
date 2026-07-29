@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
   rating DECIMAL(3,2) DEFAULT 0,
   reviews_count INT DEFAULT 0,
   sales_count INT DEFAULT 0,
+  purchases_count INT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -48,6 +49,8 @@ CREATE TABLE IF NOT EXISTS listings (
   title VARCHAR(200) NOT NULL,
   description TEXT NOT NULL,
   price DECIMAL(12,2) NOT NULL,
+  original_price DECIMAL(12,2),
+  discount_percent INT DEFAULT 0,
   currency VARCHAR(10) DEFAULT 'RUB',
   status VARCHAR(30) NOT NULL DEFAULT 'active',
   game VARCHAR(100),
@@ -124,6 +127,29 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS conversations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  participant1_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  participant2_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  listing_id UUID REFERENCES listings(id) ON DELETE SET NULL,
+  last_message_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (participant1_id, participant2_id, listing_id)
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_p1 ON conversations(participant1_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_p2 ON conversations(participant2_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_conv ON chat_messages(conversation_id);
+
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -146,14 +172,24 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Default categories
-INSERT INTO categories (name, slug, icon) VALUES
-  ('Игровая валюта', 'game-currency', 'coins'),
-  ('Аккаунты', 'accounts', 'user'),
-  ('Предметы', 'items', 'package'),
-  ('Бусты', 'boosting', 'zap'),
-  ('Другое', 'other', 'more-horizontal')
+INSERT INTO categories (name, slug, icon, sort_order) VALUES
+  ('Игровая валюта', 'game-currency', 'coins', 1),
+  ('Аккаунты', 'accounts', 'user', 2),
+  ('Предметы', 'items', 'package', 3),
+  ('Подписки', 'subscriptions', 'sparkles', 4),
+  ('Пополнения', 'topups', 'wallet', 5),
+  ('Подарочные карты', 'gift-cards', 'gift', 6),
+  ('Бусты', 'boosting', 'zap', 7),
+  ('AI и сервисы', 'ai-services', 'bot', 8),
+  ('Соцсети', 'social', 'share', 9),
+  ('Другое', 'other', 'more-horizontal', 10)
 ON CONFLICT (slug) DO NOTHING;
+`;
+
+const alters = `
+ALTER TABLE users ADD COLUMN IF NOT EXISTS purchases_count INT DEFAULT 0;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS original_price DECIMAL(12,2);
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 `;
 
 async function migrate({ closePool = false } = {}) {
@@ -161,6 +197,7 @@ async function migrate({ closePool = false } = {}) {
   try {
     console.log('Running migrations...');
     await client.query(schema);
+    await client.query(alters);
     console.log('Migrations complete.');
   } catch (err) {
     console.error('Migration error:', err);

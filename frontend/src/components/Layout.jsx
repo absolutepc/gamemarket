@@ -1,13 +1,12 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Shield, ShoppingBag, Bell, User, LogOut, Plus, Wallet, Menu, X, Search } from 'lucide-react';
+import { Shield, ShoppingBag, LogOut, Plus, Wallet, Search, MessageCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { formatPrice } from '../utils/format';
 
 export default function Layout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState('');
 
   const handleSearch = (e) => {
@@ -35,7 +34,7 @@ export default function Layout() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
             <input
               className="input pl-9 h-10 text-sm"
-              placeholder="Поиск лотов..."
+              placeholder="Поиск игр, подписок и приложений..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -46,7 +45,7 @@ export default function Layout() {
             <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
           </nav>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {user ? (
               <>
                 <Link to="/listings/create" className="btn-primary text-sm hidden sm:flex items-center gap-1.5">
@@ -56,7 +55,10 @@ export default function Layout() {
                   <Wallet size={15} />
                   {formatPrice(user.balance)}
                 </Link>
-                <Link to="/transactions" className="btn-ghost p-2">
+                <Link to="/chats" className="btn-ghost p-2" title="Чаты">
+                  <MessageCircle size={18} />
+                </Link>
+                <Link to="/transactions" className="btn-ghost p-2" title="Сделки">
                   <ShoppingBag size={18} />
                 </Link>
                 <Link to={`/users/${user.username}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -96,9 +98,10 @@ export default function Layout() {
               <span className="font-semibold">GameMarket</span>
               <span className="text-dark-400 text-sm">— безопасные сделки</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-dark-400">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm text-dark-400">
               <span>© 2026 GameMarket</span>
               <Link to="/rules" className="hover:text-white transition-colors">Правила</Link>
+              <Link to="/terms-of-sale" className="hover:text-white transition-colors">Условия продажи</Link>
               <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
               <Link to="/support" className="hover:text-white transition-colors">Поддержка</Link>
             </div>

@@ -56,6 +56,7 @@ app.use('/api/listings', require('./routes/listings'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
+app.use('/api/chats', require('./routes/chats'));
 app.use('/api', require('./routes/seo'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
@@ -90,6 +91,10 @@ io.on('connection', (socket) => {
     socket.join(`tx:${transactionId}`);
   });
 
+  socket.on('join_conversation', (conversationId) => {
+    socket.join(`chat:${conversationId}`);
+  });
+
   socket.on('send_message', async ({ transaction_id, content }) => {
     if (!content || content.length > 2000) return;
     try {
@@ -106,6 +111,35 @@ io.on('connection', (socket) => {
         [transaction_id, socket.user.id, content.trim()]
       );
       io.to(`tx:${transaction_id}`).emit('new_message', {
+        ...rows[0],
+        sender_username: socket.user.username,
+      });
+    } catch (err) {
+      logger.error(err);
+    }
+  });
+
+  socket.on('send_chat_message', async ({ conversation_id, content }) => {
+    if (!content || content.length > 2000) return;
+    try {
+      const { rows: convRows } = await pool.query(
+        'SELECT * FROM conversations WHERE id=$1',
+        [conversation_id]
+      );
+      const conv = convRows[0];
+      if (!conv) return;
+      if (conv.participant1_id !== socket.user.id && conv.participant2_id !== socket.user.id) return;
+
+      const { rows } = await pool.query(
+        `INSERT INTO chat_messages (conversation_id, sender_id, content)
+         VALUES ($1,$2,$3) RETURNING *`,
+        [conversation_id, socket.user.id, content.trim()]
+      );
+      await pool.query(
+        'UPDATE conversations SET last_message_at=NOW() WHERE id=$1',
+        [conversation_id]
+      );
+      io.to(`chat:${conversation_id}`).emit('new_chat_message', {
         ...rows[0],
         sender_username: socket.user.username,
       });
