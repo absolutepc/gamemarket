@@ -136,14 +136,24 @@ export default function HomeHeroSlider() {
         />
 
         {/* Fixed slide height so content doesn't jump between slides */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-6 sm:pt-6 sm:pb-8 lg:py-10
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-6 sm:pt-5 sm:pb-8 lg:py-10
                         min-h-[560px] sm:min-h-[520px] lg:min-h-[440px] flex flex-col">
+          {slide.tone === 'contest' && (
+            <div className="flex justify-center lg:justify-start mb-2 sm:mb-3 shrink-0">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200">
+                <Trophy size={14} className="text-amber-300" />
+                Ежемесячный конкурс
+              </div>
+            </div>
+          )}
+
           <div className="flex-1 grid lg:grid-cols-2 gap-4 lg:gap-10 items-center">
             <div className="order-2 lg:order-1">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3">
-                {slide.tone === 'contest' ? <Trophy size={14} className="text-amber-300" /> : null}
-                {slide.eyebrow}
-              </div>
+              {slide.tone !== 'contest' && (
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3">
+                  {slide.eyebrow}
+                </div>
+              )}
               <h1 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight leading-tight mb-2 sm:mb-3">
                 {slide.title}
               </h1>
