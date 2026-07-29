@@ -61,11 +61,8 @@ router.post('/',
         [sellerReceives, listing.seller_id]
       );
 
-      // Mark listing as sold
-      await client.query(
-        "UPDATE listings SET status='sold' WHERE id=$1",
-        [listing_id]
-      );
+      // Keep listing active — digital goods stay visible during/after deals
+      // (do not mark as sold)
 
       const { rows } = await client.query(
         `INSERT INTO transactions
@@ -136,17 +133,32 @@ router.get('/:id', authenticate(), async (req, res) => {
   );
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });
   const tx = rows[0];
-  if (tx.buyer_id !== req.user.id && tx.seller_id !== req.user.id && req.user.role !== 'admin') {
+  if (
+    String(tx.buyer_id) !== String(req.user.id)
+    && String(tx.seller_id) !== String(req.user.id)
+    && req.user.role !== 'admin'
+  ) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  const { rows: msgs } = await pool.query(
-    `SELECT m.*, u.username AS sender_username, u.avatar_url AS sender_avatar
-     FROM messages m JOIN users u ON u.id = m.sender_id
-     WHERE m.transaction_id=$1 ORDER BY m.created_at ASC`,
-    [req.params.id]
-  );
-  res.json({ ...tx, messages: msgs });
+  const [{ rows: msgs }, { rows: reviewRows }] = await Promise.all([
+    pool.query(
+      `SELECT m.*, u.username AS sender_username, u.avatar_url AS sender_avatar
+       FROM messages m JOIN users u ON u.id = m.sender_id
+       WHERE m.transaction_id=$1 ORDER BY m.created_at ASC`,
+      [req.params.id]
+    ),
+    pool.query(
+      'SELECT id, rating, comment, created_at FROM reviews WHERE transaction_id=$1 LIMIT 1',
+      [req.params.id]
+    ),
+  ]);
+  res.json({
+    ...tx,
+    messages: msgs,
+    has_review: reviewRows.length > 0,
+    review: reviewRows[0] || null,
+  });
 });
 
 // Seller marks delivered
@@ -244,11 +256,6 @@ router.post('/:id/confirm', authenticate(), async (req, res) => {
        escrow_released_at=NOW(), updated_at=NOW() WHERE id=$1`,
       [req.params.id]
     );
-    // Return listing to active so it can be sold again
-    await client.query(
-      "UPDATE listings SET status='active' WHERE id=$1",
-      [tx.listing_id]
-    );
     const doneMsg = isSeller
       ? 'Продавец завершил сделку. Средства переведены.'
       : 'Покупатель подтвердил получение. Сделка завершена!';
@@ -336,10 +343,6 @@ router.post('/:id/cancel', authenticate(), async (req, res) => {
       `INSERT INTO wallet_transactions (user_id, type, amount, balance_after, description, reference_id)
        SELECT $1, 'refund', $2, balance, 'Transaction cancelled - refund', $3 FROM users WHERE id=$1`,
       [tx.buyer_id, tx.amount, tx.id]
-    );
-    await client.query(
-      "UPDATE listings SET status='active' WHERE id=$1",
-      [tx.listing_id]
     );
     await client.query(
       `UPDATE transactions SET status='cancelled', cancelled_at=NOW(),

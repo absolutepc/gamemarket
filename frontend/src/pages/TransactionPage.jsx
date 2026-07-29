@@ -230,9 +230,10 @@ export default function TransactionPage() {
         )}
       </div>
 
-      {isBuyer && tx.status === 'completed' && (
+      {isBuyer && tx.status === 'completed' && tx.escrow_released_at && !tx.has_review && (
         <div className="card p-5 mb-4">
           <h3 className="font-semibold mb-3">Оставить отзыв продавцу</h3>
+          <p className="text-xs text-dark-400 mb-3">Отзыв доступен только после завершённой сделки</p>
           <div className="flex gap-2 mb-3">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -259,6 +260,12 @@ export default function TransactionPage() {
           >
             Отправить отзыв
           </button>
+        </div>
+      )}
+      {isBuyer && tx.status === 'completed' && tx.has_review && (
+        <div className="card p-5 mb-4 text-sm text-dark-300">
+          Вы уже оставили отзыв по этой сделке
+          {tx.review?.rating ? ` — ${tx.review.rating}/5` : ''}
         </div>
       )}
 

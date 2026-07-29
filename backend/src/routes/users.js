@@ -164,44 +164,73 @@ router.post('/reviews',
   [
     body('transaction_id').isUUID(),
     body('rating').isInt({ min: 1, max: 5 }),
-    body('comment').optional().trim().isLength({ max: 1000 }),
+    body('comment').optional({ nullable: true }).trim().isLength({ max: 1000 }),
   ],
   validate,
   async (req, res) => {
     const { transaction_id, rating, comment } = req.body;
-    const { rows: txRows } = await pool.query(
-      "SELECT * FROM transactions WHERE id=$1 AND status='completed'",
-      [transaction_id]
-    );
-    const tx = txRows[0];
-    if (!tx) return res.status(404).json({ error: 'Transaction not found or not completed' });
-    if (tx.buyer_id !== req.user.id) return res.status(403).json({ error: 'Only buyer can leave review' });
-
-    const reviewed_id = tx.seller_id;
-    const existing = await pool.query(
-      'SELECT id FROM reviews WHERE transaction_id=$1 AND reviewer_id=$2',
-      [transaction_id, req.user.id]
-    );
-    if (existing.rows.length > 0) return res.status(409).json({ error: 'Review already submitted' });
-
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
+
+      // Hard ban: review only after a real completed escrow deal by the buyer
+      const { rows: txRows } = await client.query(
+        `SELECT id, buyer_id, seller_id, status, amount, escrow_released_at
+         FROM transactions
+         WHERE id=$1
+         FOR UPDATE`,
+        [transaction_id]
+      );
+      const tx = txRows[0];
+      if (!tx) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Сделка не найдена' });
+      }
+      if (tx.status !== 'completed' || !tx.escrow_released_at) {
+        await client.query('ROLLBACK');
+        return res.status(403).json({ error: 'Отзыв можно оставить только после завершённой сделки' });
+      }
+      if (parseFloat(tx.amount) <= 0) {
+        await client.query('ROLLBACK');
+        return res.status(403).json({ error: 'Отзыв запрещён: недействительная сумма сделки' });
+      }
+      if (String(tx.buyer_id) !== String(req.user.id)) {
+        await client.query('ROLLBACK');
+        return res.status(403).json({ error: 'Отзыв может оставить только покупатель по этой сделке' });
+      }
+      if (String(tx.seller_id) === String(req.user.id)) {
+        await client.query('ROLLBACK');
+        return res.status(403).json({ error: 'Нельзя оставить отзыв самому себе' });
+      }
+
+      const existing = await client.query(
+        'SELECT id FROM reviews WHERE transaction_id=$1',
+        [transaction_id]
+      );
+      if (existing.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'Отзыв по этой сделке уже оставлен' });
+      }
+
       await client.query(
-        'INSERT INTO reviews (transaction_id, reviewer_id, reviewed_id, rating, comment) VALUES ($1,$2,$3,$4,$5)',
-        [transaction_id, req.user.id, reviewed_id, rating, comment || null]
+        `INSERT INTO reviews (transaction_id, reviewer_id, reviewed_id, rating, comment)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [transaction_id, req.user.id, tx.seller_id, rating, comment || null]
       );
       await client.query(
         `UPDATE users SET
            rating = (SELECT AVG(rating)::DECIMAL(3,2) FROM reviews WHERE reviewed_id=$1),
-           reviews_count = reviews_count + 1
+           reviews_count = (SELECT COUNT(*)::int FROM reviews WHERE reviewed_id=$1)
          WHERE id=$1`,
-        [reviewed_id]
+        [tx.seller_id]
       );
       await client.query('COMMIT');
       res.status(201).json({ message: 'Review submitted' });
     } catch (err) {
       await client.query('ROLLBACK');
+      if (err.code === '23505') {
+        return res.status(409).json({ error: 'Отзыв по этой сделке уже оставлен' });
+      }
       throw err;
     } finally {
       client.release();
@@ -253,57 +282,6 @@ router.get('/:username', apiLimiter, async (req, res) => {
     reviews: reviewsRes.rows,
   });
 });
-
-router.post('/reviews',
-  authenticate(),
-  strictLimiter,
-  [
-    body('transaction_id').isUUID(),
-    body('rating').isInt({ min: 1, max: 5 }),
-    body('comment').optional().trim().isLength({ max: 1000 }),
-  ],
-  validate,
-  async (req, res) => {
-    const { transaction_id, rating, comment } = req.body;
-    const { rows: txRows } = await pool.query(
-      "SELECT * FROM transactions WHERE id=$1 AND status='completed'",
-      [transaction_id]
-    );
-    const tx = txRows[0];
-    if (!tx) return res.status(404).json({ error: 'Transaction not found or not completed' });
-    if (tx.buyer_id !== req.user.id) return res.status(403).json({ error: 'Only buyer can leave review' });
-
-    const reviewed_id = tx.seller_id;
-    const existing = await pool.query(
-      'SELECT id FROM reviews WHERE transaction_id=$1 AND reviewer_id=$2',
-      [transaction_id, req.user.id]
-    );
-    if (existing.rows.length > 0) return res.status(409).json({ error: 'Review already submitted' });
-
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      await client.query(
-        'INSERT INTO reviews (transaction_id, reviewer_id, reviewed_id, rating, comment) VALUES ($1,$2,$3,$4,$5)',
-        [transaction_id, req.user.id, reviewed_id, rating, comment || null]
-      );
-      await client.query(
-        `UPDATE users SET
-           rating = (SELECT AVG(rating)::DECIMAL(3,2) FROM reviews WHERE reviewed_id=$1),
-           reviews_count = reviews_count + 1
-         WHERE id=$1`,
-        [reviewed_id]
-      );
-      await client.query('COMMIT');
-      res.status(201).json({ message: 'Review submitted' });
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
-  }
-);
 
 router.post('/:id/ban', authenticate(), requireRole('admin'), async (req, res) => {
   await pool.query('UPDATE users SET is_banned=TRUE WHERE id=$1', [req.params.id]);
