@@ -21,8 +21,7 @@ const SLIDES = [
     title: 'Эскроу защищает обе стороны',
     subtitle:
       'Оплата удерживается до подтверждения получения товара. Комиссия площадки — 7.5%.',
-    cta: { to: '/catalog', label: 'Смотреть каталог' },
-    secondary: { to: '/faq', label: 'Как это работает' },
+    cta: { to: '/faq', label: 'Как это работает' },
     tone: 'escrow',
   },
   {
@@ -32,7 +31,6 @@ const SLIDES = [
     subtitle:
       'Игровая валюта, аккаунты, подписки и сервисы — с автовыдачей или вручную через чат сделки.',
     cta: { to: '/listings/create', label: 'Продать товар' },
-    secondary: { to: '/catalog', label: 'Каталог' },
     tone: 'sell',
   },
 ];
