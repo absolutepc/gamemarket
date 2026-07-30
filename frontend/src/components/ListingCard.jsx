@@ -41,11 +41,6 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
             onError={(e) => { e.target.src = PLACEHOLDER; }}
             loading="lazy"
           />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-8 pb-2.5 px-2.5">
-            <h3 className="font-semibold text-xs sm:text-sm leading-snug line-clamp-2 text-white">
-              {listing.title}
-            </h3>
-          </div>
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {listing.is_featured && (
               <span className="badge bg-[#2B71F3]/95 text-white text-[10px] font-semibold">ТОП</span>
@@ -74,6 +69,10 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
               </>
             )}
           </div>
+
+          <h3 className="font-semibold text-xs sm:text-sm leading-snug line-clamp-2 text-white">
+            {listing.title}
+          </h3>
 
           {(listing.seller_rating > 0 || listing.seller_reviews > 0) && (
             <div className="flex items-center gap-1.5 pt-1.5 border-t border-dark-800 mt-auto">
