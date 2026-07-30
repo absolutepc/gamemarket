@@ -2,17 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Trophy, ShoppingBag, Store, ArrowRight, Shield,
-  Search, Lock, Zap, CheckCircle2,
 } from 'lucide-react';
 
 const AUTO_MS = 7000;
-
-const HOW_STEPS = [
-  { icon: Search, title: 'Найдите товар', desc: 'Выберите лот в каталоге цифровых товаров и услуг' },
-  { icon: Lock, title: 'Оплата в эскроу', desc: 'Средства замораживаются до завершения' },
-  { icon: Zap, title: 'Получите товар', desc: 'Вручную или автовыдачей' },
-  { icon: CheckCircle2, title: 'Подтвердите', desc: 'Деньги уходят продавцу после проверки' },
-];
 
 const SLIDES = [
   {
@@ -31,14 +23,8 @@ const SLIDES = [
     title: 'Эскроу защищает обе стороны',
     subtitle:
       'Оплата удерживается до подтверждения получения товара. Комиссия площадки — 7.5%.',
-    cta: { label: 'Как это работает', action: 'next' },
+    cta: { to: '/faq', label: 'Как это работает' },
     tone: 'escrow',
-  },
-  {
-    id: 'how',
-    title: 'Как работает безопасная сделка',
-    tone: 'how',
-    layout: 'steps',
   },
   {
     id: 'sell',
@@ -105,34 +91,6 @@ function SellVisual() {
   );
 }
 
-/** Vertical list of safe-deal steps (as on screenshot) */
-function HowItWorksList() {
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-5 sm:gap-6 py-2">
-      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center leading-tight">
-        Как работает безопасная сделка
-      </h1>
-      <div className="w-full max-w-md flex flex-col gap-5 sm:gap-6">
-        {HOW_STEPS.map((step, i) => {
-          const Icon = step.icon;
-          return (
-            <div key={step.title} className="flex flex-col items-center text-center gap-2">
-              <div className="w-14 h-14 rounded-2xl bg-[#2B71F3]/10 text-[#5B8CFF] flex items-center justify-center relative">
-                <Icon size={24} />
-                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#2B71F3] text-white text-xs font-bold flex items-center justify-center">
-                  {i + 1}
-                </span>
-              </div>
-              <h3 className="font-semibold text-base">{step.title}</h3>
-              <p className="text-dark-400 text-sm leading-snug max-w-[280px]">{step.desc}</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 const VISUALS = {
   contest: ContestVisual,
   escrow: EscrowVisual,
@@ -142,7 +100,6 @@ const VISUALS = {
 const TONE_BG = {
   contest: 'from-[#12141c] via-[#161a28] to-[#101214]',
   escrow: 'from-[#101816] via-[#121a18] to-[#101214]',
-  how: 'from-[#10141c] via-[#121a24] to-[#101214]',
   sell: 'from-[#10141c] via-[#121826] to-[#101214]',
 };
 
@@ -163,7 +120,6 @@ export default function HomeHeroSlider() {
   }, [paused, go, index]);
 
   const slide = SLIDES[index];
-  const isSteps = slide.layout === 'steps';
   const Visual = VISUALS[slide.tone];
 
   return (
@@ -192,50 +148,36 @@ export default function HomeHeroSlider() {
             </div>
           )}
 
-          {isSteps ? (
-            <HowItWorksList />
-          ) : (
-            <div className="flex-1 grid lg:grid-cols-2 gap-4 lg:gap-10 items-center">
-              <div className="order-2 lg:order-1">
-                {slide.tone !== 'contest' && (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3">
-                    {slide.eyebrow}
-                  </div>
-                )}
-                <h1 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight leading-tight mb-2 sm:mb-3">
-                  {slide.title}
-                </h1>
-                <p className="text-dark-300 text-sm sm:text-base leading-relaxed max-w-xl mb-4 sm:mb-5">
-                  {slide.subtitle}
-                </p>
-
-                <div className="flex flex-wrap gap-2.5 sm:gap-3">
-                  {slide.cta.action === 'next' ? (
-                    <button
-                      type="button"
-                      onClick={() => go(1)}
-                      className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base"
-                    >
-                      {slide.cta.label} <ArrowRight size={16} />
-                    </button>
-                  ) : (
-                    <Link to={slide.cta.to} className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base">
-                      {slide.cta.label} <ArrowRight size={16} />
-                    </Link>
-                  )}
-                  {slide.secondary && (
-                    <Link to={slide.secondary.to} className="btn-secondary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center text-sm sm:text-base">
-                      {slide.secondary.label}
-                    </Link>
-                  )}
+          <div className="flex-1 grid lg:grid-cols-2 gap-4 lg:gap-10 items-center">
+            <div className="order-2 lg:order-1">
+              {slide.tone !== 'contest' && (
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3">
+                  {slide.eyebrow}
                 </div>
-              </div>
+              )}
+              <h1 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight leading-tight mb-2 sm:mb-3">
+                {slide.title}
+              </h1>
+              <p className="text-dark-300 text-sm sm:text-base leading-relaxed max-w-xl mb-4 sm:mb-5">
+                {slide.subtitle}
+              </p>
 
-              <div className="order-1 lg:order-2 min-h-[200px] sm:min-h-[240px] flex items-center">
-                {Visual ? <Visual /> : null}
+              <div className="flex flex-wrap gap-2.5 sm:gap-3">
+                <Link to={slide.cta.to} className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base">
+                  {slide.cta.label} <ArrowRight size={16} />
+                </Link>
+                {slide.secondary && (
+                  <Link to={slide.secondary.to} className="btn-secondary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center text-sm sm:text-base">
+                    {slide.secondary.label}
+                  </Link>
+                )}
               </div>
             </div>
-          )}
+
+            <div className="order-1 lg:order-2 min-h-[200px] sm:min-h-[240px] flex items-center">
+              {Visual ? <Visual /> : null}
+            </div>
+          </div>
 
           <div className="mt-4 sm:mt-6 flex items-center justify-between gap-4 shrink-0">
             <div className="flex flex-1 gap-2 max-w-xs">
