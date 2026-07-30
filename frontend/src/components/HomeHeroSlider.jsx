@@ -26,15 +26,6 @@ const SLIDES = [
     cta: { to: '/faq', label: 'Как это работает' },
     tone: 'escrow',
   },
-  {
-    id: 'sell',
-    eyebrow: 'Продажа',
-    title: 'Выставляйте лоты за минуты',
-    subtitle:
-      'Игровая валюта, аккаунты, подписки и сервисы — с автовыдачей или вручную через чат сделки.',
-    cta: { to: '/listings/create', label: 'Продать товар' },
-    tone: 'sell',
-  },
 ];
 
 function ContestVisual() {
@@ -80,27 +71,14 @@ function EscrowVisual() {
   );
 }
 
-function SellVisual() {
-  return (
-    <div className="relative w-full h-full max-w-md mx-auto lg:ml-auto aspect-[4/3] max-h-[220px] sm:max-h-none flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(43,113,243,0.28),transparent_55%)]" />
-      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/30 flex items-center justify-center shadow-2xl">
-        <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" />
-      </div>
-    </div>
-  );
-}
-
 const VISUALS = {
   contest: ContestVisual,
   escrow: EscrowVisual,
-  sell: SellVisual,
 };
 
 const TONE_BG = {
   contest: 'from-[#12141c] via-[#161a28] to-[#101214]',
   escrow: 'from-[#101816] via-[#121a18] to-[#101214]',
-  sell: 'from-[#10141c] via-[#121826] to-[#101214]',
 };
 
 export default function HomeHeroSlider() {
