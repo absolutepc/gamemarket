@@ -112,9 +112,12 @@ export default function WalletPage() {
       </div>
 
       <div className="card p-6 mb-6">
-        <h2 className="font-semibold mb-4 flex items-center gap-2">
+        <h2 className="font-semibold mb-1 flex items-center gap-2">
           <ArrowDownToLine size={18} /> Вывод средств
         </h2>
+        <p className="text-xs text-emerald-400/90 mb-4">
+          Комиссия площадки за вывод — 0%. Вы получите указанную сумму.
+        </p>
         <form onSubmit={handleWithdraw} className="flex flex-col gap-3">
           <input
             className="input"
@@ -140,7 +143,7 @@ export default function WalletPage() {
           </button>
         </form>
         <p className="text-xs text-dark-500 mt-3">
-          * В демо-режиме вывод списывает баланс сразу. В продакшне — заявка + ручная/авто обработка.
+          * В демо-режиме вывод списывает баланс сразу. В продакшне — заявка + автообработка через платёжный сервис.
         </p>
       </div>
 

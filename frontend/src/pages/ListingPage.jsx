@@ -156,6 +156,16 @@ export default function ListingPage() {
             )}
           </div>
 
+          {isOwner && listing.platform_fee_percent != null && (
+            <div className="text-sm text-dark-400">
+              Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}% ·
+              вы получите{' '}
+              <span className="text-emerald-400 font-medium">
+                {formatPrice(listing.seller_receives)}
+              </span>
+            </div>
+          )}
+
           <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
             <Shield size={16} className="text-emerald-400 shrink-0 mt-0.5" />
             <div>
