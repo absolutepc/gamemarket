@@ -9,6 +9,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const pool = require('./config/database');
 const logger = require('./utils/logger');
+const { isOriginAllowed } = require('./utils/origins');
 const { apiLimiter } = require('./middleware/security');
 const { authenticate, JWT_SECRET } = require('./middleware/auth');
 const jwt = require('jsonwebtoken');
@@ -18,7 +19,10 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) callback(null, true);
+      else callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   },
 });
@@ -37,7 +41,10 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) callback(null, true);
+    else callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 

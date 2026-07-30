@@ -9,7 +9,7 @@ import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
 import { formatPrice, formatDate } from '../utils/format';
 
-const PLACEHOLDER = 'https://placehold.co/600x450/1a1a27/6083ff?text=GameMarket';
+const PLACEHOLDER = '/placeholder-listing.svg';
 
 export default function ListingPage() {
   const { id } = useParams();

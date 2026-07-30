@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Star, Zap } from 'lucide-react';
 import { formatPrice } from '../utils/format';
 
-const PLACEHOLDER = 'https://placehold.co/400x300/1a1a27/6083ff?text=GameMarket';
+const PLACEHOLDER = '/placeholder-listing.svg';
 
 export default function ListingCard({ listing, showOwnerActions = false, onEdit, onDelete }) {
   const image = listing.images?.[0] || PLACEHOLDER;

@@ -5,7 +5,7 @@ import { ShoppingBag, Package } from 'lucide-react';
 import api from '../utils/api';
 import { formatPrice, formatRelative, TX_STATUS } from '../utils/format';
 
-const PLACEHOLDER = 'https://placehold.co/80x80/1a1a27/6083ff?text=GM';
+const PLACEHOLDER = '/placeholder-listing.svg';
 
 export default function TransactionsPage() {
   const [role, setRole] = useState('buyer');
