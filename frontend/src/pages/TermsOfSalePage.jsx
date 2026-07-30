@@ -6,11 +6,11 @@ export default function TermsOfSalePage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <Seo
         title="Условия продажи"
-        description="Условия продажи на Lootz: комиссия 7.5%, эскроу, вывод средств и ответственность продавца."
+        description="Условия продажи на Lootz: комиссия 7.5% / 17.5%, эскроу, вывод средств и ответственность продавца."
         path="/terms-of-sale"
       />
       <h1 className="text-3xl font-bold mb-2">Условия продажи</h1>
-      <p className="text-dark-400 mb-8">Для продавцов Lootz · комиссия 7.5%</p>
+      <p className="text-dark-400 mb-8">Для продавцов Lootz · комиссия 7.5% или 17.5%</p>
 
       <div className="card p-6 space-y-6 text-dark-200 leading-relaxed">
         <section>
@@ -23,9 +23,19 @@ export default function TermsOfSalePage() {
 
         <section>
           <h2 className="text-xl font-semibold text-white mb-2">2. Комиссия площадки</h2>
-          <p>
-            Комиссия Lootz составляет <strong className="text-white">7.5%</strong> от суммы сделки.
-            При цене лота 1000 ₽ продавец получает 925 ₽ после подтверждения покупателем.
+          <p className="mb-3">
+            Комиссия Lootz зависит от категории товара и удерживается при выплате продавцу:
+          </p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>
+              <strong className="text-white">7.5%</strong> — подписки, пополнения, подарочные карты, AI и сервисы
+            </li>
+            <li>
+              <strong className="text-white">17.5%</strong> — аккаунты, предметы, игровая валюта, бусты и прочее
+            </li>
+          </ul>
+          <p className="mt-3">
+            Пример: при цене 1000 ₽ продавец получит 925 ₽ (7.5%) или 825 ₽ (17.5%) после подтверждения покупателем.
           </p>
         </section>
 

@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const pool = require('../config/database');
+const { feePercentForCategorySlug } = require('../services/fees');
 
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(
@@ -10,7 +11,10 @@ router.get('/', async (req, res) => {
      GROUP BY c.id
      ORDER BY c.sort_order`
   );
-  res.json(rows);
+  res.json(rows.map((c) => ({
+    ...c,
+    fee_percent: feePercentForCategorySlug(c.slug),
+  })));
 });
 
 module.exports = router;

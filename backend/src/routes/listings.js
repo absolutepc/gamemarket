@@ -4,6 +4,7 @@ const xss = require('xss');
 const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
+const { calcPlatformFee } = require('../services/fees');
 
 const LISTING_TYPES = ['item', 'account', 'currency', 'boosting', 'subscription', 'topup', 'giftcard', 'other'];
 
@@ -163,7 +164,17 @@ router.get('/:id', apiLimiter, async (req, res) => {
     [req.params.id]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Listing not found' });
-  res.json(rows[0]);
+  const listing = rows[0];
+  const fee = calcPlatformFee(listing.price, {
+    categorySlug: listing.category_slug,
+    listingType: listing.listing_type,
+  });
+  res.json({
+    ...listing,
+    platform_fee_percent: fee.feePercent,
+    platform_fee: fee.fee,
+    seller_receives: fee.sellerReceives,
+  });
 });
 
 router.post('/',

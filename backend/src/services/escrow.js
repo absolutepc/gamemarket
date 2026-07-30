@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const logger = require('../utils/logger');
+const { PLATFORM_FEE_PERCENT } = require('./fees');
 
-const PLATFORM_FEE_PERCENT = 0.075;
 const SELLER_OFFLINE_CANCEL_HOURS = 24;
 const BUYER_CONFIRM_DAYS = 7;
 

@@ -1,11 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import Seo from '../components/Seo';
+import { resolveFeePercent, formatFeePercent, calcSellerReceives } from '../utils/fees';
+import { formatPrice } from '../utils/format';
 
 const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
 
@@ -25,6 +27,8 @@ export default function CreateListingPage() {
   const price = watch('price');
   const originalPrice = watch('original_price');
   const deliveryMethod = watch('delivery_method');
+  const listingType = watch('listing_type');
+  const categoryId = watch('category_id');
   const discountPreview = originalPrice && price && parseFloat(originalPrice) > parseFloat(price)
     ? Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100)
     : 0;
@@ -33,6 +37,17 @@ export default function CreateListingPage() {
     queryKey: ['categories'],
     queryFn: () => api.get('/categories').then((r) => r.data),
   });
+
+  const selectedCategory = useMemo(
+    () => categories?.find((c) => String(c.id) === String(categoryId)),
+    [categories, categoryId]
+  );
+
+  const feePercent = resolveFeePercent({
+    categorySlug: selectedCategory?.slug,
+    listingType,
+  });
+  const feePreview = calcSellerReceives(price, feePercent);
 
   const { data: existing } = useQuery({
     queryKey: ['listing', id],
@@ -177,6 +192,22 @@ export default function CreateListingPage() {
                 <p className="text-rose-400 text-xs mt-1">Скидка {discountPreview}%</p>
               )}
             </div>
+          </div>
+
+          <div className="rounded-xl border border-dark-800 bg-dark-950/60 px-4 py-3 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-dark-300">Комиссия площадки</span>
+              <span className="font-semibold text-white">{formatFeePercent(feePercent)}</span>
+            </div>
+            {parseFloat(price) > 0 && (
+              <div className="flex items-center justify-between gap-3 mt-1.5 text-dark-400">
+                <span>Вы получите после сделки</span>
+                <span className="text-emerald-400 font-medium">{formatPrice(feePreview.sellerReceives)}</span>
+              </div>
+            )}
+            <p className="text-[11px] text-dark-500 mt-2">
+              7.5% — подписки, пополнения, карты, ИИ · 17.5% — аккаунты, предметы, валюта и остальное
+            </p>
           </div>
 
           <div>

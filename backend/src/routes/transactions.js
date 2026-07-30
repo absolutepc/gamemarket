@@ -4,13 +4,13 @@ const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { strictLimiter, validate } = require('../middleware/security');
 const {
-  PLATFORM_FEE_PERCENT,
   BUYER_CONFIRM_DAYS,
   SELLER_OFFLINE_CANCEL_HOURS,
   releaseEscrow,
   refundEscrow,
   canBuyerCancel,
 } = require('../services/escrow');
+const { calcPlatformFee } = require('../services/fees');
 const { normalizeBuyerFields, validateBuyerData } = require('./listings');
 
 // Create transaction (buy listing)
@@ -30,7 +30,11 @@ router.post('/',
       await client.query('BEGIN');
 
       const { rows: listings } = await client.query(
-        "SELECT * FROM listings WHERE id=$1 AND status='active' FOR UPDATE",
+        `SELECT l.*, c.slug AS category_slug
+         FROM listings l
+         LEFT JOIN categories c ON c.id = l.category_id
+         WHERE l.id=$1 AND l.status='active'
+         FOR UPDATE OF l`,
         [listing_id]
       );
       const listing = listings[0];
@@ -64,8 +68,10 @@ router.post('/',
         return res.status(400).json({ error: 'Insufficient balance' });
       }
 
-      const fee = parseFloat((price * PLATFORM_FEE_PERCENT).toFixed(2));
-      const sellerReceives = parseFloat((price - fee).toFixed(2));
+      const { fee, sellerReceives } = calcPlatformFee(price, {
+        categorySlug: listing.category_slug,
+        listingType: listing.listing_type,
+      });
 
       await client.query(
         'UPDATE users SET balance = balance - $1 WHERE id=$2',
