@@ -24,6 +24,18 @@ export function formatRelative(dateStr) {
   return formatDate(dateStr);
 }
 
+export function formatReviewsCount(count = 0) {
+  const n = Number(count) || 0;
+  if (n === 0) return 'нет отзывов';
+
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 19) return `${n} отзывов`;
+  if (mod10 === 1) return `${n} отзыв`;
+  if (mod10 >= 2 && mod10 <= 4) return `${n} отзыва`;
+  return `${n} отзывов`;
+}
+
 export const TX_STATUS = {
   pending: { label: 'Ожидание', color: 'badge-yellow' },
   awaiting_delivery: { label: 'Ожидает передачи', color: 'badge-yellow' },

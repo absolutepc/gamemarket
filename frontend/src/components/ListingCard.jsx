@@ -1,8 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Star, Zap } from 'lucide-react';
-import { formatPrice } from '../utils/format';
+import { formatPrice, formatReviewsCount } from '../utils/format';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
+
+function filledStarsCount(rating) {
+  const value = parseFloat(rating) || 0;
+  if (value <= 0) return 0;
+  return Math.min(5, Math.max(1, Math.round(value)));
+}
 
 export default function ListingCard({ listing, showOwnerActions = false, onEdit, onDelete }) {
   const image = listing.images?.[0] || PLACEHOLDER;
@@ -75,11 +81,10 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
           </h3>
 
           {(listing.seller_rating > 0 || listing.seller_reviews > 0) && (
-            <div className="flex items-center gap-1.5 pt-1.5 border-t border-dark-800 mt-auto">
-              <div className="flex items-center gap-0.5 text-yellow-400">
+            <div className="flex items-center gap-1.5 pt-1.5 border-t border-dark-800 mt-auto text-[11px]">
+              <div className="flex items-center gap-0.5 text-yellow-400 shrink-0">
                 {Array.from({ length: 5 }).map((_, i) => {
-                  const rating = parseFloat(listing.seller_rating || 0);
-                  const filled = i < Math.round(rating);
+                  const filled = i < filledStarsCount(listing.seller_rating);
                   return (
                     <Star
                       key={i}
@@ -90,8 +95,13 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
                   );
                 })}
               </div>
-              <span className="text-[11px] text-yellow-400 font-medium tabular-nums">
-                {parseFloat(listing.seller_rating || 0).toFixed(1)}
+              {parseFloat(listing.seller_rating) > 0 && (
+                <span className="text-yellow-400 font-medium tabular-nums shrink-0">
+                  {parseFloat(listing.seller_rating).toFixed(1)}
+                </span>
+              )}
+              <span className="text-dark-400 truncate">
+                {formatReviewsCount(listing.seller_reviews)}
               </span>
             </div>
           )}
