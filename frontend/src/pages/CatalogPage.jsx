@@ -47,7 +47,7 @@ export default function CatalogPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <Seo
         title={filters.search ? `Поиск: ${filters.search}` : 'Каталог'}
-        description="Каталог цифровых товаров GameMarket: игры, подписки ИИ, Telegram, TikTok, Steam, App Store и другое."
+        description="Каталог цифровых товаров Lootz: игры, подписки ИИ, Telegram, TikTok, Steam, App Store и другое."
         path="/catalog"
       />
       <div className="flex flex-col lg:flex-row gap-6">

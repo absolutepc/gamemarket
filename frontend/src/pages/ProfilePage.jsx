@@ -76,7 +76,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <Seo title={profile.username} description={`Профиль продавца ${profile.username} на GameMarket`} path={`/users/${profile.username}`} />
+      <Seo title={profile.username} description={`Профиль продавца ${profile.username} на Lootz`} path={`/users/${profile.username}`} />
 
       <div className="card p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">

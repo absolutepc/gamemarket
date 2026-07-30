@@ -33,7 +33,7 @@ export default function FaqPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <Seo
         title="FAQ"
-        description="Частые вопросы о GameMarket: эскроу, комиссия, споры, пополнение баланса и продажи."
+        description="Частые вопросы о Lootz: эскроу, комиссия, споры, пополнение баланса и продажи."
         path="/faq"
       />
       <h1 className="text-3xl font-bold mb-2">Частые вопросы</h1>

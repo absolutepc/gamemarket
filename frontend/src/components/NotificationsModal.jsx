@@ -118,7 +118,7 @@ export default function NotificationsModal({ open, onBack, onClose }) {
               <div className="flex-1 min-w-0 pt-0.5">
                 <p className="font-medium text-sm text-white">Telegram</p>
                 <p className="text-xs text-dark-400 mt-0.5 leading-relaxed">
-                  Уведомления присылает телеграм-бот GameMarket
+                  Уведомления присылает телеграм-бот Lootz
                 </p>
               </div>
               <Toggle on={prefs.telegram} onChange={(v) => setPref('telegram', v)} />
@@ -172,7 +172,7 @@ export default function NotificationsModal({ open, onBack, onClose }) {
               <div className="flex-1 min-w-0 pt-0.5">
                 <p className="font-medium text-sm text-white">Вконтакте</p>
                 <p className="text-xs text-dark-400 mt-0.5 leading-relaxed">
-                  Приходят в личные сообщения от сообщества GameMarket
+                  Приходят в личные сообщения от сообщества Lootz
                 </p>
               </div>
               <Toggle on={prefs.vk} onChange={(v) => setPref('vk', v)} />

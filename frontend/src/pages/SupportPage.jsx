@@ -19,7 +19,7 @@ export default function SupportPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <Seo
         title="Поддержка"
-        description="Служба поддержки GameMarket: помощь по сделкам, спорам, аккаунту и безопасности."
+        description="Служба поддержки Lootz: помощь по сделкам, спорам, аккаунту и безопасности."
         path="/support"
       />
       <h1 className="text-3xl font-bold mb-2">Поддержка</h1>

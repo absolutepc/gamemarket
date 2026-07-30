@@ -8,7 +8,7 @@ import { formatPrice } from '../utils/format';
 const PAYMENT_METHODS = [
   {
     id: 'balance',
-    label: 'Баланс GameMarket',
+    label: 'Баланс Lootz',
     hint: 'Оплата с баланса площадки',
     Icon: Wallet,
     accent: '#2B71F3',

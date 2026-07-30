@@ -29,7 +29,7 @@ export default function LoginPage() {
           <div className="w-12 h-12 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Shield size={22} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold">Вход в GameMarket</h1>
+          <h1 className="text-2xl font-bold">Вход в Lootz</h1>
           <p className="text-dark-400 text-sm mt-1">Безопасная торговая площадка</p>
         </div>
 

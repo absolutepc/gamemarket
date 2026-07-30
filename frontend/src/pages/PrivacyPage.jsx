@@ -5,7 +5,7 @@ export default function PrivacyPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <Seo
         title="Политика конфиденциальности"
-        description="Как GameMarket обрабатывает и защищает персональные данные пользователей."
+        description="Как Lootz обрабатывает и защищает персональные данные пользователей."
         path="/privacy"
       />
       <h1 className="text-3xl font-bold mb-2">Политика конфиденциальности</h1>

@@ -7,7 +7,7 @@ const PLACEHOLDER = '/placeholder-listing.svg';
 function filledStarsCount(rating) {
   const value = parseFloat(rating) || 0;
   if (value <= 0) return 0;
-  return Math.min(5, Math.max(1, Math.round(value)));
+  return Math.min(5, Math.round(value));
 }
 
 export default function ListingCard({ listing, showOwnerActions = false, onEdit, onDelete }) {

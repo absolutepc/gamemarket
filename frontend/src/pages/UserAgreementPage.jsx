@@ -6,7 +6,7 @@ export default function UserAgreementPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <Seo
         title="Пользовательское соглашение"
-        description="Условия использования маркетплейса GameMarket: аккаунт, сделки, ответственность."
+        description="Условия использования маркетплейса Lootz: аккаунт, сделки, ответственность."
         path="/user-agreement"
       />
       <h1 className="text-3xl font-bold mb-2">Пользовательское соглашение</h1>
@@ -16,7 +16,7 @@ export default function UserAgreementPage() {
         <section>
           <h2 className="text-xl font-semibold text-white mb-2">1. Предмет соглашения</h2>
           <p>
-            GameMarket предоставляет онлайн-площадку для размещения и покупки цифровых игровых
+            Lootz предоставляет онлайн-площадку для размещения и покупки цифровых игровых
             товаров и услуг. Используя сервис, вы принимаете условия этого соглашения.
           </p>
         </section>

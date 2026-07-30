@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
-const SITE_NAME = 'GameMarket';
+const SITE_NAME = 'Lootz';
 const DEFAULT_DESCRIPTION =
-  'GameMarket — безопасная торговая площадка для игровых товаров: аккаунты, валюта, предметы и бусты с эскроу-защитой.';
+  'Lootz — безопасная торговая площадка для игровых товаров: аккаунты, валюта, предметы и бусты с эскроу-защитой.';
 
 export default function Seo({
   title,

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" fill="none">
   <rect width="400" height="300" fill="#1a1a27"/>
   <rect x="120" y="90" width="160" height="120" rx="12" stroke="#6083ff" stroke-width="2" fill="#6083ff" fill-opacity="0.12"/>
-  <text x="200" y="165" text-anchor="middle" fill="#6083ff" font-family="system-ui,sans-serif" font-size="18" font-weight="600">GameMarket</text>
+  <text x="200" y="165" text-anchor="middle" fill="#6083ff" font-family="system-ui,sans-serif" font-size="18" font-weight="600">Lootz</text>
 </svg>

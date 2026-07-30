@@ -122,7 +122,7 @@ export default function Footer() {
 
         <div className="mt-10 pt-6 border-t border-dark-800">
           <p className="text-sm text-dark-500">
-            2026 © GameMarket — маркетплейс игровых товаров и услуг. Все права защищены.
+            2026 © Lootz — маркетплейс игровых товаров и услуг. Все права защищены.
           </p>
         </div>
       </div>

@@ -11,7 +11,7 @@ function escapeXml(value) {
 }
 
 router.get('/sitemap.xml', async (req, res) => {
-  const siteUrl = (process.env.FRONTEND_URL || 'https://gamemarket-production-92a3.up.railway.app').replace(/\/$/, '');
+  const siteUrl = (process.env.FRONTEND_URL || 'https://lootz.ru').replace(/\/$/, '');
 
   try {
     const { rows } = await pool.query(

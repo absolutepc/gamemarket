@@ -6,7 +6,7 @@ export default function RulesPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       <Seo
         title="Правила площадки"
-        description="Правила GameMarket: безопасные сделки, эскроу, запрещённые товары и ответственность сторон."
+        description="Правила Lootz: безопасные сделки, эскроу, запрещённые товары и ответственность сторон."
         path="/rules"
       />
       <h1 className="text-3xl font-bold mb-2">Правила площадки</h1>
@@ -16,7 +16,7 @@ export default function RulesPage() {
         <section>
           <h2 className="text-xl font-semibold text-white mb-2">1. Общие положения</h2>
           <p>
-            GameMarket — торговая площадка для покупки и продажи игровых товаров.
+            Lootz — торговая площадка для покупки и продажи игровых товаров.
             Используя сервис, вы соглашаетесь с этими правилами.
           </p>
         </section>

@@ -6,5 +6,5 @@ Disallow: /listings/create
 Disallow: /login
 Disallow: /register
 
-Sitemap: https://gamemarket-production-92a3.up.railway.app/sitemap.xml
-Sitemap: https://gamemarket-production.up.railway.app/api/sitemap.xml
+Sitemap: https://lootz.ru/sitemap.xml
+Sitemap: https://lootz.ru/api/sitemap.xml

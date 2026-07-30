@@ -35,7 +35,7 @@ export default function RegisterPage() {
             <Shield size={22} className="text-white" />
           </div>
           <h1 className="text-2xl font-bold">Регистрация</h1>
-          <p className="text-dark-400 text-sm mt-1">Создайте аккаунт на GameMarket</p>
+          <p className="text-dark-400 text-sm mt-1">Создайте аккаунт на Lootz</p>
         </div>
 
         <div className="card p-6">
