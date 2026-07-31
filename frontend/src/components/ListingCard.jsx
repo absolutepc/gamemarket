@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Star, Zap } from 'lucide-react';
 import { formatPrice, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
+import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -18,6 +19,9 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
   const matched = resolveAssortmentItem(listing.game || listing.title);
   const gameLabel = matched?.name || listing.game || listing.category_name || 'Товар';
   const gameIcon = matched?.icon || resolveAssortmentIcon(listing.game || listing.title);
+  const typeLabel =
+    LISTING_TYPE_OPTIONS.find((o) => o.value === listing.listing_type)?.label ||
+    listing.category_name;
 
   return (
     <div className="rounded-2xl bg-dark-900 border border-dark-800 flex flex-col overflow-hidden
@@ -40,9 +44,9 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-xs font-medium text-white truncate leading-tight">{gameLabel}</div>
-            {listing.category_name && listing.game && (
+            {typeLabel && listing.game && (
               <div className="text-[10px] text-dark-400 truncate leading-tight mt-0.5">
-                {listing.category_name}
+                {typeLabel}
               </div>
             )}
           </div>
