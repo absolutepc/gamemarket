@@ -13,7 +13,7 @@ export const ASSORTMENT = [
   { name: 'ВКонтакте', search: 'ВКонтакте', icon: '/assortment/vk.png', kind: 'app' },
   { name: 'Нейросети', search: 'Нейросети', icon: '/assortment/ai.png', kind: 'app' },
   { name: 'Claude', search: 'Claude', icon: '/assortment/claude.png', kind: 'app' },
-  { name: 'Cursor', search: 'Cursor', icon: '/assortment/cursor.png', kind: 'app' },
+  { name: 'Cursor AI', search: 'Cursor', icon: '/assortment/cursor.png', kind: 'app' },
   { name: 'Windows', search: 'Windows', icon: '/assortment/windows.png', kind: 'app' },
   { name: 'Battle.net', search: 'Battle.net', icon: '/assortment/battlenet.png', kind: 'app' },
   { name: 'Nintendo', search: 'Nintendo', icon: '/assortment/nintendo.png', kind: 'app' },
