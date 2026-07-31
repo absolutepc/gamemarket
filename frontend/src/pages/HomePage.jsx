@@ -3,25 +3,36 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Zap, ArrowRight, ChevronLeft, ChevronRight,
-  Coins, User, Package, Sparkles, Gift, Wallet, Bot, Share2,
+  Coins, User, Package, Sparkles, Gift, Wallet,
+  KeyRound, HelpCircle, Gamepad2, Wrench, Layers,
+  Film, Clock, Puzzle, Palette, GraduationCap, ShoppingBag,
 } from 'lucide-react';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
 import Seo from '../components/Seo';
 import HomeHeroSlider from '../components/HomeHeroSlider';
 import { ASSORTMENT, ASSORTMENT_PREVIEW_COUNT } from '../data/assortment';
+import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
-const CATEGORY_ICONS = {
-  'game-currency': Coins,
-  accounts: User,
-  items: Package,
-  subscriptions: Sparkles,
-  topups: Wallet,
-  'gift-cards': Gift,
+const LISTING_TYPE_ICONS = {
+  subscription: Sparkles,
+  donate: Gift,
+  account: User,
+  item: Package,
+  topup: Wallet,
+  keys: KeyRound,
+  other: HelpCircle,
+  currency: Coins,
+  game_account: Gamepad2,
   boosting: Zap,
-  'ai-services': Bot,
-  social: Share2,
-  other: Package,
+  services: Wrench,
+  skins: Layers,
+  games: ShoppingBag,
+  media: Film,
+  rental: Clock,
+  mods: Puzzle,
+  design: Palette,
+  training: GraduationCap,
 };
 
 
@@ -59,10 +70,6 @@ export default function HomePage() {
   const { data: listings } = useQuery({
     queryKey: ['listings', 'featured'],
     queryFn: () => api.get('/listings?limit=12&sort=popular').then((r) => r.data),
-  });
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => api.get('/categories').then((r) => r.data),
   });
 
   const scrollAssortment = (dir) => {
@@ -213,26 +220,24 @@ export default function HomePage() {
         </Link>
       </section>
 
-      {categories?.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2">
-          <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-            {categories.map((cat) => {
-              const Icon = CATEGORY_ICONS[cat.slug] || Package;
-              return (
-                <Link
-                  key={cat.id}
-                  to={`/catalog?category=${cat.slug}`}
-                  className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
-                             hover:border-[#2B71F3]/40 text-sm transition-colors"
-                >
-                  <Icon size={14} className="text-[#2B71F3]" />
-                  {cat.name}
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+          {LISTING_TYPE_OPTIONS.map((opt) => {
+            const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
+            return (
+              <Link
+                key={opt.value}
+                to={`/catalog?type=${encodeURIComponent(opt.value)}`}
+                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
+                           hover:border-[#2B71F3]/40 text-sm transition-colors"
+              >
+                <Icon size={14} className="text-[#2B71F3]" />
+                {opt.label}
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="py-6 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between mb-5">
