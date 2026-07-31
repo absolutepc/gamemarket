@@ -20,6 +20,7 @@ import ChatsPage from './pages/ChatsPage';
 import ChatPage from './pages/ChatPage';
 import VkCallbackPage from './pages/VkCallbackPage';
 import AdminDisputesPage from './pages/AdminDisputesPage';
+import AppsPage from './pages/AppsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
@@ -28,6 +29,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="apps" element={<AppsPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="listings/:id" element={<ListingPage />} />
         <Route path="users/:username" element={<ProfilePage />} />
