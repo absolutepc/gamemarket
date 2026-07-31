@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   username VARCHAR(50) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  avatar_url VARCHAR(500),
+  avatar_url TEXT,
   bio TEXT,
   balance DECIMAL(12,2) NOT NULL DEFAULT 0,
   frozen_balance DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -197,6 +197,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS buyer_fields JSONB DEFAULT '[]';
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '{}';
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS buyer_data JSONB DEFAULT '{}';
+ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT;
 UPDATE listings SET status='active' WHERE status='sold';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_transaction_unique ON reviews(transaction_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_one_per_buyer_deal ON reviews(transaction_id, reviewer_id);

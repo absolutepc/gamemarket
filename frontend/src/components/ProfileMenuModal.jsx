@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, MessageCircle, LogOut, ChevronRight, Wallet } from 'lucide-react';
+import { X, MessageCircle, LogOut, ChevronRight, Wallet, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import NotificationsModal from './NotificationsModal';
 import { formatPrice } from '../utils/format';
+import { compressImageFile } from '../utils/imageCompress';
 
 const SOCIALS = [
   { label: 'Telegram', href: 'https://t.me/', color: '#2AABEE', path: 'M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z' },
@@ -30,11 +31,12 @@ export default function ProfileMenuModal({ open, onClose }) {
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifLabel, setNotifLabel] = useState(prefsSummary);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     if (!open) {
       setShowNotifications(false);
-      return;
+      return undefined;
     }
     setNotifLabel(prefsSummary());
     const onKey = (e) => { if (e.key === 'Escape' && !showNotifications) onClose(); };
@@ -48,22 +50,29 @@ export default function ProfileMenuModal({ open, onClose }) {
 
   if (!open || !user) return null;
 
-  const changePhoto = async () => {
-    const url = window.prompt('Ссылка на новое фото (URL)', user.avatar_url || '');
-    if (url === null) return;
-    const trimmed = url.trim();
-    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
-      toast.error('Укажите корректный URL');
-      return;
-    }
+  const saveAvatar = async (avatar_url) => {
     setAvatarBusy(true);
     try {
-      const { data } = await api.put('/users/me/profile', { avatar_url: trimmed || null });
+      const { data } = await api.put('/users/me/profile', { avatar_url });
       setUser({ ...user, avatar_url: data.avatar_url });
-      toast.success('Фото обновлено');
+      toast.success(avatar_url ? 'Аватар обновлён' : 'Аватар удалён');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Не удалось обновить фото');
+      toast.error(err.response?.data?.error || 'Не удалось обновить аватар');
     } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const onPickFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setAvatarBusy(true);
+    try {
+      const dataUrl = await compressImageFile(file, { maxSide: 320, quality: 0.78 });
+      await saveAvatar(dataUrl);
+    } catch (err) {
+      toast.error(err.message || 'Не удалось загрузить фото');
       setAvatarBusy(false);
     }
   };
@@ -97,21 +106,53 @@ export default function ProfileMenuModal({ open, onClose }) {
             </div>
 
             <div className="px-6 pt-6 pb-4 flex flex-col items-center text-center">
-              {user.avatar_url ? (
-                <img src={user.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover border border-dark-700" />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold border border-dark-700">
-                  {user.username?.[0]?.toUpperCase()}
+              <div className="relative">
+                <div className="w-28 h-28 rounded-full overflow-hidden ring-2 ring-[#2B71F3]/50 ring-offset-2 ring-offset-dark-900 bg-dark-800">
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold">
+                      {user.username?.[0]?.toUpperCase()}
+                    </div>
+                  )}
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={avatarBusy}
+                  className="absolute bottom-0.5 right-0.5 w-9 h-9 rounded-full bg-[#2B71F3] text-white
+                             flex items-center justify-center shadow-lg border-2 border-dark-900
+                             hover:bg-blue-500 disabled:opacity-60"
+                  aria-label="Загрузить аватар"
+                >
+                  <Camera size={16} />
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onPickFile}
+                />
+              </div>
               <button
                 type="button"
-                onClick={changePhoto}
+                onClick={() => fileRef.current?.click()}
                 disabled={avatarBusy}
                 className="mt-3 text-sm text-brand-400 hover:text-brand-300 font-medium"
               >
-                Изменить фото
+                {avatarBusy ? 'Загрузка…' : 'Добавить аватар'}
               </button>
+              {user.avatar_url && (
+                <button
+                  type="button"
+                  onClick={() => saveAvatar(null)}
+                  disabled={avatarBusy}
+                  className="mt-1 text-xs text-dark-500 hover:text-dark-300"
+                >
+                  Удалить фото
+                </button>
+              )}
               <p className="mt-2 text-sm text-dark-300">{authLabel}</p>
               <Link
                 to="/wallet"

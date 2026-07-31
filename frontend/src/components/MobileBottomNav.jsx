@@ -70,13 +70,13 @@ export default function MobileBottomNav() {
           <img
             src={user.avatar_url}
             alt=""
-            className={`w-[22px] h-[22px] rounded-full object-cover ${
+            className={`w-7 h-7 rounded-full object-cover ring-1 ring-white/15 ${
               active ? 'ring-2 ring-[#5B8CFF] ring-offset-1 ring-offset-[#1a1b20]' : ''
             }`}
           />
         ) : (
           <span
-            className={`w-[22px] h-[22px] rounded-full flex items-center justify-center text-[11px] font-semibold ${
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold ring-1 ring-white/10 ${
               active ? 'bg-[#5B8CFF] text-white' : 'bg-[#2a2c33] text-[#A8ADB8]'
             }`}
           >

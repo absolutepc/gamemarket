@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Layers, Plus } from 'lucide-react';
 import Seo from '../components/Seo';
 import { ASSORTMENT_TABS, assortmentByTab } from '../data/assortment';
 
@@ -29,23 +29,24 @@ export default function AppsPage() {
   };
 
   const activeLabel = ASSORTMENT_TABS.find((t) => t.id === activeTab)?.label || 'Игры';
+  const suggestTopic = activeTab === 'apps' ? 'suggest_app' : activeTab === 'mobile' ? 'suggest_mobile' : 'suggest_game';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8 pb-28">
       <Seo
         title="Игры и сервисы"
         description="Все игры, мобильные игры и приложения Lootz — выберите направление и перейдите к лотам."
         path="/apps"
       />
 
-      <h1 className="text-2xl sm:text-3xl font-bold mb-2">Игры и сервисы</h1>
-      <p className="text-dark-400 text-sm mb-5">
-        {tabItems.length.toLocaleString('ru-RU')} в разделе «{activeLabel}» · выберите игру или сервис
-      </p>
+      <div className="flex items-center gap-2.5 mb-4">
+        <Layers size={22} className="text-[#2B71F3] shrink-0" />
+        <h1 className="text-xl sm:text-2xl font-bold">{activeLabel}</h1>
+      </div>
 
       {/* Tabs: Игры / Мобильные игры / Приложения */}
       <div
-        className="mb-5 flex gap-1 overflow-x-auto rounded-xl bg-dark-900 p-1 ring-1 ring-dark-800"
+        className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-dark-900 p-1 ring-1 ring-dark-800"
         style={{ scrollbarWidth: 'none' }}
         role="tablist"
         aria-label="Разделы"
@@ -71,7 +72,7 @@ export default function AppsPage() {
         })}
       </div>
 
-      <div className="relative mb-6 max-w-xl">
+      <div className="relative mb-5 max-w-xl">
         <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-500" />
         <input
           className="input pl-10"
@@ -87,16 +88,18 @@ export default function AppsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-x-3 gap-y-5">
+      {/* Playerok-style 4-column icon grid */}
+      <div className="grid grid-cols-4 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-6">
         {filtered.map((item) => (
           <Link
             key={`${item.kind}-${item.name}-${item.search}`}
             to={`/catalog?search=${encodeURIComponent(item.search)}`}
-            className="group flex flex-col items-center gap-2"
+            className="group flex flex-col items-center gap-1.5"
           >
             <div
-              className="w-full aspect-square max-w-[88px] mx-auto rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10
-                            group-hover:ring-[#2B71F3]/50 group-hover:scale-105 transition-all duration-200 shadow-lg"
+              className="w-full aspect-square max-w-[84px] mx-auto rounded-[22%] overflow-hidden bg-[#1c1e24]
+                         ring-1 ring-white/[0.08] shadow-[0_6px_18px_rgba(0,0,0,0.35)]
+                         group-hover:ring-[#2B71F3]/45 group-hover:scale-[1.04] transition-all duration-200"
             >
               <img
                 src={item.icon}
@@ -109,11 +112,32 @@ export default function AppsPage() {
                 }}
               />
             </div>
-            <span className="text-[11px] sm:text-xs text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full">
+            <span className="w-full text-center text-[11px] sm:text-xs text-white/90 group-hover:text-white leading-tight line-clamp-2 px-0.5">
               {item.name}
             </span>
           </Link>
         ))}
+
+        {/* Предложить — Playerok-style trailing tile */}
+        {!q.trim() && (
+          <Link
+            to={`/support?topic=${suggestTopic}`}
+            className="group flex flex-col items-center gap-1.5"
+            aria-label="Предложить"
+          >
+            <div
+              className="w-full aspect-square max-w-[84px] mx-auto rounded-[22%] overflow-hidden
+                         bg-[#1c1e24] ring-1 ring-white/[0.08]
+                         flex items-center justify-center
+                         group-hover:ring-[#2B71F3]/45 transition-all duration-200"
+            >
+              <Plus size={28} strokeWidth={2} className="text-[#5B8CFF]" />
+            </div>
+            <span className="w-full text-center text-[11px] sm:text-xs font-medium text-[#5B8CFF] leading-tight">
+              Предложить
+            </span>
+          </Link>
+        )}
       </div>
 
       {filtered.length === 0 && (

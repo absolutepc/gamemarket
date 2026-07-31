@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
@@ -9,6 +9,7 @@ import Seo from '../components/Seo';
 import ProfileMenuModal from '../components/ProfileMenuModal';
 import useAuthStore from '../store/authStore';
 import { formatDate, formatPrice } from '../utils/format';
+import { compressImageFile } from '../utils/imageCompress';
 
 function StarRow({ rating }) {
   return (
@@ -30,8 +31,11 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const isOwn = currentUser?.username === username;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileRef = useRef(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', username],
@@ -54,6 +58,24 @@ export default function ProfilePage() {
       navigate(`/chats/${data.id}`);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Не удалось открыть чат');
+    }
+  };
+
+  const onAvatarFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !isOwn) return;
+    setAvatarBusy(true);
+    try {
+      const dataUrl = await compressImageFile(file, { maxSide: 320, quality: 0.78 });
+      const { data } = await api.put('/users/me/profile', { avatar_url: dataUrl });
+      setUser({ ...currentUser, avatar_url: data.avatar_url });
+      qc.invalidateQueries(['profile', username]);
+      toast.success('Аватар обновлён');
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || 'Не удалось загрузить аватар');
+    } finally {
+      setAvatarBusy(false);
     }
   };
 
@@ -80,13 +102,39 @@ export default function ProfilePage() {
 
       <div className="card p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="w-20 h-20 rounded-2xl object-cover shrink-0 border border-dark-700" />
-          ) : (
-            <div className="w-20 h-20 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold shrink-0">
-              {profile.username[0].toUpperCase()}
+          <div className="relative shrink-0">
+            <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-[#2B71F3]/40 ring-offset-2 ring-offset-dark-900 bg-dark-800 border border-dark-700">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold">
+                  {profile.username[0].toUpperCase()}
+                </div>
+              )}
             </div>
-          )}
+            {isOwn && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={avatarBusy}
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#2B71F3] text-white
+                             flex items-center justify-center border-2 border-dark-900 shadow-md
+                             hover:bg-blue-500 disabled:opacity-60"
+                  aria-label="Загрузить аватар"
+                >
+                  <Camera size={14} />
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onAvatarFile}
+                />
+              </>
+            )}
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{profile.username}</h1>

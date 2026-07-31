@@ -1,9 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Seo from '../components/Seo';
 
 export default function SupportPage() {
-  const [form, setForm] = useState({ email: '', topic: 'deal', message: '' });
+  const [params] = useSearchParams();
+  const topicFromUrl = params.get('topic') || 'deal';
+  const [form, setForm] = useState({ email: '', topic: topicFromUrl, message: '' });
+
+  useEffect(() => {
+    const t = params.get('topic');
+    if (t) setForm((f) => ({ ...f, topic: t }));
+  }, [params]);
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -11,7 +19,11 @@ export default function SupportPage() {
       toast.error('Укажите email и сообщение от 20 символов');
       return;
     }
-    toast.success('Запрос принят. Мы ответим на email.');
+    toast.success(
+      form.topic.startsWith('suggest')
+        ? 'Спасибо! Мы рассмотрим ваше предложение.'
+        : 'Запрос принят. Мы ответим на email.'
+    );
     setForm({ email: '', topic: 'deal', message: '' });
   };
 
@@ -43,7 +55,9 @@ export default function SupportPage() {
       </div>
 
       <div className="card p-6">
-        <h2 className="font-semibold text-lg mb-4">Написать в поддержку</h2>
+        <h2 className="font-semibold text-lg mb-4">
+          {form.topic.startsWith('suggest') ? 'Предложить игру или сервис' : 'Написать в поддержку'}
+        </h2>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <div>
             <label className="text-sm font-medium mb-1.5 block">Email</label>
@@ -66,6 +80,9 @@ export default function SupportPage() {
               <option value="deal">Проблема со сделкой</option>
               <option value="account">Аккаунт и вход</option>
               <option value="payment">Баланс и платежи</option>
+              <option value="suggest_app">Предложить приложение</option>
+              <option value="suggest_game">Предложить игру</option>
+              <option value="suggest_mobile">Предложить мобильную игру</option>
               <option value="other">Другое</option>
             </select>
           </div>
@@ -73,7 +90,11 @@ export default function SupportPage() {
             <label className="text-sm font-medium mb-1.5 block">Сообщение</label>
             <textarea
               className="input min-h-[140px] resize-none"
-              placeholder="Опишите ситуацию подробнее..."
+              placeholder={
+                form.topic.startsWith('suggest')
+                  ? 'Напишите название игры или сервиса и коротко, зачем его добавить...'
+                  : 'Опишите ситуацию подробнее...'
+              }
               value={form.message}
               onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
               required

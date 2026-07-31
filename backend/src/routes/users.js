@@ -31,6 +31,11 @@ router.put('/me/profile',
     body('bio').optional({ nullable: true }).trim().isLength({ max: 500 }),
     body('avatar_url').optional({ nullable: true }).custom((v) => {
       if (v === null || v === '' || v === undefined) return true;
+      if (typeof v !== 'string') return false;
+      if (v.length > 1_500_000) return false;
+      if (v.startsWith('data:image/')) {
+        return /^data:image\/(jpeg|jpg|png|webp|gif);base64,/.test(v);
+      }
       try {
         const u = new URL(v);
         return u.protocol === 'http:' || u.protocol === 'https:';
