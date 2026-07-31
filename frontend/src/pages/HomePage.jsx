@@ -11,7 +11,7 @@ import api from '../utils/api';
 import ListingCard from '../components/ListingCard';
 import Seo from '../components/Seo';
 import HomeHeroSlider from '../components/HomeHeroSlider';
-import { ASSORTMENT, ASSORTMENT_PREVIEW_COUNT } from '../data/assortment';
+import { ASSORTMENT, ASSORTMENT_PREVIEW_COUNT, HOME_TOP_14 } from '../data/assortment';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const LISTING_TYPE_ICONS = {
@@ -44,10 +44,8 @@ export default function HomePage() {
   const sidePad = 12;
   const visibleCount = 5;
 
-  const previewItems = useMemo(
-    () => ASSORTMENT.slice(0, ASSORTMENT_PREVIEW_COUNT),
-    []
-  );
+  // Explicit top-14 list (not a slice of a reordered catalog)
+  const previewItems = HOME_TOP_14;
   const moreCount = Math.max(0, ASSORTMENT.length - ASSORTMENT_PREVIEW_COUNT);
   const mosaicIcons = useMemo(
     () => ASSORTMENT.slice(ASSORTMENT_PREVIEW_COUNT, ASSORTMENT_PREVIEW_COUNT + 4).map((p) => p.icon),

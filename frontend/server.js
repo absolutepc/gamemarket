@@ -24,9 +24,19 @@ const wsProxy = createProxyMiddleware({
 app.use('/api', apiProxy);
 app.use('/socket.io', wsProxy);
 
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'dist'), {
+  index: false,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    } else if (/\.(?:js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
 
 app.get('*', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 

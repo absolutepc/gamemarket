@@ -1,6 +1,5 @@
-/** Playerok-style assortment: preview favorites first, then apps → mobile → PC */
-export const ASSORTMENT = [
-  // Home preview (first 14)
+/** Fixed home carousel order (first 14) — do not reorder without product request */
+export const HOME_TOP_14 = [
   { name: 'Claude AI', search: 'Claude', icon: '/assortment/claude.png', kind: 'app' },
   { name: 'Cursor AI', search: 'Cursor', icon: '/assortment/cursor.png', kind: 'app' },
   { name: 'Arena Breakout', search: 'Arena Breakout', icon: '/assortment/arena-breakout.png', kind: 'mobile' },
@@ -15,6 +14,11 @@ export const ASSORTMENT = [
   { name: 'Valorant', search: 'Valorant', icon: '/assortment/valorant.png', kind: 'pc' },
   { name: 'Escape From Tarkov', search: 'Tarkov', icon: '/assortment/escape-from-tarkov.png', kind: 'pc' },
   { name: 'CS2', search: 'Counter-Strike', icon: '/assortment/cs2.png', kind: 'pc' },
+];
+
+/** Playerok-style assortment: home top-14 first, then apps → mobile → PC */
+export const ASSORTMENT = [
+  ...HOME_TOP_14,
   // Remaining
   { name: 'TikTok', search: 'TikTok', icon: '/assortment/tiktok.png', kind: 'app' },
   { name: 'Discord', search: 'Discord', icon: '/assortment/discord.png', kind: 'app' },
@@ -149,7 +153,7 @@ export const ASSORTMENT = [
   { name: 'Helldivers 2', search: 'Helldivers', icon: '/assortment/helldivers-2.png', kind: 'pc' },
 ];
 
-export const ASSORTMENT_PREVIEW_COUNT = 14;
+export const ASSORTMENT_PREVIEW_COUNT = HOME_TOP_14.length;
 
 export const ASSORTMENT_TABS = [
   { id: 'games', label: 'Игры' },
