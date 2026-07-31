@@ -183,17 +183,17 @@ export default function HomePage() {
         </section>
       )}
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-16">
-        <div className="flex items-center justify-between mb-5">
+      <section className="py-6 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold">Ассортимент</h2>
           <Link to="/catalog" className="flex items-center gap-1 text-[#2B71F3] hover:text-blue-400 text-sm font-medium transition-colors">
             Все лоты <ArrowRight size={14} />
           </Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
           {listings?.listings?.map((l) => <ListingCard key={l.id} listing={l} />)}
           {(!listings?.listings || listings.listings.length === 0) && (
-            <div className="col-span-full text-center text-dark-400 py-12 text-sm">
+            <div className="col-span-full text-center text-dark-400 py-12 text-sm px-4">
               Пока нет активных лотов —{' '}
               <Link to="/listings/create" className="text-[#2B71F3] hover:underline">создайте первый</Link>
             </div>

@@ -156,6 +156,19 @@ export default function ListingPage() {
             )}
           </div>
 
+          {listing.attributes && Object.keys(listing.attributes).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(listing.attributes).map(([key, value]) => (
+                <span
+                  key={key}
+                  className="inline-flex items-center rounded-lg bg-dark-800 border border-dark-700 px-2.5 py-1 text-xs text-dark-200"
+                >
+                  {String(value)}
+                </span>
+              ))}
+            </div>
+          )}
+
           {isOwner && listing.platform_fee_percent != null && (
             <div className="text-sm text-dark-400">
               Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}% ·

@@ -75,6 +75,32 @@ function validateBuyerData(fields, data) {
   return { data: cleaned };
 }
 
+function normalizeAttributes(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const k = String(key).trim().slice(0, 40);
+    if (!k) continue;
+    const v = value == null ? '' : String(value).trim().slice(0, 80);
+    if (v) out[k] = v;
+    if (Object.keys(out).length >= 20) break;
+  }
+  return out;
+}
+
+function normalizeImages(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => String(item || '').trim())
+    .filter((item) => {
+      if (!item) return false;
+      if (item.startsWith('https://') || item.startsWith('http://') || item.startsWith('/')) return true;
+      if (item.startsWith('data:image/') && item.length < 1_200_000) return true;
+      return false;
+    })
+    .slice(0, 5);
+}
+
 function calcDiscount(price, originalPrice) {
   const p = parseFloat(price);
   const o = originalPrice != null ? parseFloat(originalPrice) : null;
@@ -210,12 +236,16 @@ router.post('/',
     body('listing_type').isIn(LISTING_TYPES),
     body('category_id').optional().isUUID(),
     body('delivery_method').optional().isIn(['manual', 'auto']),
+    body('images').optional().isArray({ max: 5 }),
+    body('attributes').optional().isObject(),
+    body('tags').optional().isArray({ max: 20 }),
   ],
   validate,
   async (req, res) => {
     const {
       title, description, price, original_price, game, listing_type,
       category_id, delivery_method, delivery_instructions, tags, buyer_fields,
+      images, attributes,
     } = req.body;
     const method = delivery_method || 'manual';
     const fields = normalizeBuyerFields(buyer_fields, method);
@@ -224,16 +254,22 @@ router.post('/',
     }
     const safeDesc = xss(description);
     const discount = calcDiscount(price, original_price);
+    const imageList = normalizeImages(images);
+    const attrs = normalizeAttributes(attributes);
+    const tagList = Array.isArray(tags)
+      ? tags.map((t) => String(t).trim().slice(0, 50)).filter(Boolean).slice(0, 20)
+      : Object.values(attrs).slice(0, 12);
     const { rows } = await pool.query(
       `INSERT INTO listings
          (seller_id, category_id, title, description, price, original_price, discount_percent,
-          game, listing_type, delivery_method, delivery_instructions, tags, buyer_fields)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+          game, listing_type, delivery_method, delivery_instructions, tags, buyer_fields, images, attributes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING *`,
       [req.user.id, category_id || null, title, safeDesc, price,
        discount.original_price, discount.discount_percent,
        game || null, listing_type, method,
-       delivery_instructions || null, tags || [], JSON.stringify(fields)]
+       delivery_instructions || null, tagList, JSON.stringify(fields),
+       JSON.stringify(imageList), JSON.stringify(attrs)]
     );
     res.status(201).json(rows[0]);
   }
@@ -249,6 +285,9 @@ router.put('/:id',
     body('original_price').optional({ nullable: true }).isFloat({ min: 1, max: 1000000 }),
     body('listing_type').optional().isIn(LISTING_TYPES),
     body('delivery_method').optional().isIn(['manual', 'auto']),
+    body('images').optional().isArray({ max: 5 }),
+    body('attributes').optional().isObject(),
+    body('tags').optional().isArray({ max: 20 }),
   ],
   validate,
   async (req, res) => {
@@ -260,6 +299,7 @@ router.put('/:id',
     const {
       title, description, price, original_price, status, game,
       delivery_instructions, listing_type, delivery_method, category_id, buyer_fields,
+      images, attributes, tags,
     } = req.body;
     const safeDesc = description ? xss(description) : null;
     const nextPrice = price != null ? price : existing[0].price;
@@ -276,6 +316,12 @@ router.put('/:id',
       return res.status(400).json({ error: 'Для автовыдачи укажите хотя бы один атрибут покупателя (например ID / ник)' });
     }
 
+    const imageList = images !== undefined ? normalizeImages(images) : undefined;
+    const attrs = attributes !== undefined ? normalizeAttributes(attributes) : undefined;
+    const tagList = tags !== undefined
+      ? (Array.isArray(tags) ? tags.map((t) => String(t).trim().slice(0, 50)).filter(Boolean).slice(0, 20) : [])
+      : undefined;
+
     const { rows } = await pool.query(
       `UPDATE listings SET
          title=COALESCE($1,title),
@@ -290,8 +336,11 @@ router.put('/:id',
          delivery_method=COALESCE($10,delivery_method),
          category_id=COALESCE($11,category_id),
          buyer_fields=COALESCE($12,buyer_fields),
+         images=COALESCE($13,images),
+         attributes=COALESCE($14,attributes),
+         tags=COALESCE($15,tags),
          updated_at=NOW()
-       WHERE id=$13 RETURNING *`,
+       WHERE id=$16 RETURNING *`,
       [
         title || null, safeDesc, price || null,
         discount.original_price, discount.discount_percent,
@@ -299,6 +348,9 @@ router.put('/:id',
         listing_type || null, delivery_method || null,
         category_id || null,
         fields ? JSON.stringify(fields) : null,
+        imageList ? JSON.stringify(imageList) : null,
+        attrs ? JSON.stringify(attrs) : null,
+        tagList || null,
         req.params.id,
       ]
     );
