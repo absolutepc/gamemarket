@@ -169,6 +169,10 @@ export default function HomePage() {
                   className="w-full h-full object-cover"
                   loading="lazy"
                   draggable={false}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/assortment/other-apps.svg';
+                  }}
                 />
               </div>
               <span className="text-[11px] sm:text-xs text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full transition-colors">
