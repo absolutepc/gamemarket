@@ -8,7 +8,7 @@ import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
 import { formatPrice, formatDate } from '../utils/format';
-import { resolveAssortmentIcon } from '../utils/assortmentIcons';
+import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -152,7 +152,9 @@ export default function ListingPage() {
                   }}
                 />
               </span>
-              <span className="text-brand-400 text-sm font-medium uppercase tracking-wide">{listing.game}</span>
+              <span className="text-brand-400 text-sm font-medium uppercase tracking-wide">
+                {resolveAssortmentItem(listing.game)?.name || listing.game}
+              </span>
             </div>
           )}
           <h1 className="text-2xl font-bold leading-snug">{listing.title}</h1>

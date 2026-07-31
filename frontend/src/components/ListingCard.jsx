@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Star, Zap } from 'lucide-react';
 import { formatPrice, formatReviewsCount } from '../utils/format';
-import { resolveAssortmentIcon } from '../utils/assortmentIcons';
+import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -15,8 +15,9 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
   const image = listing.images?.[0] || PLACEHOLDER;
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
   const isAuto = listing.delivery_method === 'auto';
-  const gameLabel = listing.game || listing.category_name || 'Товар';
-  const gameIcon = resolveAssortmentIcon(listing.game || listing.title || listing.category_name);
+  const matched = resolveAssortmentItem(listing.game || listing.title);
+  const gameLabel = matched?.name || listing.game || listing.category_name || 'Товар';
+  const gameIcon = matched?.icon || resolveAssortmentIcon(listing.game || listing.title);
 
   return (
     <div className="rounded-2xl bg-dark-900 border border-dark-800 flex flex-col overflow-hidden

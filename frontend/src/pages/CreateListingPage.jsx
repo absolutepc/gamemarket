@@ -7,6 +7,7 @@ import {
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import Seo from '../components/Seo';
+import AssortmentPicker from '../components/AssortmentPicker';
 import { resolveFeePercent, formatFeePercent, calcSellerReceives } from '../utils/fees';
 import { formatPrice } from '../utils/format';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
@@ -16,6 +17,7 @@ import {
   attributesToTags,
 } from '../utils/listingAttributes';
 import { compressImageFile } from '../utils/imageCompress';
+import { resolveAssortmentItem, isExactAssortmentName } from '../utils/assortmentIcons';
 
 const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
 const STEPS = [
@@ -158,6 +160,10 @@ export default function CreateListingPage() {
         toast.error('Выберите тип лота');
         return false;
       }
+      if (!form.game.trim() || !isExactAssortmentName(form.game)) {
+        toast.error('Выберите игру, приложение или сервис из списка');
+        return false;
+      }
       const price = parseFloat(form.price);
       if (!price || price < 1) {
         toast.error('Укажите цену');
@@ -221,7 +227,7 @@ export default function CreateListingPage() {
       description: form.description.trim(),
       price: parseFloat(form.price),
       original_price: form.original_price ? parseFloat(form.original_price) : null,
-      game: form.game.trim() || undefined,
+      game: form.game.trim(),
       listing_type: form.listing_type,
       category_id: form.category_id || undefined,
       delivery_method: form.delivery_method,
@@ -257,6 +263,8 @@ export default function CreateListingPage() {
       setCompressing(false);
     }
   };
+
+  const selectedGame = useMemo(() => resolveAssortmentItem(form.game), [form.game]);
 
   const progress = ((step + 1) / STEPS.length) * 100;
 
@@ -349,15 +357,11 @@ export default function CreateListingPage() {
               </select>
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Игра / сервис</label>
-              <input
-                className="input"
-                placeholder="Например: Cursor, Warface, Steam"
-                value={form.game}
-                onChange={(e) => patchForm('game', e.target.value)}
-              />
-            </div>
+            <AssortmentPicker
+              value={form.game}
+              onChange={(name) => patchForm('game', name)}
+              required
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -405,7 +409,14 @@ export default function CreateListingPage() {
         {step === 1 && (
           <div className="flex flex-col gap-6">
             {form.game && (
-              <div className="flex items-center gap-2 text-sm text-dark-300">
+              <div className="flex items-center gap-2.5 text-sm text-dark-300">
+                {selectedGame && (
+                  <img
+                    src={selectedGame.icon}
+                    alt=""
+                    className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/10"
+                  />
+                )}
                 <span className="font-medium text-white">{form.game}</span>
                 <span className="text-dark-600">·</span>
                 <span>{LISTING_TYPE_OPTIONS.find((o) => o.value === form.listing_type)?.label || form.listing_type}</span>
