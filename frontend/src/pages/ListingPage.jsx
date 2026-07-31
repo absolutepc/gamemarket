@@ -8,6 +8,7 @@ import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
 import { formatPrice, formatDate } from '../utils/format';
+import { resolveAssortmentIcon } from '../utils/assortmentIcons';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -139,7 +140,20 @@ export default function ListingPage() {
 
         <div className="flex flex-col gap-4">
           {listing.game && (
-            <span className="text-brand-400 text-sm font-medium uppercase tracking-wide">{listing.game}</span>
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg overflow-hidden bg-dark-800 ring-1 ring-white/10 shrink-0">
+                <img
+                  src={resolveAssortmentIcon(listing.game)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/assortment/other-apps.png';
+                  }}
+                />
+              </span>
+              <span className="text-brand-400 text-sm font-medium uppercase tracking-wide">{listing.game}</span>
+            </div>
           )}
           <h1 className="text-2xl font-bold leading-snug">{listing.title}</h1>
 

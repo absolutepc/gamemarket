@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Star, Zap } from 'lucide-react';
 import { formatPrice, formatReviewsCount } from '../utils/format';
+import { resolveAssortmentIcon } from '../utils/assortmentIcons';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -15,7 +16,7 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
   const isAuto = listing.delivery_method === 'auto';
   const gameLabel = listing.game || listing.category_name || 'Товар';
-  const gameLetter = String(gameLabel).trim().charAt(0).toUpperCase() || 'G';
+  const gameIcon = resolveAssortmentIcon(listing.game || listing.title || listing.category_name);
 
   return (
     <div className="rounded-2xl bg-dark-900 border border-dark-800 flex flex-col overflow-hidden
@@ -24,10 +25,17 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
       <Link to={`/listings/${listing.id}`} className="flex flex-col flex-1">
         {/* Playerok-style card header: game icon + name/category */}
         <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-dark-700 to-dark-800
-                          flex items-center justify-center text-[11px] font-bold text-white shrink-0
-                          ring-1 ring-white/10">
-            {gameLetter}
+          <div className="w-7 h-7 rounded-lg overflow-hidden bg-dark-800 shrink-0 ring-1 ring-white/10">
+            <img
+              src={gameIcon}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/assortment/other-apps.png';
+              }}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-xs font-medium text-white truncate leading-tight">{gameLabel}</div>

@@ -54,7 +54,7 @@ export default function AppsPage() {
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/assortment/other-apps.svg';
+                  e.currentTarget.src = '/assortment/other-apps.png';
                 }}
               />
             </div>
