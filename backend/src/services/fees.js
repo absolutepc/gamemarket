@@ -15,8 +15,10 @@ const REDUCED_CATEGORY_SLUGS = new Set([
 
 const REDUCED_LISTING_TYPES = new Set([
   'subscription',
+  'donate',
   'topup',
-  'giftcard',
+  'keys',
+  'giftcard', // legacy
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

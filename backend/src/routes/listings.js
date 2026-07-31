@@ -6,7 +6,28 @@ const { authenticate } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
 const { calcPlatformFee } = require('../services/fees');
 
-const LISTING_TYPES = ['item', 'account', 'currency', 'boosting', 'subscription', 'topup', 'giftcard', 'other'];
+const LISTING_TYPES = [
+  'subscription',
+  'donate',
+  'account',
+  'item',
+  'topup',
+  'keys',
+  'other',
+  'currency',
+  'game_account',
+  'boosting',
+  'services',
+  'skins',
+  'games',
+  'media',
+  'rental',
+  'mods',
+  'design',
+  'training',
+  // legacy values kept for existing listings
+  'giftcard',
+];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [
   { key: 'player_id', label: 'ID / ник', required: true },

@@ -119,6 +119,7 @@ router.post('/me/withdraw',
         await client.query('ROLLBACK');
         return res.status(400).json({ error: 'Insufficient balance' });
       }
+      // Platform withdrawal fee: 0%. Full amount is paid out (provider costs are on Lootz).
       const { rows: updated } = await client.query(
         `UPDATE users SET balance = balance - $1 WHERE id=$2
          RETURNING balance, frozen_balance`,
@@ -127,7 +128,7 @@ router.post('/me/withdraw',
       await client.query(
         `INSERT INTO wallet_transactions (user_id, type, amount, balance_after, description)
          VALUES ($1,'withdrawal',$2,$3,$4)`,
-        [req.user.id, -amount, updated[0].balance, `Withdrawal via ${method}: ${details}`]
+        [req.user.id, -amount, updated[0].balance, `Withdrawal via ${method} (0% platform fee): ${details}`]
       );
       await client.query('COMMIT');
       res.json({

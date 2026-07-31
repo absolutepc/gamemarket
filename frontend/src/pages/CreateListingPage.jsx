@@ -8,6 +8,7 @@ import api from '../utils/api';
 import Seo from '../components/Seo';
 import { resolveFeePercent, formatFeePercent, calcSellerReceives } from '../utils/fees';
 import { formatPrice } from '../utils/format';
+import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
 
@@ -18,7 +19,7 @@ export default function CreateListingPage() {
   const [buyerFields, setBuyerFields] = useState([DEFAULT_FIELD]);
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
-      listing_type: 'item',
+      listing_type: 'subscription',
       delivery_method: 'manual',
       original_price: '',
     },
@@ -137,14 +138,12 @@ export default function CreateListingPage() {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Тип лота *</label>
               <select className="input" {...register('listing_type', { required: true })}>
-                <option value="item">Предмет</option>
-                <option value="account">Аккаунт</option>
-                <option value="currency">Валюта</option>
-                <option value="subscription">Подписка / ИИ</option>
-                <option value="topup">Пополнение</option>
-                <option value="giftcard">Подарочная карта</option>
-                <option value="boosting">Буст / услуга</option>
-                <option value="other">Другое</option>
+                {LISTING_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+                {isEdit && existing?.listing_type === 'giftcard' && (
+                  <option value="giftcard">Подарочная карта</option>
+                )}
               </select>
             </div>
             <div>
@@ -206,7 +205,7 @@ export default function CreateListingPage() {
               </div>
             )}
             <p className="text-[11px] text-dark-500 mt-2">
-              7.5% — подписки, пополнения, карты, ИИ · 17.5% — аккаунты, предметы, валюта и остальное
+              7.5% — подписки, донат, пополнения, ключи · 17.5% — аккаунты, предметы, валюта и остальное
             </p>
           </div>
 
