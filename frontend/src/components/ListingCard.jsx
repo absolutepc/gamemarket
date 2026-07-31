@@ -39,7 +39,7 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
           </div>
         </div>
 
-        <div className="relative mx-3 aspect-[4/3] overflow-hidden rounded-xl bg-dark-800">
+        <div className="relative mx-1.5 aspect-[4/3] overflow-hidden rounded-xl bg-dark-800">
           <img
             src={image}
             alt={listing.title}
