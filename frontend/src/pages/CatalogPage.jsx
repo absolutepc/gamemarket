@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { SlidersHorizontal, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
 import api from '../utils/api';
-import ListingCard from '../components/ListingCard';
+import ListingCard, { LISTING_GRID_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
@@ -177,9 +177,9 @@ export default function CatalogPage() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className={LISTING_GRID_CLASS}>
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="card aspect-[3/4] animate-pulse bg-dark-800" />
+                <div key={i} className="card aspect-[3/4] animate-pulse bg-dark-800 min-w-0" />
               ))}
             </div>
           ) : data?.listings?.length === 0 ? (
@@ -188,7 +188,7 @@ export default function CatalogPage() {
               <p className="text-sm mt-1">Попробуйте изменить фильтры</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className={LISTING_GRID_CLASS}>
               {data?.listings?.map((l) => <ListingCard key={l.id} listing={l} />)}
             </div>
           )}

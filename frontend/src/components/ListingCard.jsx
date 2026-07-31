@@ -6,6 +6,10 @@ import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
+/** Same listing grid in home / catalog / profile */
+export const LISTING_GRID_CLASS =
+  'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3';
+
 function filledStarsCount(rating) {
   const value = parseFloat(rating) || 0;
   if (value <= 0) return 0;
@@ -24,12 +28,12 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
     listing.category_name;
 
   return (
-    <div className="rounded-2xl bg-dark-900 border border-dark-800 flex flex-col overflow-hidden
+    <div className="rounded-2xl bg-dark-900 border border-dark-800 flex flex-col overflow-hidden w-full min-w-0
                     hover:border-dark-600 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.35)]
                     transition-all duration-200 group animate-fade-in relative">
-      <Link to={`/listings/${listing.id}`} className="flex flex-col flex-1">
+      <Link to={`/listings/${listing.id}`} className="flex flex-col flex-1 min-w-0">
         {/* Playerok-style card header: game icon + name/category */}
-        <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+        <div className="flex items-center gap-2 px-2.5 sm:px-3 pt-2.5 sm:pt-3 pb-2 min-w-0">
           <div className="w-7 h-7 rounded-lg overflow-hidden bg-dark-800 shrink-0 ring-1 ring-white/10">
             <img
               src={gameIcon}
@@ -72,14 +76,14 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
           </div>
         </div>
 
-        <div className="px-3 py-3 flex flex-col gap-1.5 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="px-2.5 sm:px-3 py-2.5 sm:py-3 flex flex-col gap-1.5 flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             <span className="text-base sm:text-lg font-bold text-emerald-400 leading-none">
               {formatPrice(listing.price)}
             </span>
             {hasDiscount && (
               <>
-                <span className="badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5">
+                <span className="badge bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 shrink-0">
                   -{listing.discount_percent}%
                 </span>
                 <span className="text-xs text-dark-500 line-through leading-none">
@@ -94,7 +98,7 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
           </h3>
 
           {(listing.seller_rating > 0 || listing.seller_reviews > 0) && (
-            <div className="flex items-center gap-1.5 pt-1.5 border-t border-dark-800 mt-auto text-[11px]">
+            <div className="flex items-center gap-1.5 pt-1.5 border-t border-dark-800 mt-auto text-[11px] min-w-0">
               <div className="flex items-center gap-0.5 text-yellow-400 shrink-0">
                 {Array.from({ length: 5 }).map((_, i) => {
                   const filled = i < filledStarsCount(listing.seller_rating);
@@ -122,18 +126,22 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
       </Link>
 
       {showOwnerActions && (
-        <div className="px-3 pb-3 flex gap-2">
+        <div className="px-2.5 sm:px-3 pb-2.5 sm:pb-3 grid grid-cols-2 gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); onEdit?.(listing); }}
-            className="btn-secondary flex-1 text-xs py-1.5"
+            className="min-w-0 inline-flex items-center justify-center rounded-xl border border-dark-700
+                       bg-dark-800 hover:bg-dark-700 text-white text-[11px] sm:text-xs font-medium
+                       px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
           >
             Изменить
           </button>
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); onDelete?.(listing); }}
-            className="btn-secondary flex-1 text-xs py-1.5 text-red-400 hover:border-red-500/40"
+            className="min-w-0 inline-flex items-center justify-center rounded-xl border border-dark-700
+                       bg-dark-800 hover:bg-dark-700 hover:border-red-500/40 text-red-400
+                       text-[11px] sm:text-xs font-medium px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
           >
             Удалить
           </button>

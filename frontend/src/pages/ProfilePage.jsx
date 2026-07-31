@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
-import ListingCard from '../components/ListingCard';
+import ListingCard, { LISTING_GRID_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import ProfileMenuModal from '../components/ProfileMenuModal';
 import useAuthStore from '../store/authStore';
@@ -80,7 +80,7 @@ export default function ProfilePage() {
   };
 
   if (isLoading) return (
-    <div className="max-w-4xl mx-auto px-4 py-8 animate-pulse">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
       <div className="flex gap-5 mb-8">
         <div className="w-24 h-24 rounded-2xl bg-dark-800" />
         <div className="flex flex-col gap-3 pt-2">
@@ -97,7 +97,7 @@ export default function ProfilePage() {
   const avatarUrl = isOwn ? (currentUser?.avatar_url || profile.avatar_url) : profile.avatar_url;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <Seo title={profile.username} description={`Профиль продавца ${profile.username} на Lootz`} path={`/users/${profile.username}`} />
 
       <div className="card p-6 mb-6">
@@ -190,7 +190,7 @@ export default function ProfilePage() {
       <div className="mb-8">
         <h2 className="font-bold text-lg mb-4">Активные лоты ({profile.listings?.length || 0})</h2>
         {profile.listings?.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className={LISTING_GRID_CLASS}>
             {profile.listings.map((l) => (
               <ListingCard
                 key={l.id}
