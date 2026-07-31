@@ -57,7 +57,6 @@ export const ASSORTMENT = [
   { name: 'WhatsApp', search: 'WhatsApp', icon: '/assortment/whatsapp.png', kind: 'app' },
   { name: 'Twitch', search: 'Twitch', icon: '/assortment/twitch.png', kind: 'app' },
   { name: 'Microsoft Store', search: 'Microsoft Store', icon: '/assortment/microsoft-store.png', kind: 'app' },
-  { name: 'Другие приложения', search: 'приложения', icon: '/assortment/other-apps.png', kind: 'app' },
   { name: 'Brawl Stars', search: 'Brawl Stars', icon: '/assortment/brawl-stars.png', kind: 'mobile' },
   { name: 'Clash of Clans', search: 'Clash of Clans', icon: '/assortment/clash-of-clans.png', kind: 'mobile' },
   { name: 'Standoff 2', search: 'Standoff 2', icon: '/assortment/standoff-2.png', kind: 'mobile' },
