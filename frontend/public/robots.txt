@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /wallet
+Disallow: /transactions
+Disallow: /listings/create
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://lootz.ru/api/sitemap.xml

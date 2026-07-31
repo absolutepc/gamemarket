@@ -1,0 +1,121 @@
+const router = require('express').Router();
+const { body } = require('express-validator');
+const pool = require('../config/database');
+const { authenticate, requireRole } = require('../middleware/auth');
+const { validate } = require('../middleware/security');
+const { releaseEscrow, refundEscrow } = require('../services/escrow');
+
+router.use(authenticate(), requireRole('admin'));
+
+router.get('/disputes', async (req, res) => {
+  const { status = 'open' } = req.query;
+  const params = [];
+  let where = '';
+  if (status && status !== 'all') {
+    params.push(status);
+    where = `WHERE d.status=$${params.length}`;
+  }
+  const { rows } = await pool.query(
+    `SELECT d.*,
+            t.amount, t.seller_receives, t.status AS transaction_status, t.id AS tx_id,
+            l.title AS listing_title,
+            bu.username AS buyer_username,
+            su.username AS seller_username,
+            ou.username AS opened_by_username
+     FROM disputes d
+     JOIN transactions t ON t.id = d.transaction_id
+     JOIN listings l ON l.id = t.listing_id
+     JOIN users bu ON bu.id = t.buyer_id
+     JOIN users su ON su.id = t.seller_id
+     JOIN users ou ON ou.id = d.opened_by
+     ${where}
+     ORDER BY d.created_at DESC
+     LIMIT 100`,
+    params
+  );
+  res.json(rows);
+});
+
+router.post('/disputes/:id/resolve',
+  [
+    body('winner').isIn(['buyer', 'seller']),
+    body('resolution').trim().isLength({ min: 10, max: 2000 }),
+  ],
+  validate,
+  async (req, res) => {
+    const { winner, resolution } = req.body;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows: disputeRows } = await client.query(
+        `SELECT d.* FROM disputes d WHERE d.id=$1 FOR UPDATE`,
+        [req.params.id]
+      );
+      const dispute = disputeRows[0];
+      if (!dispute) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Dispute not found' });
+      }
+      if (dispute.status !== 'open') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Dispute already resolved' });
+      }
+
+      const { rows: txRows } = await client.query(
+        `SELECT * FROM transactions WHERE id=$1 FOR UPDATE`,
+        [dispute.transaction_id]
+      );
+      const tx = txRows[0];
+      if (!tx || tx.status !== 'disputed') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Transaction is not in disputed status' });
+      }
+
+      if (winner === 'seller') {
+        await releaseEscrow(client, tx, {
+          systemMessage: `Спор решён в пользу продавца. ${resolution}`,
+        });
+      } else {
+        await refundEscrow(client, tx, {
+          reason: `Dispute resolved for buyer: ${resolution}`,
+          systemMessage: `Спор решён в пользу покупателя. Средства возвращены. ${resolution}`,
+        });
+        // Mark as refunded via cancel status; also notify seller
+        await client.query(
+          `INSERT INTO notifications (user_id, type, title, body, data)
+           VALUES ($1,'dispute_resolved','Спор решён','Решение в пользу покупателя. Средства возвращены.',$2)`,
+          [tx.seller_id, JSON.stringify({ transaction_id: tx.id, dispute_id: dispute.id })]
+        );
+      }
+
+      await client.query(
+        `UPDATE disputes SET status='resolved', resolution=$2, resolved_by=$3,
+         resolved_at=NOW(), updated_at=NOW() WHERE id=$1`,
+        [dispute.id, resolution, req.user.id]
+      );
+
+      const notifyWinner = winner === 'seller' ? tx.seller_id : tx.buyer_id;
+      await client.query(
+        `INSERT INTO notifications (user_id, type, title, body, data)
+         VALUES ($1,'dispute_resolved','Спор решён',$2,$3)`,
+        [
+          notifyWinner,
+          winner === 'seller'
+            ? 'Спор решён в вашу пользу. Средства зачислены.'
+            : 'Спор решён в вашу пользу. Средства возвращены.',
+          JSON.stringify({ transaction_id: tx.id, dispute_id: dispute.id }),
+        ]
+      );
+
+      await client.query('COMMIT');
+      res.json({ message: 'Dispute resolved', winner });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+);
+
+module.exports = router;

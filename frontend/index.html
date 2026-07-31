@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Lootz — безопасная торговая площадка для игровых товаров: аккаунты, валюта, предметы и бусты с эскроу-защитой." />
+    <meta name="keywords" content="игровой маркетплейс, купить аккаунт, игровая валюта, безопасная сделка, эскроу, Lootz" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#18181f" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Lootz" />
+    <meta property="og:title" content="Lootz — Торговая площадка игровых товаров" />
+    <meta property="og:description" content="Покупайте и продавайте игровые товары безопасно. Эскроу защищает обе стороны сделки." />
+    <meta property="og:locale" content="ru_RU" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lootz — Торговая площадка игровых товаров" />
+    <meta name="twitter:description" content="Безопасные сделки с эскроу для аккаунтов, валюты и игровых предметов." />
+    <title>Lootz — Торговая площадка игровых товаров</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('gm_theme');
+          if (t === 'light') {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
