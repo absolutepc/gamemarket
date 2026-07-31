@@ -101,15 +101,13 @@ export default function Layout() {
         </header>
       )}
 
-      <main className={`flex-1 ${hideChrome ? 'pb-28 lg:pb-8' : 'pb-28 lg:pb-0'}`}>
+      <main className={`flex-1 ${hideChrome ? 'pb-28 lg:pb-0' : 'pb-28 lg:pb-0'}`}>
         <Outlet />
       </main>
 
-      {!hideChrome && (
-        <div className="pb-24 lg:pb-0">
-          <Footer />
-        </div>
-      )}
+      <div className="pb-24 lg:pb-0">
+        <Footer />
+      </div>
 
       <MobileBottomNav />
     </div>
