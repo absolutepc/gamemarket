@@ -75,7 +75,11 @@ export default function NotificationsModal({ open, onBack, onClose }) {
     toast.success(value ? 'Уведомления включены' : 'Уведомления выключены');
   };
 
-  const hasEmail = user?.auth_provider !== 'vk' || (user?.email && !String(user.email).endsWith('@vk.users.local'));
+  const hasEmail = Boolean(
+    user?.email
+    && !String(user.email).endsWith('@vk.users.local')
+    && !String(user.email).endsWith('@apple.users.local')
+  );
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" role="dialog" aria-modal="true">

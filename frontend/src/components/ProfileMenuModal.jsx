@@ -85,7 +85,9 @@ export default function ProfileMenuModal({ open, onClose }) {
 
   const authLabel = user.auth_provider === 'vk'
     ? 'Вы вошли с VK ID'
-    : 'Вы вошли по email';
+    : user.auth_provider === 'apple'
+      ? 'Вы вошли с Apple ID'
+      : 'Вы вошли по email';
 
   const closeAll = () => {
     setShowNotifications(false);

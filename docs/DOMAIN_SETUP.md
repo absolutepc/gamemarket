@@ -31,16 +31,27 @@ BACKEND_URL=<внутренний/публичный URL backend-сервиса 
 
 После смены переменных сделайте **Redeploy** backend и frontend.
 
-## 4. VK ID
+## 4. VK ID и Apple ID
 
-В кабинете VK ID добавьте Trusted redirect URI:
+Подробная инструкция: [OAUTH_SETUP.md](./OAUTH_SETUP.md)
+
+Кратко — в Variables **backend**:
+
+```
+VK_APP_ID=...
+VK_CLIENT_SECRET=...
+APPLE_CLIENT_ID=ru.lootz.web
+```
+
+Trusted redirects:
 ```
 https://lootz.ru/auth/vk/callback
+https://lootz.ru/auth/apple/callback
 ```
 
 ## 5. Проверка
 
 - https://lootz.ru открывается без VPN
 - /api/health отвечает через тот же домен (прокси фронта)
-- Логин VK работает
+- Логин VK / Apple работает
 - Cookies / сессия не ломаются

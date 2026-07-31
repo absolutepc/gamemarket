@@ -6,9 +6,14 @@ const { body } = require('express-validator');
 const pool = require('../config/database');
 const { authenticate, JWT_SECRET } = require('../middleware/auth');
 const { authLimiter, validate } = require('../middleware/security');
+const { verifyAppleIdentityToken } = require('../utils/appleAuth');
 
 const JWT_EXPIRES = '15m';
 const REFRESH_EXPIRES_DAYS = 30;
+
+function frontendBaseUrl() {
+  return (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+}
 
 function generateTokens(userId) {
   const accessToken = jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
@@ -167,14 +172,36 @@ async function issueSession(res, req, user) {
   return accessToken;
 }
 
+function oauthProviderConfig() {
+  const base = frontendBaseUrl();
+  const vkAppId = process.env.VK_APP_ID || null;
+  const appleClientId = process.env.APPLE_CLIENT_ID || null;
+  return {
+    vk: {
+      enabled: Boolean(vkAppId),
+      appId: vkAppId,
+      redirectUri: `${base}/auth/vk/callback`,
+    },
+    apple: {
+      enabled: Boolean(appleClientId),
+      clientId: appleClientId,
+      redirectUri: `${base}/auth/apple/callback`,
+    },
+  };
+}
+
+router.get('/providers', (req, res) => {
+  res.json(oauthProviderConfig());
+});
+
 router.get('/vk/config', (req, res) => {
-  const appId = process.env.VK_APP_ID;
-  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
-  res.json({
-    enabled: Boolean(appId),
-    appId: appId || null,
-    redirectUri: `${frontendUrl}/auth/vk/callback`,
-  });
+  const { vk } = oauthProviderConfig();
+  res.json(vk);
+});
+
+router.get('/apple/config', (req, res) => {
+  const { apple } = oauthProviderConfig();
+  res.json(apple);
 });
 
 router.post('/vk',
@@ -255,7 +282,6 @@ router.post('/vk',
     }
 
     if (!user) {
-      // ensure unique username
       for (let attempt = 0; attempt < 5; attempt++) {
         const exists = await pool.query('SELECT id FROM users WHERE username=$1 OR email=$2', [username, email]);
         if (!exists.rows.length) break;
@@ -274,6 +300,88 @@ router.post('/vk',
       const updated = await pool.query(
         `UPDATE users SET avatar_url=$1, auth_provider='vk', updated_at=NOW() WHERE id=$2 RETURNING *`,
         [vkUser.avatar, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    const accessToken = await issueSession(res, req, user);
+    res.json({ accessToken, user: publicUser(user) });
+  }
+);
+
+router.post('/apple',
+  authLimiter,
+  [
+    body('identityToken').trim().notEmpty(),
+    body('user').optional({ nullable: true }),
+  ],
+  validate,
+  async (req, res) => {
+    if (!process.env.APPLE_CLIENT_ID) {
+      return res.status(503).json({ error: 'Apple ID не настроен (APPLE_CLIENT_ID)' });
+    }
+
+    let claims;
+    try {
+      claims = await verifyAppleIdentityToken(req.body.identityToken);
+    } catch (err) {
+      return res.status(401).json({ error: err.message || 'Неверный Apple identity token' });
+    }
+
+    const appleId = String(claims.sub);
+    const appleEmail = typeof claims.email === 'string' && claims.email.includes('@')
+      ? claims.email
+      : null;
+    const profileUser = req.body.user && typeof req.body.user === 'object' ? req.body.user : null;
+    const profileEmail = typeof profileUser?.email === 'string' && profileUser.email.includes('@')
+      ? profileUser.email
+      : null;
+    const email = appleEmail || profileEmail || `apple_${appleId.replace(/\W/g, '').slice(0, 24)}@apple.users.local`;
+
+    const firstName = String(profileUser?.name?.firstName || profileUser?.firstName || '')
+      .replace(/[^a-zA-Z0-9_]/g, '')
+      .slice(0, 16);
+    const shortSub = appleId.replace(/\W/g, '').slice(-8) || crypto.randomBytes(3).toString('hex');
+    let username = (firstName
+      ? `apple_${firstName}_${shortSub}`
+      : `apple_${shortSub}`
+    ).slice(0, 50).toLowerCase();
+
+    let { rows } = await pool.query('SELECT * FROM users WHERE apple_id=$1', [appleId]);
+    let user = rows[0];
+
+    if (!user && appleEmail) {
+      const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [appleEmail]);
+      if (byEmail.rows[0]) {
+        const linked = await pool.query(
+          `UPDATE users SET apple_id=$1, auth_provider='apple', updated_at=NOW()
+           WHERE id=$2
+           RETURNING *`,
+          [appleId, byEmail.rows[0].id]
+        );
+        user = linked.rows[0];
+      }
+    }
+
+    if (!user) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const exists = await pool.query('SELECT id FROM users WHERE username=$1 OR email=$2', [username, email]);
+        if (!exists.rows.length) break;
+        username = `apple_${shortSub}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
+      }
+      const inserted = await pool.query(
+        `INSERT INTO users (username, email, password_hash, apple_id, auth_provider, is_verified)
+         VALUES ($1,$2,NULL,$3,'apple',TRUE)
+         RETURNING *`,
+        [username, email, appleId]
+      );
+      user = inserted.rows[0];
+    } else if (user.is_banned) {
+      return res.status(403).json({ error: 'Account suspended' });
+    } else if (user.auth_provider !== 'apple') {
+      const updated = await pool.query(
+        `UPDATE users SET auth_provider='apple', updated_at=NOW() WHERE id=$1 RETURNING *`,
+        [user.id]
       );
       user = updated.rows[0];
     }
