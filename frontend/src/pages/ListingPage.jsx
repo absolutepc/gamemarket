@@ -377,8 +377,8 @@ export default function ListingPage() {
             className="flex items-center gap-3 mb-4 group"
           >
             <div className="w-12 h-12 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden ring-1 ring-white/10">
-              {listing.seller_avatar_url ? (
-                <img src={listing.seller_avatar_url} alt="" className="w-full h-full object-cover" />
+              {listing.seller_avatar ? (
+                <img src={listing.seller_avatar} alt="" className="w-full h-full object-cover" />
               ) : (
                 listing.seller_username?.[0]?.toUpperCase()
               )}
