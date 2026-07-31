@@ -149,7 +149,7 @@ export default function HomePage() {
 
           {/* 15th tile: mosaic → all games & services (Playerok-style) */}
           <Link
-            to="/apps"
+            to="/apps?tab=games"
             className="shrink-0 group flex flex-col items-center gap-1.5"
             style={itemWidth ? { width: itemWidth } : { width: `calc((100% - ${sidePad * 2}px - ${gapPx * 4}px) / 5)` }}
             aria-label="Все игры и сервисы"
