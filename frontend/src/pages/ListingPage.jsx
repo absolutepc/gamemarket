@@ -1,16 +1,26 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Star, Eye, Clock, MessageCircle, Pencil, Trash2, Zap } from 'lucide-react';
+import {
+  Shield, Star, Eye, Clock, MessageCircle, Pencil, Trash2, Zap,
+  ChevronLeft, ChevronRight, Lock, CheckSquare,
+} from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
-import { formatPrice, formatDate } from '../utils/format';
+import { formatPrice, formatDate, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
+import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
+
+function filledStarsCount(rating) {
+  const value = parseFloat(rating) || 0;
+  if (value <= 0) return 0;
+  return Math.min(5, Math.round(value));
+}
 
 export default function ListingPage() {
   const { id } = useParams();
@@ -20,6 +30,7 @@ export default function ListingPage() {
   const setUser = useAuthStore((s) => s.setUser);
   const [imgIdx, setImgIdx] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
@@ -76,198 +87,370 @@ export default function ListingPage() {
     }
   };
 
-  if (isLoading) return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="aspect-[4/3] rounded-2xl bg-dark-800 animate-pulse" />
-        <div className="flex flex-col gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className={`h-6 bg-dark-800 rounded animate-pulse ${i === 0 ? 'w-3/4' : 'w-full'}`} />
-          ))}
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/catalog');
+  };
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="sticky top-0 z-40 h-14 bg-dark-950 border-b border-dark-800" />
+        <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+          <div className="aspect-[4/3] rounded-2xl bg-dark-800 animate-pulse" />
+          <div className="h-8 w-40 bg-dark-800 rounded animate-pulse" />
+          <div className="h-6 w-full bg-dark-800 rounded animate-pulse" />
+          <div className="h-12 w-full bg-dark-800 rounded-xl animate-pulse" />
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (!listing) return <div className="text-center py-20 text-dark-400">Лот не найден</div>;
+  if (!listing) {
+    return <div className="text-center py-20 text-dark-400">Лот не найден</div>;
+  }
 
   const images = listing.images?.length ? listing.images : [PLACEHOLDER];
   const isOwner = user?.id === listing.seller_id;
   const canBuy = user && !isOwner && listing.status === 'active';
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
+  const matched = resolveAssortmentItem(listing.game || listing.title);
+  const gameLabel = matched?.name || listing.game || listing.category_name || 'Товар';
+  const gameIcon = matched?.icon || resolveAssortmentIcon(listing.game || listing.title);
+  const typeLabel =
+    LISTING_TYPE_OPTIONS.find((o) => o.value === listing.listing_type)?.label ||
+    listing.category_name ||
+    '';
+  const plainDesc = (listing.description || '').replace(/<[^>]+>/g, '').trim();
+  const descLong = plainDesc.length > 220;
+  const descShown = descExpanded || !descLong ? plainDesc : `${plainDesc.slice(0, 220).trimEnd()}…`;
+  const attrEntries = listing.attributes && typeof listing.attributes === 'object'
+    ? Object.entries(listing.attributes).filter(([, v]) => v != null && String(v).trim() !== '')
+    : [];
+  const sellerRating = parseFloat(listing.seller_rating || 0);
+  const deliveryLabel = listing.delivery_method === 'auto' ? 'Автоматическая выдача' : 'Вручную через чат сделки';
+  const deliveryHint = listing.delivery_method === 'auto'
+    ? 'После оплаты товар придёт сразу по указанным данным.'
+    : 'Продавец передаст товар в чате сделки после оплаты.';
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <Seo title={listing.title} description={listing.description?.replace(/<[^>]+>/g, '').slice(0, 160)} path={`/listings/${id}`} />
+    <div className="min-h-full bg-dark-950">
+      <Seo
+        title={listing.title}
+        description={plainDesc.slice(0, 160)}
+        path={`/listings/${id}`}
+      />
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div>
-          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-dark-800 mb-3">
-            <img
-              src={images[imgIdx]}
-              className="w-full h-full object-cover"
-              alt={listing.title}
-              onError={(e) => { e.target.src = PLACEHOLDER; }}
-            />
-            {hasDiscount && (
-              <span className="absolute top-3 right-3 badge bg-rose-500 text-white font-bold">
+      {/* Playerok-style product header — replaces global nav */}
+      <header className="sticky top-0 z-40 bg-dark-950/95 backdrop-blur-xl border-b border-dark-800/80">
+        <div className="max-w-lg mx-auto px-2 sm:px-3 h-14 flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={goBack}
+            className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:bg-dark-800 transition-colors shrink-0"
+            aria-label="Назад"
+          >
+            <ChevronLeft size={24} strokeWidth={2} />
+          </button>
+
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-dark-800 ring-1 ring-white/10 shrink-0">
+              <img
+                src={gameIcon}
+                alt=""
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = '/assortment/other-apps.png';
+                }}
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-white truncate leading-tight">{gameLabel}</div>
+              {typeLabel && (
+                <div className="text-[11px] text-dark-400 truncate leading-tight mt-0.5">{typeLabel}</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-lg mx-auto px-4 pt-3 pb-6">
+        {/* Gallery */}
+        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-dark-800 mb-3">
+          <img
+            src={images[imgIdx]}
+            className="w-full h-full object-cover"
+            alt={listing.title}
+            onError={(e) => { e.target.src = PLACEHOLDER; }}
+          />
+          {listing.delivery_method === 'auto' && (
+            <span className="absolute top-3 left-3 badge bg-violet-500/95 text-white flex items-center gap-1">
+              <Zap size={12} /> Автовыдача
+            </span>
+          )}
+        </div>
+        {images.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto mb-4 pb-1">
+            {images.map((src, i) => (
+              <button
+                key={src + i}
+                type="button"
+                onClick={() => setImgIdx(i)}
+                className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 ${
+                  imgIdx === i ? 'border-[#2B71F3]' : 'border-transparent'
+                }`}
+              >
+                <img src={src} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Price */}
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400 leading-none">
+            {formatPrice(listing.price)}
+          </span>
+          {hasDiscount && (
+            <>
+              <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5">
                 -{listing.discount_percent}%
               </span>
-            )}
-            {listing.delivery_method === 'auto' && (
-              <span className="absolute top-3 left-3 badge bg-violet-500/90 text-white flex items-center gap-1">
-                <Zap size={12} /> Автовыдача
+              <span className="text-base text-dark-500 line-through">
+                {formatPrice(listing.original_price)}
               </span>
-            )}
-          </div>
-          {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
-              {images.map((src, i) => (
-                <button
-                  key={src + i}
-                  type="button"
-                  onClick={() => setImgIdx(i)}
-                  className={`w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 ${
-                    imgIdx === i ? 'border-brand-500' : 'border-transparent'
-                  }`}
-                >
-                  <img src={src} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+            </>
           )}
         </div>
 
-        <div className="flex flex-col gap-4">
-          {listing.game && (
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg overflow-hidden bg-dark-800 ring-1 ring-white/10 shrink-0">
-                <img
-                  src={resolveAssortmentIcon(listing.game)}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assortment/other-apps.png';
-                  }}
-                />
-              </span>
-              <span className="text-brand-400 text-sm font-medium uppercase tracking-wide">
-                {resolveAssortmentItem(listing.game)?.name || listing.game}
-              </span>
-            </div>
-          )}
-          <h1 className="text-2xl font-bold leading-snug">{listing.title}</h1>
+        {/* Title */}
+        <h1 className="text-lg sm:text-xl font-bold leading-snug text-white mb-2">
+          {listing.title}
+        </h1>
 
-          <div className="flex items-center gap-3 text-sm text-dark-400 flex-wrap">
-            <span className="flex items-center gap-1"><Eye size={14} />{listing.views_count} просмотров</span>
-            <span className="flex items-center gap-1"><Clock size={14} />{formatDate(listing.created_at)}</span>
-            {listing.category_name && <span className="badge-blue">{listing.category_name}</span>}
-          </div>
-
-          <div className="flex items-end gap-3">
-            <div className="text-3xl font-extrabold text-white">{formatPrice(listing.price)}</div>
-            {hasDiscount && (
-              <div className="text-lg text-dark-500 line-through pb-1">{formatPrice(listing.original_price)}</div>
-            )}
-          </div>
-
-          {listing.attributes && Object.keys(listing.attributes).length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(listing.attributes).map(([key, value]) => (
-                <span
-                  key={key}
-                  className="inline-flex items-center rounded-lg bg-dark-800 border border-dark-700 px-2.5 py-1 text-xs text-dark-200"
-                >
-                  {String(value)}
+        {/* Rating / meta */}
+        <div className="flex items-center gap-2 flex-wrap text-sm mb-4">
+          {(sellerRating > 0 || listing.seller_reviews > 0) && (
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-0.5 text-[#5B8CFF]">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const filled = i < filledStarsCount(sellerRating);
+                  return (
+                    <Star
+                      key={i}
+                      size={14}
+                      fill={filled ? 'currentColor' : 'none'}
+                      className={filled ? '' : 'text-dark-600'}
+                    />
+                  );
+                })}
+              </div>
+              {sellerRating > 0 && (
+                <span className="text-[#5B8CFF] font-medium tabular-nums text-xs">
+                  {sellerRating.toFixed(1)}
                 </span>
-              ))}
-            </div>
-          )}
-
-          {isOwner && listing.platform_fee_percent != null && (
-            <div className="text-sm text-dark-400">
-              Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}% ·
-              вы получите{' '}
-              <span className="text-emerald-400 font-medium">
-                {formatPrice(listing.seller_receives)}
+              )}
+              <span className="text-dark-400 text-xs">
+                {formatReviewsCount(listing.seller_reviews)}
               </span>
             </div>
           )}
+          <span className="flex items-center gap-1 text-dark-500 text-xs">
+            <Eye size={12} />{listing.views_count}
+          </span>
+          <span className="flex items-center gap-1 text-dark-500 text-xs">
+            <Clock size={12} />{formatDate(listing.created_at)}
+          </span>
+        </div>
 
-          <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
-            <Shield size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-emerald-300">Защищено эскроу</p>
-              <p className="text-dark-400 text-xs mt-0.5">Средства передаются продавцу только после вашего подтверждения</p>
-            </div>
+        {/* Delivery method */}
+        <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3.5 mb-4">
+          <div className="font-semibold text-sm text-white mb-1">
+            📦 Способ получения
           </div>
+          <p className="text-sm text-dark-300 leading-relaxed">
+            <span className="text-white font-medium">{deliveryLabel}.</span>{' '}
+            {deliveryHint}
+          </p>
+        </div>
 
+        {/* Buy / owner actions */}
+        <div className="mb-3">
           {isOwner ? (
             <div className="flex gap-2">
-              <button onClick={() => navigate(`/listings/${id}/edit`)} className="btn-secondary flex-1 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate(`/listings/${id}/edit`)}
+                className="btn-secondary flex-1 flex items-center justify-center gap-2 h-12"
+              >
                 <Pencil size={16} /> Редактировать
               </button>
               <button
+                type="button"
                 onClick={() => {
                   if (window.confirm('Удалить лот?')) deleteMutation.mutate();
                 }}
-                className="btn-secondary flex items-center justify-center gap-2 text-red-400"
+                className="btn-secondary h-12 px-4 flex items-center justify-center text-red-400"
               >
                 <Trash2 size={16} />
               </button>
             </div>
           ) : canBuy ? (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setCheckoutOpen(true)}
-                className="btn-primary h-12 text-base flex-1"
-              >
-                Купить за {formatPrice(listing.price)}
-              </button>
-              <button onClick={startChat} className="btn-secondary h-12 px-4" title="Написать продавцу">
-                <MessageCircle size={18} />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setCheckoutOpen(true)}
+              className="w-full h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99]
+                         text-white font-bold text-base transition-colors"
+            >
+              Купить
+            </button>
           ) : !user ? (
-            <Link to="/login" className="btn-primary h-12 text-base text-center flex items-center justify-center">
+            <Link
+              to="/login"
+              className="w-full h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-400
+                         text-white font-bold text-base flex items-center justify-center transition-colors"
+            >
               Войдите для покупки
             </Link>
           ) : listing.status !== 'active' ? (
             <div className="badge-gray text-sm px-4 py-2.5 w-fit">Лот недоступен</div>
           ) : null}
+        </div>
 
-          <div className="card p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold">
-              {listing.seller_username?.[0]?.toUpperCase()}
+        {isOwner && listing.platform_fee_percent != null && (
+          <div className="text-sm text-dark-400 mb-4">
+            Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}% ·
+            вы получите{' '}
+            <span className="text-emerald-400 font-medium">
+              {formatPrice(listing.seller_receives)}
+            </span>
+          </div>
+        )}
+
+        {/* Warranty row */}
+        <Link
+          to="/faq"
+          className="flex items-center gap-2.5 py-3 mb-5 border-b border-dark-800/80 group"
+        >
+          <Shield size={18} className="text-[#5B8CFF] shrink-0" />
+          <span className="flex-1 text-sm text-white font-medium">Гарантия Lootz</span>
+          <ChevronRight size={18} className="text-dark-500 group-hover:text-white transition-colors" />
+        </Link>
+
+        {/* Description */}
+        <section className="mb-6">
+          <h2 className="font-bold text-base text-white mb-3">Описание</h2>
+          {attrEntries.length > 0 && (
+            <div className="flex flex-col gap-2 mb-3">
+              {attrEntries.map(([key, value]) => (
+                <div key={key} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="text-dark-400 shrink-0">{key}</span>
+                  <span className="text-white text-right">{String(value)}</span>
+                </div>
+              ))}
             </div>
-            <div className="flex-1">
-              <Link to={`/users/${listing.seller_username}`} className="font-medium hover:text-brand-300 transition-colors">
+          )}
+          {plainDesc ? (
+            <p className="text-sm text-dark-300 leading-relaxed whitespace-pre-wrap">
+              {descShown}
+              {descLong && (
+                <button
+                  type="button"
+                  onClick={() => setDescExpanded((v) => !v)}
+                  className="ml-1 text-[#5B8CFF] font-medium hover:underline"
+                >
+                  {descExpanded ? 'свернуть' : 'ещё'}
+                </button>
+              )}
+            </p>
+          ) : (
+            <p className="text-sm text-dark-500">Без описания</p>
+          )}
+        </section>
+
+        {/* Seller */}
+        <section className="mb-4">
+          <h2 className="font-bold text-base text-white mb-3">Продавец</h2>
+          <Link
+            to={`/users/${listing.seller_username}`}
+            className="flex items-center gap-3 mb-4 group"
+          >
+            <div className="w-12 h-12 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden ring-1 ring-white/10">
+              {listing.seller_avatar_url ? (
+                <img src={listing.seller_avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                listing.seller_username?.[0]?.toUpperCase()
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold text-white group-hover:text-[#5B8CFF] transition-colors truncate">
                 {listing.seller_username}
-              </Link>
-              <div className="flex items-center gap-3 text-xs text-dark-400 mt-0.5">
-                <span className="flex items-center gap-0.5 text-yellow-400">
-                  <Star size={11} fill="currentColor" />
-                  {parseFloat(listing.seller_rating || 0).toFixed(1)}
+              </div>
+              <div className="flex items-center gap-1.5 mt-0.5 text-xs flex-wrap">
+                <div className="flex items-center gap-0.5 text-[#5B8CFF]">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const filled = i < filledStarsCount(sellerRating);
+                    return (
+                      <Star
+                        key={i}
+                        size={12}
+                        fill={filled ? 'currentColor' : 'none'}
+                        className={filled ? '' : 'text-dark-600'}
+                      />
+                    );
+                  })}
+                </div>
+                {sellerRating > 0 && (
+                  <span className="text-[#5B8CFF] font-medium tabular-nums">
+                    {sellerRating.toFixed(1)}
+                  </span>
+                )}
+                <span className="text-dark-400">
+                  {formatReviewsCount(listing.seller_reviews)}
                 </span>
-                <span>{listing.seller_reviews || 0} отзывов</span>
-                <span>{listing.seller_sales} продаж</span>
               </div>
             </div>
             {!isOwner && user && (
-              <button onClick={startChat} className="btn-ghost p-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  startChat();
+                }}
+                className="btn-ghost p-2 shrink-0"
+                title="Написать продавцу"
+              >
                 <MessageCircle size={18} />
               </button>
             )}
-          </div>
-        </div>
-      </div>
+          </Link>
 
-      <div className="mt-8 card p-6">
-        <h2 className="font-semibold text-lg mb-4">Описание</h2>
-        <div className="text-dark-300 leading-relaxed whitespace-pre-wrap text-sm">
-          {listing.description?.replace(/<[^>]+>/g, '')}
+          <div className="flex items-center gap-2 mb-3 text-sm">
+            <Lock size={15} className="text-amber-400 shrink-0" />
+            <span className="text-dark-200">Безопасная оплата</span>
+          </div>
+
+          <ul className="flex flex-col gap-2.5">
+            <li className="flex items-start gap-2.5 text-sm text-dark-300">
+              <CheckSquare size={16} className="text-[#5B8CFF] shrink-0 mt-0.5" />
+              <span>Возврат средств, если вы не получили товар</span>
+            </li>
+            <li className="flex items-start gap-2.5 text-sm text-dark-300">
+              <CheckSquare size={16} className="text-[#5B8CFF] shrink-0 mt-0.5" />
+              <span>Возврат средств, если товар не соответствует описанию</span>
+            </li>
+          </ul>
+        </section>
+
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm mt-5">
+          <Shield size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-emerald-300">Защищено эскроу</p>
+            <p className="text-dark-400 text-xs mt-0.5">
+              Средства передаются продавцу только после вашего подтверждения
+            </p>
+          </div>
         </div>
       </div>
 
