@@ -37,6 +37,12 @@ export default function ListingPage() {
     queryFn: () => api.get(`/listings/${id}`).then((r) => r.data),
   });
 
+  const { data: sellerReviews = [] } = useQuery({
+    queryKey: ['listing-seller-reviews', listing?.seller_username],
+    queryFn: () => api.get(`/users/${listing.seller_username}`).then((r) => r.data?.reviews || []),
+    enabled: Boolean(listing?.seller_username),
+  });
+
   const buyerFields = listing?.delivery_method === 'auto'
     ? (Array.isArray(listing.buyer_fields) && listing.buyer_fields.length
       ? listing.buyer_fields
@@ -134,7 +140,7 @@ export default function ListingPage() {
     : 'Продавец передаст товар в чате сделки после оплаты.';
 
   return (
-    <div className="min-h-full bg-dark-950">
+    <div className="bg-dark-950">
       <Seo
         title={listing.title}
         description={plainDesc.slice(0, 160)}
@@ -443,7 +449,7 @@ export default function ListingPage() {
           </ul>
         </section>
 
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm mt-5">
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm mt-5 mb-6">
           <Shield size={16} className="text-emerald-400 shrink-0 mt-0.5" />
           <div>
             <p className="font-medium text-emerald-300">Защищено эскроу</p>
@@ -452,6 +458,72 @@ export default function ListingPage() {
             </p>
           </div>
         </div>
+
+        {/* Seller reviews — fills space under product details */}
+        <section className="mb-2">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 className="font-bold text-base text-white">
+              Отзывы{listing.seller_reviews ? ` (${listing.seller_reviews})` : ''}
+            </h2>
+            {listing.seller_username && (
+              <Link
+                to={`/users/${listing.seller_username}`}
+                className="text-xs text-[#5B8CFF] hover:underline shrink-0"
+              >
+                Все отзывы
+              </Link>
+            )}
+          </div>
+
+          {sellerReviews.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {sellerReviews.slice(0, 5).map((r, i) => (
+                <div
+                  key={`${r.reviewer_username}-${r.created_at}-${i}`}
+                  className="rounded-2xl bg-dark-900 border border-dark-800 px-3.5 py-3"
+                >
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-semibold overflow-hidden shrink-0">
+                      {r.reviewer_avatar ? (
+                        <img src={r.reviewer_avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        (r.reviewer_username || '?')[0].toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-white truncate">
+                        {r.reviewer_username}
+                      </div>
+                      <div className="flex items-center gap-0.5 text-[#5B8CFF] mt-0.5">
+                        {Array.from({ length: 5 }).map((_, si) => (
+                          <Star
+                            key={si}
+                            size={11}
+                            fill={si < (r.rating || 0) ? 'currentColor' : 'none'}
+                            className={si < (r.rating || 0) ? '' : 'text-dark-600'}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-[11px] text-dark-500 shrink-0">
+                      {formatDate(r.created_at)}
+                    </span>
+                  </div>
+                  {r.comment && (
+                    <p className="text-sm text-dark-300 leading-relaxed whitespace-pre-wrap">
+                      {r.comment}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-5 text-center">
+              <p className="text-sm text-dark-400">Пока нет отзывов об этом продавце</p>
+              <p className="text-xs text-dark-500 mt-1">Оставьте отзыв после завершённой сделки</p>
+            </div>
+          )}
+        </section>
       </div>
 
       <BuyCheckoutModal
