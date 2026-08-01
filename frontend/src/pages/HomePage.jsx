@@ -59,15 +59,13 @@ export default function HomePage() {
     [previewItems.length]
   );
 
-  const pageWidth = tileWidth * DESKTOP_VISIBLE + gapPx * (DESKTOP_VISIBLE - 1);
-
   const updateScrollEdges = () => {
     const el = scrollRef.current;
     if (!el) return;
-    const maxScroll = el.scrollWidth - el.clientWidth;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
     const left = el.scrollLeft;
-    setCanScrollLeft(left > 4);
-    setCanScrollRight(maxScroll > 4 && left < maxScroll - 4);
+    setCanScrollLeft(left > 6);
+    setCanScrollRight(maxScroll > 6 && left < maxScroll - 6);
   };
 
   useEffect(() => {
@@ -77,7 +75,7 @@ export default function HomePage() {
     const update = () => {
       const desktop = window.matchMedia('(min-width: 1024px)').matches;
       setIsDesktop(desktop);
-      const gap = desktop ? 12 : 12;
+      const gap = 12;
       setGapPx(gap);
 
       if (desktop) {
@@ -95,10 +93,12 @@ export default function HomePage() {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     el.addEventListener('scroll', updateScrollEdges, { passive: true });
+    el.addEventListener('scrollend', updateScrollEdges);
     window.addEventListener('resize', update);
     return () => {
       ro.disconnect();
       el.removeEventListener('scroll', updateScrollEdges);
+      el.removeEventListener('scrollend', updateScrollEdges);
       window.removeEventListener('resize', update);
     };
   }, []);
@@ -116,17 +116,29 @@ export default function HomePage() {
     const el = scrollRef.current;
     if (!el) return;
     if (isDesktop) {
-      const target = Math.round(el.scrollLeft / pageWidth + dir) * pageWidth;
-      el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      // Step = one full page including the gap after the 16th item
+      // so page 2 lands exactly at maxScroll (fixes stuck right arrow)
+      const step = DESKTOP_VISIBLE * (tileWidth + gapPx);
+      let target = el.scrollLeft + dir * step;
+      if (dir > 0) target = Math.min(maxScroll, target);
+      else target = Math.max(0, target);
+      if (dir > 0 && target >= maxScroll - 2) target = maxScroll;
+      if (dir < 0 && target <= 2) target = 0;
+      el.scrollTo({ left: target, behavior: 'smooth' });
+      window.setTimeout(updateScrollEdges, 400);
     } else {
       const step = tileWidth + gapPx;
       const page = Math.max(1, Math.floor(el.clientWidth / step));
       el.scrollBy({ left: dir * step * page, behavior: 'smooth' });
+      window.setTimeout(updateScrollEdges, 400);
     }
   };
 
-  const arrowBtnClass =
-    'w-9 h-9 rounded-full bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors';
+  const glassArrowClass =
+    'hidden lg:flex absolute z-20 w-11 h-11 rounded-full items-center justify-center ' +
+    'bg-white/10 hover:bg-white/20 text-white border border-white/20 ' +
+    'backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-colors';
 
   return (
     <div>
@@ -138,102 +150,105 @@ export default function HomePage() {
 
       <HomeHeroSlider />
 
-      {/* Assortment: 16 exact per desktop page, rounded-square icons, edge arrows */}
+      {/* Assortment: 16 exact per desktop page, side glass arrows */}
       <section className={`${PAGE_WIDTH_CLASS} pt-5 lg:pt-6 pb-1`}>
         <div className="flex items-center justify-between mb-2.5 lg:mb-3">
           <h2 className="text-base lg:text-lg font-bold">Игры и сервисы</h2>
-          <div className="hidden lg:flex items-center gap-2">
-            {canScrollLeft && (
-              <button
-                type="button"
-                onClick={() => scrollAssortment(-1)}
-                className={arrowBtnClass}
-                aria-label="Назад"
-              >
-                <ChevronLeft size={18} />
-              </button>
-            )}
-            {canScrollRight && (
-              <button
-                type="button"
-                onClick={() => scrollAssortment(1)}
-                className={arrowBtnClass}
-                aria-label="Вперёд"
-              >
-                <ChevronRight size={18} />
-              </button>
-            )}
-          </div>
         </div>
 
-        <div
-          ref={scrollRef}
-          className="flex overflow-x-auto lg:overflow-x-hidden pt-1 pb-3 scroll-smooth
-                     [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ gap: `${gapPx}px` }}
-        >
-          {previewItems.map((item) => (
+        <div className="relative">
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scrollAssortment(-1)}
+              className={`${glassArrowClass} left-0 -translate-x-1/2`}
+              style={{ top: Math.max(24, tileWidth / 2) }}
+              aria-label="Назад"
+            >
+              <ChevronLeft size={22} />
+            </button>
+          )}
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => scrollAssortment(1)}
+              className={`${glassArrowClass} right-0 translate-x-1/2`}
+              style={{ top: Math.max(24, tileWidth / 2) }}
+              aria-label="Вперёд"
+            >
+              <ChevronRight size={22} />
+            </button>
+          )}
+
+          <div
+            ref={scrollRef}
+            className="flex overflow-x-auto lg:overflow-x-hidden pt-1 pb-3 scroll-smooth
+                       [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ gap: `${gapPx}px` }}
+          >
+            {previewItems.map((item) => (
+              <Link
+                key={item.search + item.name}
+                to={`/catalog?search=${encodeURIComponent(item.search)}`}
+                className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
+                style={{ width: tileWidth }}
+              >
+                <div
+                  className="w-full aspect-square rounded-[18%] overflow-hidden
+                              bg-dark-800 ring-1 ring-white/10
+                              group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200"
+                >
+                  <img
+                    src={item.icon}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/assortment/other-apps.png';
+                    }}
+                  />
+                </div>
+                <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
+                  {item.name}
+                </span>
+              </Link>
+            ))}
+
+            {/* End tile: mosaic folder → all games & services */}
             <Link
-              key={item.search + item.name}
-              to={`/catalog?search=${encodeURIComponent(item.search)}`}
-              className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
+              to="/apps?tab=games"
+              className="shrink-0 group flex flex-col items-center gap-1.5"
               style={{ width: tileWidth }}
+              aria-label="Все игры и сервисы"
             >
               <div
                 className="w-full aspect-square rounded-[18%] overflow-hidden
                             bg-dark-800 ring-1 ring-white/10
-                            group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200"
+                            group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200
+                            grid grid-cols-2 grid-rows-2 gap-[2px] p-[2px]"
               >
-                <img
-                  src={item.icon}
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assortment/other-apps.png';
-                  }}
-                />
+                {mosaicIcons.map((src, i) => (
+                  <img
+                    key={`${src}-${i}`}
+                    src={src}
+                    alt=""
+                    className="w-full h-full object-cover rounded-[28%]"
+                    loading="lazy"
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/assortment/other-apps.png';
+                    }}
+                  />
+                ))}
               </div>
-              <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
-                {item.name}
+              <span className="text-[11px] lg:text-[12px] text-[#2B71F3] font-semibold text-center leading-tight">
+                +{moreCount.toLocaleString('ru-RU')}
               </span>
             </Link>
-          ))}
-
-          {/* End tile: mosaic folder → all games & services */}
-          <Link
-            to="/apps?tab=games"
-            className="shrink-0 group flex flex-col items-center gap-1.5"
-            style={{ width: tileWidth }}
-            aria-label="Все игры и сервисы"
-          >
-            <div
-              className="w-full aspect-square rounded-[18%] overflow-hidden
-                          bg-dark-800 ring-1 ring-white/10
-                          group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200
-                          grid grid-cols-2 grid-rows-2 gap-[2px] p-[2px]"
-            >
-              {mosaicIcons.map((src, i) => (
-                <img
-                  key={`${src}-${i}`}
-                  src={src}
-                  alt=""
-                  className="w-full h-full object-cover rounded-[28%]"
-                  loading="lazy"
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assortment/other-apps.png';
-                  }}
-                />
-              ))}
-            </div>
-            <span className="text-[11px] lg:text-[12px] text-[#2B71F3] font-semibold text-center leading-tight">
-              +{moreCount.toLocaleString('ru-RU')}
-            </span>
-          </Link>
+          </div>
         </div>
       </section>
 
