@@ -149,7 +149,7 @@ export default function ListingPage() {
     mutationFn: () => api.delete(`/listings/${id}`),
     onSuccess: () => {
       toast.success('Лот удалён');
-      navigate(`/users/${user.username}`);
+      navigate(user.username ? `/users/${user.username}` : '/login');
     },
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
   });
