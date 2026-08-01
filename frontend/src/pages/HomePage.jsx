@@ -256,7 +256,7 @@ export default function HomePage() {
           >
             {previewItems.map((item) => (
               <Link
-                key={item.search + item.name}
+                key={item.catalog || item.search + item.name}
                 to={`/catalog?search=${encodeURIComponent(item.search)}`}
                 className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
                 style={{ width: tileWidth }}
