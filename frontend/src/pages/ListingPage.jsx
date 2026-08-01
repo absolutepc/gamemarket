@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield, Star, Eye, Clock, MessageCircle, Pencil, Trash2, Zap,
-  ChevronLeft, ChevronRight, Lock, CheckSquare,
+  ChevronLeft, ChevronRight, Lock, CheckSquare, Package,
 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -10,6 +10,7 @@ import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
+import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { formatPrice, formatDate, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
@@ -20,6 +21,69 @@ function filledStarsCount(rating) {
   const value = parseFloat(rating) || 0;
   if (value <= 0) return 0;
   return Math.min(5, Math.round(value));
+}
+
+function BuyActions({
+  isOwner,
+  canBuy,
+  user,
+  listing,
+  id,
+  navigate,
+  deleteMutation,
+  setCheckoutOpen,
+}) {
+  if (isOwner) {
+    return (
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => navigate(`/listings/${id}/edit`)}
+          className="btn-secondary flex-1 flex items-center justify-center gap-2 h-12"
+        >
+          <Pencil size={16} /> Редактировать
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm('Удалить лот?')) deleteMutation.mutate();
+          }}
+          className="btn-secondary h-12 px-4 flex items-center justify-center text-red-400"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    );
+  }
+  if (canBuy) {
+    return (
+      <button
+        type="button"
+        onClick={() => setCheckoutOpen(true)}
+        className="w-full h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500
+                   hover:from-emerald-400 hover:to-teal-400 active:scale-[0.99]
+                   text-white font-bold text-base transition-colors"
+      >
+        Купить
+      </button>
+    );
+  }
+  if (!user) {
+    return (
+      <Link
+        to="/login"
+        className="w-full h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500
+                   hover:from-emerald-400 hover:to-teal-400
+                   text-white font-bold text-base flex items-center justify-center transition-colors"
+      >
+        Войдите для покупки
+      </Link>
+    );
+  }
+  if (listing.status !== 'active') {
+    return <div className="badge-gray text-sm px-4 py-2.5 w-fit">Лот недоступен</div>;
+  }
+  return null;
 }
 
 export default function ListingPage() {
@@ -41,6 +105,15 @@ export default function ListingPage() {
     queryKey: ['listing-seller-reviews', listing?.seller_username],
     queryFn: () => api.get(`/users/${listing.seller_username}`).then((r) => r.data?.reviews || []),
     enabled: Boolean(listing?.seller_username),
+  });
+
+  const { data: sellerOther } = useQuery({
+    queryKey: ['listing-seller-other', listing?.seller_id, id],
+    queryFn: () =>
+      api
+        .get(`/listings?seller_id=${listing.seller_id}&limit=10`)
+        .then((r) => (r.data?.listings || []).filter((l) => String(l.id) !== String(id)).slice(0, 5)),
+    enabled: Boolean(listing?.seller_id),
   });
 
   const buyerFields = listing?.delivery_method === 'auto'
@@ -101,12 +174,16 @@ export default function ListingPage() {
   if (isLoading) {
     return (
       <div>
-        <div className="sticky top-0 z-40 h-14 bg-dark-950 border-b border-dark-800" />
-        <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
-          <div className="aspect-[4/3] rounded-2xl bg-dark-800 animate-pulse" />
-          <div className="h-8 w-40 bg-dark-800 rounded animate-pulse" />
-          <div className="h-6 w-full bg-dark-800 rounded animate-pulse" />
-          <div className="h-12 w-full bg-dark-800 rounded-xl animate-pulse" />
+        <div className="lg:hidden sticky top-0 z-40 h-14 bg-dark-950 border-b border-dark-800" />
+        <div className={`${PAGE_WIDTH_CLASS} py-4`}>
+          <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.9fr)] gap-6 lg:gap-10">
+            <div className="aspect-[4/3] rounded-2xl bg-dark-800 animate-pulse" />
+            <div className="space-y-4">
+              <div className="h-8 w-40 bg-dark-800 rounded animate-pulse" />
+              <div className="h-6 w-full bg-dark-800 rounded animate-pulse" />
+              <div className="h-12 w-full bg-dark-800 rounded-xl animate-pulse" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -128,8 +205,8 @@ export default function ListingPage() {
     listing.category_name ||
     '';
   const plainDesc = (listing.description || '').replace(/<[^>]+>/g, '').trim();
-  const descLong = plainDesc.length > 220;
-  const descShown = descExpanded || !descLong ? plainDesc : `${plainDesc.slice(0, 220).trimEnd()}…`;
+  const descLong = plainDesc.length > 280;
+  const descShown = descExpanded || !descLong ? plainDesc : `${plainDesc.slice(0, 280).trimEnd()}…`;
   const attrEntries = listing.attributes && typeof listing.attributes === 'object'
     ? Object.entries(listing.attributes).filter(([, v]) => v != null && String(v).trim() !== '')
     : [];
@@ -139,17 +216,179 @@ export default function ListingPage() {
     ? 'После оплаты товар придёт сразу по указанным данным.'
     : 'Продавец передаст товар в чате сделки после оплаты.';
 
+  const buyProps = {
+    isOwner,
+    canBuy,
+    user,
+    listing,
+    id,
+    navigate,
+    deleteMutation,
+    setCheckoutOpen,
+  };
+
+  const gallery = (
+    <div>
+      <div className="relative aspect-[4/3] lg:aspect-[5/4] rounded-2xl overflow-hidden bg-dark-800">
+        <img
+          src={images[imgIdx]}
+          className="w-full h-full object-cover"
+          alt={listing.title}
+          onError={(e) => { e.target.src = PLACEHOLDER; }}
+        />
+        {listing.delivery_method === 'auto' && (
+          <span className="absolute top-3 left-3 badge bg-violet-500/95 text-white flex items-center gap-1">
+            <Zap size={12} /> Автовыдача
+          </span>
+        )}
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => setImgIdx((i) => (i - 1 + images.length) % images.length)}
+              className="hidden lg:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full
+                         bg-dark-950/70 border border-white/10 items-center justify-center text-white
+                         hover:bg-dark-900 transition-colors"
+              aria-label="Предыдущее фото"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setImgIdx((i) => (i + 1) % images.length)}
+              className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full
+                         bg-dark-950/70 border border-white/10 items-center justify-center text-white
+                         hover:bg-dark-900 transition-colors"
+              aria-label="Следующее фото"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </>
+        )}
+      </div>
+      {images.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto mt-3 pb-1">
+          {images.map((src, i) => (
+            <button
+              key={src + i}
+              type="button"
+              onClick={() => setImgIdx(i)}
+              className={`w-14 h-14 lg:w-16 lg:h-16 rounded-xl overflow-hidden shrink-0 border-2 ${
+                imgIdx === i ? 'border-[#2B71F3]' : 'border-transparent'
+              }`}
+            >
+              <img src={src} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const purchasePanel = (
+    <div className="lg:sticky lg:top-20 space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-3xl font-extrabold text-emerald-400 leading-none">
+          {formatPrice(listing.price)}
+        </span>
+        {hasDiscount && (
+          <>
+            <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5">
+              -{listing.discount_percent}%
+            </span>
+            <span className="text-base text-dark-500 line-through">
+              {formatPrice(listing.original_price)}
+            </span>
+          </>
+        )}
+      </div>
+
+      <h1 className="text-lg lg:text-xl font-bold leading-snug text-white">
+        {listing.title}
+      </h1>
+
+      <div className="flex items-center gap-2 flex-wrap text-sm">
+        {(sellerRating > 0 || listing.seller_reviews > 0) && (
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-0.5 text-[#5B8CFF]">
+              {Array.from({ length: 5 }).map((_, i) => {
+                const filled = i < filledStarsCount(sellerRating);
+                return (
+                  <Star
+                    key={i}
+                    size={14}
+                    fill={filled ? 'currentColor' : 'none'}
+                    className={filled ? '' : 'text-dark-600'}
+                  />
+                );
+              })}
+            </div>
+            {sellerRating > 0 && (
+              <span className="text-[#5B8CFF] font-medium tabular-nums text-xs">
+                {sellerRating.toFixed(1)}
+              </span>
+            )}
+            <Link
+              to={`/users/${listing.seller_username}`}
+              className="text-[#5B8CFF] text-xs hover:underline"
+            >
+              {formatReviewsCount(listing.seller_reviews)}
+            </Link>
+          </div>
+        )}
+        <span className="flex items-center gap-1 text-dark-500 text-xs">
+          <Eye size={12} />{listing.views_count}
+        </span>
+        <span className="flex items-center gap-1 text-dark-500 text-xs">
+          <Clock size={12} />{formatDate(listing.created_at)}
+        </span>
+      </div>
+
+      <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3.5">
+        <div className="font-semibold text-sm text-white mb-1 flex items-center gap-2">
+          <Package size={16} className="text-dark-300" />
+          Способ получения
+        </div>
+        <p className="text-sm text-dark-300 leading-relaxed">
+          <span className="text-white font-medium">{deliveryLabel}.</span>{' '}
+          {deliveryHint}
+        </p>
+      </div>
+
+      <BuyActions {...buyProps} />
+
+      {isOwner && listing.platform_fee_percent != null && (
+        <div className="text-sm text-dark-400">
+          Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}% ·
+          вы получите{' '}
+          <span className="text-emerald-400 font-medium">
+            {formatPrice(listing.seller_receives)}
+          </span>
+        </div>
+      )}
+
+      <Link
+        to="/faq"
+        className="flex items-center gap-2.5 py-1 group"
+      >
+        <Shield size={18} className="text-[#5B8CFF] shrink-0" />
+        <span className="flex-1 text-sm text-white font-medium">Гарантия Lootz</span>
+        <ChevronRight size={18} className="text-dark-500 group-hover:text-white transition-colors" />
+      </Link>
+    </div>
+  );
+
   return (
-    <div className="bg-dark-950">
+    <div className="bg-dark-950 min-h-full">
       <Seo
         title={listing.title}
         description={plainDesc.slice(0, 160)}
         path={`/listings/${id}`}
       />
 
-      {/* Playerok-style product header — replaces global nav */}
-      <header className="sticky top-0 z-40 bg-dark-950/95 backdrop-blur-xl border-b border-dark-800/80">
-        <div className="max-w-lg mx-auto px-2 sm:px-3 h-14 flex items-center gap-1.5">
+      {/* Mobile product bar — desktop uses global header + crumb row */}
+      <header className="lg:hidden sticky top-0 z-40 bg-dark-950/95 backdrop-blur-xl border-b border-dark-800/80">
+        <div className="px-2 sm:px-3 h-14 flex items-center gap-1.5">
           <button
             type="button"
             onClick={goBack}
@@ -158,7 +397,6 @@ export default function ListingPage() {
           >
             <ChevronLeft size={24} strokeWidth={2} />
           </button>
-
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="w-9 h-9 rounded-full overflow-hidden bg-dark-800 ring-1 ring-white/10 shrink-0">
               <img
@@ -181,178 +419,49 @@ export default function ListingPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 pt-3 pb-6">
-        {/* Gallery */}
-        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-dark-800 mb-3">
-          <img
-            src={images[imgIdx]}
-            className="w-full h-full object-cover"
-            alt={listing.title}
-            onError={(e) => { e.target.src = PLACEHOLDER; }}
-          />
-          {listing.delivery_method === 'auto' && (
-            <span className="absolute top-3 left-3 badge bg-violet-500/95 text-white flex items-center gap-1">
-              <Zap size={12} /> Автовыдача
-            </span>
-          )}
-        </div>
-        {images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto mb-4 pb-1">
-            {images.map((src, i) => (
-              <button
-                key={src + i}
-                type="button"
-                onClick={() => setImgIdx(i)}
-                className={`w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 ${
-                  imgIdx === i ? 'border-[#2B71F3]' : 'border-transparent'
-                }`}
-              >
-                <img src={src} alt="" className="w-full h-full object-cover" />
-              </button>
-            ))}
+      <div className={`${PAGE_WIDTH_CLASS} pt-3 lg:pt-5 pb-8 lg:pb-12`}>
+        {/* Desktop crumb: back + game */}
+        <div className="hidden lg:flex items-center gap-2 mb-5">
+          <button
+            type="button"
+            onClick={goBack}
+            className="w-9 h-9 flex items-center justify-center rounded-full text-white hover:bg-dark-800 transition-colors shrink-0"
+            aria-label="Назад"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-dark-800 ring-1 ring-white/10 shrink-0">
+            <img
+              src={gameIcon}
+              alt=""
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/assortment/other-apps.png';
+              }}
+            />
           </div>
-        )}
-
-        {/* Price */}
-        <div className="flex items-center gap-2 flex-wrap mb-3">
-          <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400 leading-none">
-            {formatPrice(listing.price)}
-          </span>
-          {hasDiscount && (
-            <>
-              <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5">
-                -{listing.discount_percent}%
-              </span>
-              <span className="text-base text-dark-500 line-through">
-                {formatPrice(listing.original_price)}
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Title */}
-        <h1 className="text-lg sm:text-xl font-bold leading-snug text-white mb-2">
-          {listing.title}
-        </h1>
-
-        {/* Rating / meta */}
-        <div className="flex items-center gap-2 flex-wrap text-sm mb-4">
-          {(sellerRating > 0 || listing.seller_reviews > 0) && (
-            <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5 text-[#5B8CFF]">
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const filled = i < filledStarsCount(sellerRating);
-                  return (
-                    <Star
-                      key={i}
-                      size={14}
-                      fill={filled ? 'currentColor' : 'none'}
-                      className={filled ? '' : 'text-dark-600'}
-                    />
-                  );
-                })}
-              </div>
-              {sellerRating > 0 && (
-                <span className="text-[#5B8CFF] font-medium tabular-nums text-xs">
-                  {sellerRating.toFixed(1)}
-                </span>
-              )}
-              <span className="text-dark-400 text-xs">
-                {formatReviewsCount(listing.seller_reviews)}
-              </span>
-            </div>
-          )}
-          <span className="flex items-center gap-1 text-dark-500 text-xs">
-            <Eye size={12} />{listing.views_count}
-          </span>
-          <span className="flex items-center gap-1 text-dark-500 text-xs">
-            <Clock size={12} />{formatDate(listing.created_at)}
-          </span>
-        </div>
-
-        {/* Delivery method */}
-        <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3.5 mb-4">
-          <div className="font-semibold text-sm text-white mb-1">
-            📦 Способ получения
+          <div className="min-w-0 text-sm">
+            <span className="font-semibold text-white">{gameLabel}</span>
+            {typeLabel && <span className="text-dark-400"> · {typeLabel}</span>}
           </div>
-          <p className="text-sm text-dark-300 leading-relaxed">
-            <span className="text-white font-medium">{deliveryLabel}.</span>{' '}
-            {deliveryHint}
-          </p>
         </div>
 
-        {/* Buy / owner actions */}
-        <div className="mb-3">
-          {isOwner ? (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => navigate(`/listings/${id}/edit`)}
-                className="btn-secondary flex-1 flex items-center justify-center gap-2 h-12"
-              >
-                <Pencil size={16} /> Редактировать
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm('Удалить лот?')) deleteMutation.mutate();
-                }}
-                className="btn-secondary h-12 px-4 flex items-center justify-center text-red-400"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ) : canBuy ? (
-            <button
-              type="button"
-              onClick={() => setCheckoutOpen(true)}
-              className="w-full h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99]
-                         text-white font-bold text-base transition-colors"
-            >
-              Купить
-            </button>
-          ) : !user ? (
-            <Link
-              to="/login"
-              className="w-full h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-400
-                         text-white font-bold text-base flex items-center justify-center transition-colors"
-            >
-              Войдите для покупки
-            </Link>
-          ) : listing.status !== 'active' ? (
-            <div className="badge-gray text-sm px-4 py-2.5 w-fit">Лот недоступен</div>
-          ) : null}
+        {/* Hero: stacked on mobile, 2 columns on desktop (Playerok) */}
+        <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)] gap-5 lg:gap-10 items-start mb-8 lg:mb-10">
+          {gallery}
+          {purchasePanel}
         </div>
-
-        {isOwner && listing.platform_fee_percent != null && (
-          <div className="text-sm text-dark-400 mb-4">
-            Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}% ·
-            вы получите{' '}
-            <span className="text-emerald-400 font-medium">
-              {formatPrice(listing.seller_receives)}
-            </span>
-          </div>
-        )}
-
-        {/* Warranty row */}
-        <Link
-          to="/faq"
-          className="flex items-center gap-2.5 py-3 mb-5 border-b border-dark-800/80 group"
-        >
-          <Shield size={18} className="text-[#5B8CFF] shrink-0" />
-          <span className="flex-1 text-sm text-white font-medium">Гарантия Lootz</span>
-          <ChevronRight size={18} className="text-dark-500 group-hover:text-white transition-colors" />
-        </Link>
 
         {/* Description */}
-        <section className="mb-6">
-          <h2 className="font-bold text-base text-white mb-3">Описание</h2>
+        <section className="mb-8 max-w-3xl">
+          <h2 className="font-bold text-lg text-white mb-4">Описание</h2>
           {attrEntries.length > 0 && (
-            <div className="flex flex-col gap-2 mb-3">
+            <div className="flex flex-col gap-3 mb-4">
               {attrEntries.map(([key, value]) => (
-                <div key={key} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="text-dark-400 shrink-0">{key}</span>
-                  <span className="text-white text-right">{String(value)}</span>
+                <div key={key} className="flex flex-col gap-0.5 text-sm">
+                  <span className="text-dark-400 text-xs">{key}</span>
+                  <span className="text-white">{String(value)}</span>
                 </div>
               ))}
             </div>
@@ -376,8 +485,8 @@ export default function ListingPage() {
         </section>
 
         {/* Seller */}
-        <section className="mb-4">
-          <h2 className="font-bold text-base text-white mb-3">Продавец</h2>
+        <section className="mb-8 max-w-3xl">
+          <h2 className="font-bold text-lg text-white mb-4">Продавец</h2>
           <Link
             to={`/users/${listing.seller_username}`}
             className="flex items-center gap-3 mb-4 group"
@@ -437,7 +546,7 @@ export default function ListingPage() {
             <span className="text-dark-200">Безопасная оплата</span>
           </div>
 
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col gap-2.5 mb-5">
             <li className="flex items-start gap-2.5 text-sm text-dark-300">
               <CheckSquare size={16} className="text-[#5B8CFF] shrink-0 mt-0.5" />
               <span>Возврат средств, если вы не получили товар</span>
@@ -447,37 +556,62 @@ export default function ListingPage() {
               <span>Возврат средств, если товар не соответствует описанию</span>
             </li>
           </ul>
+
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
+            <Shield size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-emerald-300">Защищено эскроу</p>
+              <p className="text-dark-400 text-xs mt-0.5">
+                Средства передаются продавцу только после вашего подтверждения
+              </p>
+            </div>
+          </div>
         </section>
 
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm mt-5 mb-6">
-          <Shield size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-medium text-emerald-300">Защищено эскроу</p>
-            <p className="text-dark-400 text-xs mt-0.5">
-              Средства передаются продавцу только после вашего подтверждения
-            </p>
-          </div>
-        </div>
-
-        {/* Seller reviews — fills space under product details */}
-        <section className="mb-2">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <h2 className="font-bold text-base text-white">
-              Отзывы{listing.seller_reviews ? ` (${listing.seller_reviews})` : ''}
+        {/* Reviews */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h2 className="font-bold text-lg text-white">
+              Отзывы о {listing.seller_username}
+              {listing.seller_reviews ? ` (${listing.seller_reviews})` : ''}
             </h2>
             {listing.seller_username && (
               <Link
                 to={`/users/${listing.seller_username}`}
-                className="text-xs text-[#5B8CFF] hover:underline shrink-0"
+                className="text-sm text-[#5B8CFF] hover:underline shrink-0 flex items-center gap-0.5"
               >
                 Все отзывы
+                <ChevronRight size={16} />
               </Link>
             )}
           </div>
 
+          {(sellerRating > 0 || listing.seller_reviews > 0) && (
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl font-bold text-white tabular-nums">
+                {sellerRating > 0 ? sellerRating.toFixed(1) : '—'}
+              </span>
+              <div>
+                <div className="flex items-center gap-0.5 text-[#5B8CFF]">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      size={16}
+                      fill={i < filledStarsCount(sellerRating) ? 'currentColor' : 'none'}
+                      className={i < filledStarsCount(sellerRating) ? '' : 'text-dark-600'}
+                    />
+                  ))}
+                </div>
+                <div className="text-xs text-dark-400 mt-0.5">
+                  {formatReviewsCount(listing.seller_reviews)}
+                </div>
+              </div>
+            </div>
+          )}
+
           {sellerReviews.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {sellerReviews.slice(0, 5).map((r, i) => (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {sellerReviews.slice(0, 6).map((r, i) => (
                 <div
                   key={`${r.reviewer_username}-${r.created_at}-${i}`}
                   className="rounded-2xl bg-dark-900 border border-dark-800 px-3.5 py-3"
@@ -510,7 +644,7 @@ export default function ListingPage() {
                     </span>
                   </div>
                   {r.comment && (
-                    <p className="text-sm text-dark-300 leading-relaxed whitespace-pre-wrap">
+                    <p className="text-sm text-dark-300 leading-relaxed whitespace-pre-wrap line-clamp-4">
                       {r.comment}
                     </p>
                   )}
@@ -518,12 +652,33 @@ export default function ListingPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-5 text-center">
+            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-5 text-center max-w-xl">
               <p className="text-sm text-dark-400">Пока нет отзывов об этом продавце</p>
               <p className="text-xs text-dark-500 mt-1">Оставьте отзыв после завершённой сделки</p>
             </div>
           )}
         </section>
+
+        {/* Other listings from seller */}
+        {sellerOther?.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="font-bold text-lg text-white">Другие товары продавца</h2>
+              <Link
+                to={`/users/${listing.seller_username}`}
+                className="text-sm text-[#5B8CFF] hover:underline flex items-center gap-0.5"
+              >
+                Все товары
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+            <div className={LISTING_GRID_CLASS}>
+              {sellerOther.map((l) => (
+                <ListingCard key={l.id} listing={l} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <BuyCheckoutModal
