@@ -181,7 +181,7 @@ export const ASSORTMENT = [
   { name: 'GearUP', search: 'GearUP Booster', icon: '/assortment/gearup.png', kind: 'app' },
   { name: 'HeyGen', search: 'HeyGen', icon: '/assortment/heygen.png', kind: 'app' },
   { name: 'Busuu', search: 'Busuu', icon: '/assortment/busuu.png', kind: 'app' },
-  { name: 'Midjourney', search: 'Midjourney', icon: '/assortment/midjourney.png', kind: 'app' },
+  { name: 'Midjourney', search: 'Midjourney', icon: '/assortment/midjourney-sailboat.png', kind: 'app' },
   { name: 'Дизайн', search: 'Дизайн', icon: '/assortment/design.png', kind: 'app' },
   { name: 'OpenRouter', search: 'OpenRouter', icon: '/assortment/openrouter.png', kind: 'app' },
   { name: 'Character ai', search: 'Character.AI', icon: '/assortment/character-ai.png', kind: 'app' },
