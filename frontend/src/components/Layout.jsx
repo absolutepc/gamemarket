@@ -66,7 +66,7 @@ export default function Layout() {
                       <ShoppingBag size={20} />
                     </Link>
                     <Link
-                      to={`/users/${user.username}`}
+                      to={`/users/${user.username || ''}`}
                       className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                       title="Личный кабинет"
                     >
@@ -74,7 +74,7 @@ export default function Layout() {
                         <img src={user.avatar_url} className="w-9 h-9 rounded-full object-cover" alt="" />
                       ) : (
                         <div className="w-9 h-9 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-semibold">
-                          {user.username[0].toUpperCase()}
+                          {(user.username?.[0] || '?').toUpperCase()}
                         </div>
                       )}
                     </Link>
