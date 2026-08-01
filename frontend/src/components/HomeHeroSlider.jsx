@@ -41,13 +41,7 @@ const SLIDES = [
 function ContestVisual() {
   return (
     <div className="relative w-full h-full flex flex-col items-center lg:items-start justify-center">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle at 35% 42%, rgba(43,113,243,0.32), transparent 58%)',
-        }}
-      />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_45%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
       <div className="relative z-10 w-full max-w-[380px] lg:max-w-none lg:w-[92%] flex flex-col items-center lg:items-start">
         <img
           src="/banners/macbook-air-15.webp"
@@ -80,16 +74,10 @@ function ContestVisual() {
 function EscrowVisual() {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle at 50% 50%, rgba(16,185,129,0.2), transparent 58%)',
-        }}
-      />
-      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/20
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.22),transparent_55%)] pointer-events-none" />
+      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/25
                       flex items-center justify-center">
-        <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" strokeWidth={1.75} />
+        <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" />
       </div>
     </div>
   );
@@ -98,16 +86,10 @@ function EscrowVisual() {
 function SellVisual() {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle at 50% 50%, rgba(43,113,243,0.26), transparent 58%)',
-        }}
-      />
-      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/20
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(43,113,243,0.28),transparent_55%)] pointer-events-none" />
+      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/25
                       flex items-center justify-center">
-        <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" strokeWidth={1.75} />
+        <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" />
       </div>
     </div>
   );
@@ -146,19 +128,12 @@ export default function HomeHeroSlider() {
 
   return (
     <section
-      className="relative"
+      className="relative border-b border-dark-800"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* No overflow-hidden here — it clipped glows into a hard line under icons */}
-      <div className={`relative bg-gradient-to-br ${TONE_BG[slide.tone]}`}>
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse at top right, rgba(43,113,243,0.12), transparent 55%)',
-          }}
-        />
+      <div className={`relative overflow-hidden bg-gradient-to-br ${TONE_BG[slide.tone]}`}>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(43,113,243,0.14),_transparent_50%)] pointer-events-none" />
 
         <div
           className={`relative ${PAGE_WIDTH_CLASS} py-5 sm:py-7 lg:py-8
@@ -184,39 +159,31 @@ export default function HomeHeroSlider() {
               </p>
 
               <div className="flex flex-wrap gap-2.5 sm:gap-3">
-                <Link
-                  to={slide.cta.to}
-                  className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base no-underline"
-                >
+                <Link to={slide.cta.to} className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base">
                   {slide.cta.label} <ArrowRight size={16} />
                 </Link>
                 {slide.secondary && (
-                  <Link
-                    to={slide.secondary.to}
-                    className="btn-secondary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center text-sm sm:text-base no-underline"
-                  >
+                  <Link to={slide.secondary.to} className="btn-secondary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center text-sm sm:text-base">
                     {slide.secondary.label}
                   </Link>
                 )}
               </div>
             </div>
 
-            <div className="order-1 lg:order-2 h-[210px] sm:h-[240px] lg:h-full min-h-0 flex items-center justify-center lg:justify-start">
+            <div className="order-1 lg:order-2 h-[210px] sm:h-[240px] lg:h-full min-h-0 flex items-center justify-center">
               {Visual ? <Visual /> : null}
             </div>
           </div>
 
-          <div className="pt-4 sm:pt-5 flex items-center shrink-0 border-0">
-            <div className="flex w-full max-w-[200px] gap-1.5" role="tablist" aria-label="Слайды">
+          <div className="mt-4 sm:mt-5 flex items-center shrink-0">
+            <div className="flex w-full max-w-xs gap-2">
               {SLIDES.map((s, i) => (
                 <button
                   key={s.id}
                   type="button"
-                  role="tab"
-                  aria-selected={i === index}
                   aria-label={`Слайд ${i + 1}`}
                   onClick={() => goTo(i)}
-                  className={`h-1 flex-1 rounded-full border-0 outline-none shadow-none ring-0 appearance-none ${
+                  className={`h-1.5 flex-1 rounded-full transition-colors ${
                     i === index ? 'bg-[#2B71F3]' : 'bg-dark-700 hover:bg-dark-600'
                   }`}
                 />
@@ -225,7 +192,6 @@ export default function HomeHeroSlider() {
           </div>
         </div>
       </div>
-      <div className="h-px bg-dark-800" aria-hidden />
     </section>
   );
 }
