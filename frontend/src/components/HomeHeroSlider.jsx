@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Trophy, ShoppingBag, Store, ArrowRight, Shield,
+  Trophy, ShoppingBag, Store, ArrowRight, Shield, Layers, Percent, Zap,
 } from 'lucide-react';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
 
@@ -35,6 +35,35 @@ const SLIDES = [
       'Игровая валюта, аккаунты, подписки и сервисы — с автовыдачей или вручную через чат сделки.',
     cta: { to: '/listings/create', label: 'Продать товар' },
     tone: 'sell',
+  },
+  {
+    id: 'apps',
+    eyebrow: 'Каталог',
+    title: 'Сотни игр и сервисов',
+    subtitle:
+      'Steam, PlayStation, Telegram, ChatGPT и сотни других направлений — найдите нужное и перейдите к лотам в один клик.',
+    cta: { to: '/apps', label: 'Смотреть каталог' },
+    secondary: { to: '/catalog', label: 'Все лоты' },
+    tone: 'apps',
+  },
+  {
+    id: 'fees',
+    eyebrow: 'Комиссия',
+    title: 'От 7.5% — прозрачно',
+    subtitle:
+      'Для подписок, доната и пополнений — 7.5%. Для аккаунтов, валюты и остального — 17.5%. Без скрытых сборов за вывод.',
+    cta: { to: '/faq', label: 'Подробнее о комиссии' },
+    tone: 'fees',
+  },
+  {
+    id: 'delivery',
+    eyebrow: 'Выдача',
+    title: 'Мгновенно или через чат',
+    subtitle:
+      'Автовыдача для цифровых товаров и ручная передача с чатом сделки — выбирайте удобный формат при создании лота.',
+    cta: { to: '/listings/create', label: 'Создать лот' },
+    secondary: { to: '/catalog', label: 'Купить сейчас' },
+    tone: 'delivery',
   },
 ];
 
@@ -85,41 +114,81 @@ function ContestVisual() {
   );
 }
 
-function EscrowVisual() {
+function IconVisual({
+  Icon,
+  glow = 'rgba(43,113,243,0.38)',
+  glowSoft = 'rgba(43,113,243,0.14)',
+  box = 'bg-[#2B71F3]/15 border-[#2B71F3]/25',
+  iconClass = 'text-[#2B71F3]',
+}) {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <div className="relative flex items-center justify-center">
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                     w-[240px] h-[240px] sm:w-[280px] sm:h-[280px] rounded-full pointer-events-none
-                     bg-[radial-gradient(circle,rgba(16,185,129,0.32)_0%,rgba(16,185,129,0.12)_42%,transparent_72%)]"
+                     w-[240px] h-[240px] sm:w-[280px] sm:h-[280px] rounded-full pointer-events-none"
+          style={{
+            background: `radial-gradient(circle,${glow} 0%,${glowSoft} 42%,transparent 72%)`,
+          }}
           aria-hidden
         />
-        <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/25
-                        flex items-center justify-center">
-          <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" />
+        <div className={`relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl border flex items-center justify-center ${box}`}>
+          <Icon size={48} className={`${iconClass} sm:w-14 sm:h-14`} />
         </div>
       </div>
     </div>
   );
 }
 
-function SellVisual() {
+function EscrowVisual() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      <div className="relative flex items-center justify-center">
-        <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                     w-[240px] h-[240px] sm:w-[280px] sm:h-[280px] rounded-full pointer-events-none
-                     bg-[radial-gradient(circle,rgba(43,113,243,0.38)_0%,rgba(43,113,243,0.14)_42%,transparent_72%)]"
-          aria-hidden
-        />
-        <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/25
-                        flex items-center justify-center">
-          <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" />
-        </div>
-      </div>
-    </div>
+    <IconVisual
+      Icon={Shield}
+      glow="rgba(16,185,129,0.32)"
+      glowSoft="rgba(16,185,129,0.12)"
+      box="bg-emerald-500/15 border-emerald-500/25"
+      iconClass="text-emerald-400"
+    />
+  );
+}
+
+function SellVisual() {
+  return <IconVisual Icon={Store} />;
+}
+
+function AppsVisual() {
+  return (
+    <IconVisual
+      Icon={Layers}
+      glow="rgba(91,140,255,0.4)"
+      glowSoft="rgba(91,140,255,0.14)"
+      box="bg-[#5B8CFF]/15 border-[#5B8CFF]/25"
+      iconClass="text-[#5B8CFF]"
+    />
+  );
+}
+
+function FeesVisual() {
+  return (
+    <IconVisual
+      Icon={Percent}
+      glow="rgba(251,191,36,0.32)"
+      glowSoft="rgba(251,191,36,0.12)"
+      box="bg-amber-500/15 border-amber-500/25"
+      iconClass="text-amber-300"
+    />
+  );
+}
+
+function DeliveryVisual() {
+  return (
+    <IconVisual
+      Icon={Zap}
+      glow="rgba(167,139,250,0.38)"
+      glowSoft="rgba(167,139,250,0.14)"
+      box="bg-violet-500/15 border-violet-500/25"
+      iconClass="text-violet-300"
+    />
   );
 }
 
@@ -127,12 +196,18 @@ const VISUALS = {
   contest: ContestVisual,
   escrow: EscrowVisual,
   sell: SellVisual,
+  apps: AppsVisual,
+  fees: FeesVisual,
+  delivery: DeliveryVisual,
 };
 
 const TONE_BG = {
   contest: 'from-[#12141c] via-[#161a28] to-[#101214]',
   escrow: 'from-[#101816] via-[#121a18] to-[#101214]',
   sell: 'from-[#10141c] via-[#121826] to-[#101214]',
+  apps: 'from-[#10141c] via-[#141a2a] to-[#101214]',
+  fees: 'from-[#161410] via-[#1a1812] to-[#101214]',
+  delivery: 'from-[#14101a] via-[#18141f] to-[#101214]',
 };
 
 export default function HomeHeroSlider() {
