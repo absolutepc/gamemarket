@@ -34,20 +34,21 @@ export default function Layout() {
         }`}
       >
         <div className={`${PAGE_WIDTH_CLASS} py-3.5 lg:py-0 lg:h-20 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5`}>
-          {/* Top row: brand + theme (mobile); brand inline on desktop */}
+          {/* Top row: brand + theme; actions on the right */}
           <div className="flex items-center justify-between gap-3 lg:contents">
-            <Link to="/" className="flex items-center gap-2.5 shrink-0 no-underline">
-              <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center overflow-hidden shadow-none ring-0">
-                <Shield size={20} className="text-white" />
-              </div>
-              <span className="font-bold text-2xl lg:text-[1.75rem] leading-none tracking-tight text-[#5B8CFF]">
-                Lootz
-              </span>
-            </Link>
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              <Link to="/" className="flex items-center gap-2.5 no-underline">
+                <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center overflow-hidden shadow-none ring-0">
+                  <Shield size={20} className="text-white" />
+                </div>
+                <span className="font-bold text-2xl lg:text-[1.75rem] leading-none tracking-tight text-[#5B8CFF]">
+                  Lootz
+                </span>
+              </Link>
+              <ThemeToggle />
+            </div>
 
             <div className="flex items-center gap-2 lg:order-last shrink-0">
-              <ThemeToggle className="lg:mr-1" />
-
               <nav className="hidden lg:flex items-center gap-1">
                 <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
                 {user?.role === 'admin' && (
