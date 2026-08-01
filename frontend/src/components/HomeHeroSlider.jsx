@@ -57,10 +57,17 @@ function ContestVisual() {
 function EscrowVisual() {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.22),transparent_55%)] pointer-events-none" />
-      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/25
-                      flex items-center justify-center">
-        <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" />
+      <div className="relative flex items-center justify-center">
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                     w-[240px] h-[240px] sm:w-[280px] sm:h-[280px] rounded-full pointer-events-none
+                     bg-[radial-gradient(circle,rgba(16,185,129,0.32)_0%,rgba(16,185,129,0.12)_42%,transparent_72%)]"
+          aria-hidden
+        />
+        <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/25
+                        flex items-center justify-center">
+          <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" />
+        </div>
       </div>
     </div>
   );
@@ -69,10 +76,17 @@ function EscrowVisual() {
 function SellVisual() {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(43,113,243,0.28),transparent_55%)] pointer-events-none" />
-      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/25
-                      flex items-center justify-center">
-        <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" />
+      <div className="relative flex items-center justify-center">
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                     w-[240px] h-[240px] sm:w-[280px] sm:h-[280px] rounded-full pointer-events-none
+                     bg-[radial-gradient(circle,rgba(43,113,243,0.38)_0%,rgba(43,113,243,0.14)_42%,transparent_72%)]"
+          aria-hidden
+        />
+        <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/25
+                        flex items-center justify-center">
+          <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" />
+        </div>
       </div>
     </div>
   );
