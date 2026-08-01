@@ -107,7 +107,7 @@ export default function HomePage() {
       <section className={`${PAGE_WIDTH_CLASS} pt-5 lg:pt-6 pb-1`}>
         <div className="flex items-center justify-between mb-2.5 lg:mb-3">
           <h2 className="text-base lg:text-lg font-bold">Игры и сервисы</h2>
-          <div className="hidden lg:flex items-center gap-1.5">
+          <div className="hidden sm:flex lg:hidden items-center gap-1.5">
             <button
               type="button"
               onClick={() => scrollAssortment(-1)}
