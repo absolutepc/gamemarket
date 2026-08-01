@@ -40,33 +40,16 @@ const SLIDES = [
 
 function ContestVisual() {
   return (
-    <div className="relative w-full h-full flex flex-col items-center lg:items-start justify-center">
+    <div className="relative w-full h-full flex items-center justify-center lg:justify-start">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_45%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
-      <div className="relative z-10 w-full max-w-[380px] lg:max-w-none lg:w-[92%] flex flex-col items-center lg:items-start">
-        <img
-          src="/banners/macbook-air-15.webp"
-          alt="MacBook Air 15″ — приз конкурса"
-          className="w-full h-auto max-h-[240px] sm:max-h-[280px] lg:max-h-[320px] object-contain object-left
-                     select-none pointer-events-none"
-          draggable={false}
-        />
-        <div className="mt-3 flex flex-col items-center lg:items-start gap-1.5">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-0.5 text-[10px] text-dark-200">
-            <Trophy size={11} className="text-amber-300" />
-            256 ГБ · 2 приза / месяц
-          </div>
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5">
-            <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5">
-              <Store size={12} className="text-[#2B71F3] shrink-0" />
-              <span className="text-[11px] font-medium whitespace-nowrap">1× продавцам</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5">
-              <ShoppingBag size={12} className="text-emerald-400 shrink-0" />
-              <span className="text-[11px] font-medium whitespace-nowrap">1× покупателям</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <img
+        src="/banners/macbook-air-15.webp"
+        alt="MacBook Air 15″ — приз конкурса"
+        className="relative z-10 w-full max-w-[420px] lg:max-w-none lg:w-[95%] h-auto
+                   max-h-[260px] sm:max-h-[300px] lg:max-h-[340px] object-contain object-left
+                   select-none pointer-events-none"
+        draggable={false}
+      />
     </div>
   );
 }
@@ -154,9 +137,26 @@ export default function HomeHeroSlider() {
               <h1 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight leading-tight mb-2 sm:mb-3">
                 {slide.title}
               </h1>
-              <p className="text-dark-300 text-sm sm:text-base leading-relaxed max-w-xl mb-4 sm:mb-5 line-clamp-4">
+              <p className="text-dark-300 text-sm sm:text-base leading-relaxed max-w-xl mb-3 sm:mb-4 line-clamp-4">
                 {slide.subtitle}
               </p>
+
+              {slide.tone === 'contest' && (
+                <div className="flex flex-wrap items-center gap-2 mb-4 sm:mb-5">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-1 text-[11px] text-dark-200">
+                    <Trophy size={12} className="text-amber-300" />
+                    256 ГБ · 2 приза / месяц
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 text-[11px] font-medium">
+                    <Store size={12} className="text-[#2B71F3] shrink-0" />
+                    1× продавцам
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 text-[11px] font-medium">
+                    <ShoppingBag size={12} className="text-emerald-400 shrink-0" />
+                    1× покупателям
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-2.5 sm:gap-3">
                 <Link to={slide.cta.to} className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base">
