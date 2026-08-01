@@ -215,12 +215,42 @@ CREATE TABLE IF NOT EXISTS assortment_hidden (
 CREATE INDEX IF NOT EXISTS idx_assortment_hidden_created ON assortment_hidden(created_at DESC);
 `;
 
+/** Usernames promoted to admin on each migrate (comma-separated). Default: Mercy */
+function bootstrapAdminUsernames() {
+  const raw = process.env.ADMIN_USERNAMES != null && String(process.env.ADMIN_USERNAMES).trim() !== ''
+    ? process.env.ADMIN_USERNAMES
+    : 'Mercy';
+  return [...new Set(
+    String(raw)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  )];
+}
+
+async function promoteBootstrapAdmins(client) {
+  const usernames = bootstrapAdminUsernames();
+  for (const username of usernames) {
+    const { rowCount, rows } = await client.query(
+      `UPDATE users
+       SET role = 'admin', updated_at = NOW()
+       WHERE LOWER(username) = LOWER($1) AND role IS DISTINCT FROM 'admin'
+       RETURNING username, role`,
+      [username]
+    );
+    if (rowCount > 0) {
+      console.log(`Promoted to admin: ${rows[0].username}`);
+    }
+  }
+}
+
 async function migrate({ closePool = false } = {}) {
   const client = await pool.connect();
   try {
     console.log('Running migrations...');
     await client.query(schema);
     await client.query(alters);
+    await promoteBootstrapAdmins(client);
     console.log('Migrations complete.');
   } catch (err) {
     console.error('Migration error:', err);
