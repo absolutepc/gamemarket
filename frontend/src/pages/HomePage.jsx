@@ -350,7 +350,29 @@ export default function HomePage() {
       </section>
 
       <section className={`${PAGE_WIDTH_CLASS} pt-5 pb-2`}>
-        <div className="relative">
+        {/* Mobile: simple horizontal chips (pre-arrow layout) */}
+        <div
+          className="flex gap-2 overflow-x-auto pb-2 lg:hidden"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {LISTING_TYPE_OPTIONS.map((opt) => {
+            const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
+            return (
+              <Link
+                key={opt.value}
+                to={`/catalog?type=${encodeURIComponent(opt.value)}`}
+                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
+                           hover:border-[#2B71F3]/40 text-sm transition-colors"
+              >
+                <Icon size={14} className="text-[#2B71F3]" />
+                {opt.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Desktop: glass-arrow carousel, 10 per page */}
+        <div className="relative hidden lg:block">
           {canCatLeft && (
             <button
               type="button"
@@ -374,7 +396,7 @@ export default function HomePage() {
 
           <div
             ref={catScrollRef}
-            className="flex overflow-x-auto lg:overflow-x-hidden scroll-smooth
+            className="flex overflow-x-hidden scroll-smooth
                        [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             <div
