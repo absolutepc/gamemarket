@@ -64,6 +64,7 @@ app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/chats', require('./routes/chats'));
+app.use('/api/assortment', require('./routes/assortment'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api', require('./routes/seo'));
 

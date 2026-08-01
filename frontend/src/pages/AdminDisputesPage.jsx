@@ -42,6 +42,7 @@ export default function AdminDisputesPage() {
       <div className="flex items-center gap-3 mb-6">
         <Scale className="text-brand-400" size={22} />
         <h1 className="text-2xl font-bold">Разбор споров</h1>
+        <Link to="/admin/assortment" className="ml-auto btn-ghost text-sm">Каталог</Link>
       </div>
 
       <div className="flex gap-2 mb-6">

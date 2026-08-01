@@ -53,7 +53,10 @@ export default function Layout() {
               <nav className="hidden lg:flex items-center gap-1">
                 <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
                 {user?.role === 'admin' && (
-                  <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
+                  <>
+                    <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
+                    <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
+                  </>
                 )}
               </nav>
 

@@ -21,6 +21,7 @@ import ChatPage from './pages/ChatPage';
 import VkCallbackPage from './pages/VkCallbackPage';
 import AppleCallbackPage from './pages/AppleCallbackPage';
 import AdminDisputesPage from './pages/AdminDisputesPage';
+import AdminAssortmentPage from './pages/AdminAssortmentPage';
 import AppsPage from './pages/AppsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -64,6 +65,7 @@ export default function App() {
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="admin/disputes" element={<AdminDisputesPage />} />
+          <Route path="admin/assortment" element={<AdminAssortmentPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

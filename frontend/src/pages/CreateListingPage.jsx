@@ -18,6 +18,7 @@ import {
 } from '../utils/listingAttributes';
 import { compressImageFile } from '../utils/imageCompress';
 import { resolveAssortmentItem, isExactAssortmentName } from '../utils/assortmentIcons';
+import { useHiddenAssortmentKeys } from '../hooks/useAssortmentCatalog';
 
 const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
 const STEPS = [
@@ -64,6 +65,7 @@ export default function CreateListingPage() {
   const [attributes, setAttributes] = useState({});
   const [images, setImages] = useState([]);
   const [compressing, setCompressing] = useState(false);
+  const { hiddenKeys } = useHiddenAssortmentKeys();
   const [form, setForm] = useState({
     title: '',
     listing_type: 'subscription',
@@ -160,7 +162,7 @@ export default function CreateListingPage() {
         toast.error('Выберите тип лота');
         return false;
       }
-      if (!form.game.trim() || !isExactAssortmentName(form.game)) {
+      if (!form.game.trim() || !isExactAssortmentName(form.game, hiddenKeys)) {
         toast.error('Выберите игру, приложение или сервис из списка');
         return false;
       }

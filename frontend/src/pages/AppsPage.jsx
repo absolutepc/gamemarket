@@ -3,7 +3,8 @@ import { useMemo, useState } from 'react';
 import { Gamepad2, Smartphone, Layers, Plus, Search } from 'lucide-react';
 import Seo from '../components/Seo';
 import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
-import { ASSORTMENT_TABS, assortmentByTab } from '../data/assortment';
+import { ASSORTMENT_TABS } from '../data/assortment';
+import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 
 const FALLBACK_ICON = '/assortment/other-apps.png';
 
@@ -18,8 +19,9 @@ export default function AppsPage() {
   const tabParam = searchParams.get('tab');
   const activeTab = ASSORTMENT_TABS.some((t) => t.id === tabParam) ? tabParam : 'games';
   const [q, setQ] = useState('');
+  const { byTab } = useVisibleAssortment();
 
-  const tabItems = useMemo(() => assortmentByTab(activeTab), [activeTab]);
+  const tabItems = useMemo(() => byTab(activeTab), [byTab, activeTab]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -31,8 +33,8 @@ export default function AppsPage() {
   }, [q, tabItems]);
 
   const tabCounts = useMemo(
-    () => Object.fromEntries(ASSORTMENT_TABS.map((t) => [t.id, assortmentByTab(t.id).length])),
-    []
+    () => Object.fromEntries(ASSORTMENT_TABS.map((t) => [t.id, byTab(t.id).length])),
+    [byTab]
   );
 
   const setTab = (id) => {

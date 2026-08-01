@@ -11,8 +11,8 @@ import api from '../utils/api';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import HomeHeroSlider from '../components/HomeHeroSlider';
-import { ASSORTMENT, HOME_TOP_14 } from '../data/assortment';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
+import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 
 const LISTING_TYPE_ICONS = {
   subscription: Sparkles,
@@ -55,16 +55,17 @@ export default function HomePage() {
 
   const catPage1 = useMemo(() => LISTING_TYPE_OPTIONS.slice(0, CAT_PAGE_SIZE), []);
   const catPage2 = useMemo(() => LISTING_TYPE_OPTIONS.slice(CAT_PAGE_SIZE), []);
+  const { items: visibleAssortment, homeTop } = useVisibleAssortment();
 
   // Desktop: 31 games + mosaic folder = 32; mobile: top-14 + folder
   const previewItems = useMemo(
-    () => (isDesktop ? ASSORTMENT.slice(0, DESKTOP_ITEMS) : HOME_TOP_14),
-    [isDesktop]
+    () => (isDesktop ? visibleAssortment.slice(0, DESKTOP_ITEMS) : homeTop),
+    [isDesktop, visibleAssortment, homeTop]
   );
-  const moreCount = Math.max(0, ASSORTMENT.length - previewItems.length);
+  const moreCount = Math.max(0, visibleAssortment.length - previewItems.length);
   const mosaicIcons = useMemo(
-    () => ASSORTMENT.slice(previewItems.length, previewItems.length + 4).map((p) => p.icon),
-    [previewItems.length]
+    () => visibleAssortment.slice(previewItems.length, previewItems.length + 4).map((p) => p.icon),
+    [visibleAssortment, previewItems.length]
   );
 
   const updateScrollEdges = () => {

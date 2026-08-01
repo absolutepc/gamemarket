@@ -5,7 +5,74 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const { validate } = require('../middleware/security');
 const { releaseEscrow, refundEscrow } = require('../services/escrow');
 
+function normalizeAssortmentKey(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[^a-z0-9а-я]+/gi, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
 router.use(authenticate(), requireRole('admin'));
+
+/** Hidden assortment items with metadata for admin UI */
+router.get('/assortment/hidden', async (_req, res) => {
+  const { rows } = await pool.query(
+    `SELECT h.item_key, h.name, h.note, h.created_at, u.username AS hidden_by_username
+     FROM assortment_hidden h
+     LEFT JOIN users u ON u.id = h.hidden_by
+     ORDER BY h.created_at DESC`
+  );
+  res.json(rows);
+});
+
+router.post(
+  '/assortment/hide',
+  [
+    body('name').trim().isLength({ min: 1, max: 200 }),
+    body('note').optional({ nullable: true }).trim().isLength({ max: 500 }),
+  ],
+  validate,
+  async (req, res) => {
+    const name = String(req.body.name).trim();
+    const itemKey = normalizeAssortmentKey(name);
+    if (!itemKey) return res.status(400).json({ error: 'Invalid name' });
+    const note = req.body.note ? String(req.body.note).trim() : null;
+
+    const { rows } = await pool.query(
+      `INSERT INTO assortment_hidden (item_key, name, hidden_by, note)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (item_key) DO UPDATE
+         SET name = EXCLUDED.name,
+             note = COALESCE(EXCLUDED.note, assortment_hidden.note),
+             hidden_by = EXCLUDED.hidden_by,
+             created_at = NOW()
+       RETURNING item_key, name, note, created_at`,
+      [itemKey, name, req.user.id, note]
+    );
+    res.json({ message: 'Hidden', item: rows[0] });
+  }
+);
+
+router.post(
+  '/assortment/unhide',
+  [body('name').trim().isLength({ min: 1, max: 200 })],
+  validate,
+  async (req, res) => {
+    const name = String(req.body.name).trim();
+    const itemKey = normalizeAssortmentKey(name);
+    if (!itemKey) return res.status(400).json({ error: 'Invalid name' });
+
+    const { rowCount } = await pool.query(
+      `DELETE FROM assortment_hidden WHERE item_key=$1`,
+      [itemKey]
+    );
+    if (!rowCount) return res.status(404).json({ error: 'Not hidden' });
+    res.json({ message: 'Restored', key: itemKey });
+  }
+);
+
 
 router.get('/disputes', async (req, res) => {
   const { status = 'open' } = req.query;

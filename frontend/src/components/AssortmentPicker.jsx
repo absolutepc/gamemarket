@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X, Check } from 'lucide-react';
-import { ASSORTMENT, ASSORTMENT_TABS, assortmentByTab } from '../data/assortment';
+import { ASSORTMENT_TABS } from '../data/assortment';
 import { resolveAssortmentItem } from '../utils/assortmentIcons';
+import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 
 /**
  * Required picker: user must select a concrete game / app / service from assortment.
  * Stores the exact assortment `name` so listing cards can resolve the logo.
+ * Respects admin-hidden catalog entries.
  */
 export default function AssortmentPicker({ value, onChange, required = true }) {
   const [open, setOpen] = useState(false);
@@ -13,20 +15,21 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
   const [tab, setTab] = useState('games');
   const rootRef = useRef(null);
   const inputRef = useRef(null);
+  const { items: visibleAssortment, byTab } = useVisibleAssortment();
 
   const selected = useMemo(() => resolveAssortmentItem(value), [value]);
 
-  const tabItems = useMemo(() => assortmentByTab(tab), [tab]);
+  const tabItems = useMemo(() => byTab(tab), [byTab, tab]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
-    const source = query ? ASSORTMENT : tabItems;
+    const source = query ? visibleAssortment : tabItems;
     if (!query) return source;
     return source.filter(
       (item) =>
         item.name.toLowerCase().includes(query) || item.search.toLowerCase().includes(query)
     );
-  }, [q, tabItems]);
+  }, [q, tabItems, visibleAssortment]);
 
   useEffect(() => {
     if (!open) return undefined;

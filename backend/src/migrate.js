@@ -204,6 +204,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_transaction_unique ON reviews(tran
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_one_per_buyer_deal ON reviews(transaction_id, reviewer_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_auto_release ON transactions(auto_release_at) WHERE status='awaiting_confirmation';
 CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status);
+
+CREATE TABLE IF NOT EXISTS assortment_hidden (
+  item_key VARCHAR(200) PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  hidden_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_assortment_hidden_created ON assortment_hidden(created_at DESC);
 `;
 
 async function migrate({ closePool = false } = {}) {

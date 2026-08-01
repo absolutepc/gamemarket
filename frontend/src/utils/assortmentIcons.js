@@ -47,9 +47,13 @@ export function resolveAssortmentIcon(gameOrSearch) {
   return resolveAssortmentItem(gameOrSearch)?.icon || FALLBACK_ICON;
 }
 
-/** True when value is an exact assortment name (required for new listings). */
-export function isExactAssortmentName(value) {
+/**
+ * True when value is an exact assortment name (required for new listings).
+ * Pass hiddenKeys (Set) to reject admin-hidden catalog entries.
+ */
+export function isExactAssortmentName(value, hiddenKeys) {
   const q = normalizeAssortmentKey(value);
   if (!q) return false;
+  if (hiddenKeys?.size && hiddenKeys.has(q)) return false;
   return INDEX.some((item) => item.key === q);
 }
