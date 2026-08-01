@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { useMemo } from 'react';
-import { Gamepad2, Smartphone, Layers, Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Gamepad2, Smartphone, Layers, Plus, Search } from 'lucide-react';
 import Seo from '../components/Seo';
 import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { ASSORTMENT_TABS, assortmentByTab } from '../data/assortment';
@@ -17,8 +17,18 @@ export default function AppsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const activeTab = ASSORTMENT_TABS.some((t) => t.id === tabParam) ? tabParam : 'games';
+  const [q, setQ] = useState('');
 
   const tabItems = useMemo(() => assortmentByTab(activeTab), [activeTab]);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    if (!query) return tabItems;
+    return tabItems.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) || item.search.toLowerCase().includes(query)
+    );
+  }, [q, tabItems]);
 
   const tabCounts = useMemo(
     () => Object.fromEntries(ASSORTMENT_TABS.map((t) => [t.id, assortmentByTab(t.id).length])),
@@ -27,12 +37,19 @@ export default function AppsPage() {
 
   const setTab = (id) => {
     setSearchParams(id === 'games' ? {} : { tab: id }, { replace: true });
+    setQ('');
   };
 
   const activeLabel = ASSORTMENT_TABS.find((t) => t.id === activeTab)?.label || 'Игры';
   const ActiveIcon = TAB_ICONS[activeTab] || Layers;
   const suggestTopic =
     activeTab === 'apps' ? 'suggest_app' : activeTab === 'mobile' ? 'suggest_mobile' : 'suggest_game';
+  const searchPlaceholder =
+    activeTab === 'apps'
+      ? 'Поиск приложений...'
+      : activeTab === 'mobile'
+        ? 'Поиск мобильных игр...'
+        : 'Поиск игр...';
 
   return (
     <div className={`${PAGE_WIDTH_CLASS} py-6 sm:py-8 pb-28`}>
@@ -83,9 +100,21 @@ export default function AppsPage() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-2.5 mb-4 sm:mb-5">
-        <ActiveIcon size={22} className="text-[#2B71F3] shrink-0" />
-        <h1 className="text-xl sm:text-2xl font-bold">{activeLabel}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <ActiveIcon size={22} className="text-[#2B71F3] shrink-0" />
+          <h1 className="text-xl sm:text-2xl font-bold">{activeLabel}</h1>
+        </div>
+        <div className="relative w-full sm:max-w-md sm:ml-auto">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-500" />
+          <input
+            className="input pl-10"
+            placeholder={searchPlaceholder}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label={searchPlaceholder}
+          />
+        </div>
       </div>
 
       {/* Dense Playerok-style icon grid */}
@@ -94,7 +123,7 @@ export default function AppsPage() {
                    grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12
                    2xl:grid-cols-[repeat(14,minmax(0,1fr))]"
       >
-        {tabItems.map((item) => (
+        {filtered.map((item) => (
           <Link
             key={`${item.kind}-${item.name}-${item.search}`}
             to={`/catalog?search=${encodeURIComponent(item.search)}`}
@@ -123,8 +152,19 @@ export default function AppsPage() {
         ))}
       </div>
 
-      {tabItems.length === 0 && (
-        <div className="text-center text-dark-400 py-16 text-sm">Пока ничего нет в этом разделе</div>
+      {filtered.length === 0 && (
+        <div className="text-center text-dark-400 py-16 text-sm">
+          {q.trim() ? (
+            <>
+              Ничего не найдено —{' '}
+              <Link to={`/support?topic=${suggestTopic}`} className="text-[#2B71F3] hover:underline">
+                предложить
+              </Link>
+            </>
+          ) : (
+            'Пока ничего нет в этом разделе'
+          )}
+        </div>
       )}
     </div>
   );
