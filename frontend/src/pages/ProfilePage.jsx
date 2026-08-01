@@ -108,7 +108,7 @@ export default function ProfilePage() {
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold">
-                  {profile.username[0].toUpperCase()}
+                  {(profile.username?.[0] || '?').toUpperCase()}
                 </div>
               )}
             </div>
@@ -228,7 +228,7 @@ export default function ProfilePage() {
               <div key={i} className="card p-4">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-semibold">
-                    {r.reviewer_username[0].toUpperCase()}
+                    {(r.reviewer_username?.[0] || '?').toUpperCase()}
                   </div>
                   <div>
                     <p className="font-medium text-sm">{r.reviewer_username}</p>
