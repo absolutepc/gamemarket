@@ -454,20 +454,20 @@ export default function ListingPage() {
         </div>
 
         {/* Description */}
-        <section className="mb-8 max-w-3xl">
-          <h2 className="font-bold text-lg text-white mb-4">Описание</h2>
+        <section className="mb-8 lg:mb-10 max-w-4xl">
+          <h2 className="font-bold text-xl lg:text-2xl text-white mb-4 lg:mb-5">Описание</h2>
           {attrEntries.length > 0 && (
-            <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-col gap-3.5 mb-5">
               {attrEntries.map(([key, value]) => (
-                <div key={key} className="flex flex-col gap-0.5 text-sm">
-                  <span className="text-dark-400 text-xs">{key}</span>
-                  <span className="text-white">{String(value)}</span>
+                <div key={key} className="flex flex-col gap-1">
+                  <span className="text-dark-400 text-sm">{key}</span>
+                  <span className="text-white text-base lg:text-lg">{String(value)}</span>
                 </div>
               ))}
             </div>
           )}
           {plainDesc ? (
-            <p className="text-sm text-dark-300 leading-relaxed whitespace-pre-wrap">
+            <p className="text-base text-dark-300 leading-relaxed whitespace-pre-wrap">
               {descShown}
               {descLong && (
                 <button
@@ -480,18 +480,18 @@ export default function ListingPage() {
               )}
             </p>
           ) : (
-            <p className="text-sm text-dark-500">Без описания</p>
+            <p className="text-base text-dark-500">Без описания</p>
           )}
         </section>
 
         {/* Seller */}
-        <section className="mb-8 max-w-3xl">
-          <h2 className="font-bold text-lg text-white mb-4">Продавец</h2>
+        <section className="mb-8 lg:mb-10 max-w-4xl">
+          <h2 className="font-bold text-xl lg:text-2xl text-white mb-4 lg:mb-5">Продавец</h2>
           <Link
             to={`/users/${listing.seller_username}`}
-            className="flex items-center gap-3 mb-4 group"
+            className="flex items-center gap-3.5 mb-5 group"
           >
-            <div className="w-12 h-12 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden ring-1 ring-white/10">
+            <div className="w-14 h-14 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-xl shrink-0 overflow-hidden ring-1 ring-white/10">
               {listing.seller_avatar ? (
                 <img src={listing.seller_avatar} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -499,17 +499,17 @@ export default function ListingPage() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-semibold text-white group-hover:text-[#5B8CFF] transition-colors truncate">
+              <div className="font-semibold text-lg text-white group-hover:text-[#5B8CFF] transition-colors truncate">
                 {listing.seller_username}
               </div>
-              <div className="flex items-center gap-1.5 mt-0.5 text-xs flex-wrap">
+              <div className="flex items-center gap-1.5 mt-1 text-sm flex-wrap">
                 <div className="flex items-center gap-0.5 text-[#5B8CFF]">
                   {Array.from({ length: 5 }).map((_, i) => {
                     const filled = i < filledStarsCount(sellerRating);
                     return (
                       <Star
                         key={i}
-                        size={12}
+                        size={14}
                         fill={filled ? 'currentColor' : 'none'}
                         className={filled ? '' : 'text-dark-600'}
                       />
@@ -533,35 +533,35 @@ export default function ListingPage() {
                   e.preventDefault();
                   startChat();
                 }}
-                className="btn-ghost p-2 shrink-0"
+                className="btn-ghost p-2.5 shrink-0"
                 title="Написать продавцу"
               >
-                <MessageCircle size={18} />
+                <MessageCircle size={20} />
               </button>
             )}
           </Link>
 
-          <div className="flex items-center gap-2 mb-3 text-sm">
-            <Lock size={15} className="text-amber-400 shrink-0" />
+          <div className="flex items-center gap-2.5 mb-3.5 text-base">
+            <Lock size={17} className="text-amber-400 shrink-0" />
             <span className="text-dark-200">Безопасная оплата</span>
           </div>
 
-          <ul className="flex flex-col gap-2.5 mb-5">
-            <li className="flex items-start gap-2.5 text-sm text-dark-300">
-              <CheckSquare size={16} className="text-[#5B8CFF] shrink-0 mt-0.5" />
+          <ul className="flex flex-col gap-3 mb-5">
+            <li className="flex items-start gap-2.5 text-base text-dark-300">
+              <CheckSquare size={18} className="text-[#5B8CFF] shrink-0 mt-0.5" />
               <span>Возврат средств, если вы не получили товар</span>
             </li>
-            <li className="flex items-start gap-2.5 text-sm text-dark-300">
-              <CheckSquare size={16} className="text-[#5B8CFF] shrink-0 mt-0.5" />
+            <li className="flex items-start gap-2.5 text-base text-dark-300">
+              <CheckSquare size={18} className="text-[#5B8CFF] shrink-0 mt-0.5" />
               <span>Возврат средств, если товар не соответствует описанию</span>
             </li>
           </ul>
 
-          <div className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
-            <Shield size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <Shield size={18} className="text-emerald-400 shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-emerald-300">Защищено эскроу</p>
-              <p className="text-dark-400 text-xs mt-0.5">
+              <p className="font-medium text-base text-emerald-300">Защищено эскроу</p>
+              <p className="text-dark-400 text-sm mt-1">
                 Средства передаются продавцу только после вашего подтверждения
               </p>
             </div>
@@ -569,26 +569,26 @@ export default function ListingPage() {
         </section>
 
         {/* Reviews */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="font-bold text-lg text-white">
+        <section className="mb-10 lg:mb-12">
+          <div className="flex items-center justify-between gap-3 mb-4 lg:mb-5">
+            <h2 className="font-bold text-xl lg:text-2xl text-white">
               Отзывы о {listing.seller_username}
               {listing.seller_reviews ? ` (${listing.seller_reviews})` : ''}
             </h2>
             {listing.seller_username && (
               <Link
                 to={`/users/${listing.seller_username}`}
-                className="text-sm text-[#5B8CFF] hover:underline shrink-0 flex items-center gap-0.5"
+                className="text-sm lg:text-base text-[#5B8CFF] hover:underline shrink-0 flex items-center gap-0.5"
               >
                 Все отзывы
-                <ChevronRight size={16} />
+                <ChevronRight size={18} />
               </Link>
             )}
           </div>
 
           {(sellerRating > 0 || listing.seller_reviews > 0) && (
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl font-bold text-white tabular-nums">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="text-3xl lg:text-4xl font-bold text-white tabular-nums">
                 {sellerRating > 0 ? sellerRating.toFixed(1) : '—'}
               </span>
               <div>
@@ -596,13 +596,13 @@ export default function ListingPage() {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      size={16}
+                      size={18}
                       fill={i < filledStarsCount(sellerRating) ? 'currentColor' : 'none'}
                       className={i < filledStarsCount(sellerRating) ? '' : 'text-dark-600'}
                     />
                   ))}
                 </div>
-                <div className="text-xs text-dark-400 mt-0.5">
+                <div className="text-sm text-dark-400 mt-0.5">
                   {formatReviewsCount(listing.seller_reviews)}
                 </div>
               </div>
@@ -610,14 +610,14 @@ export default function ListingPage() {
           )}
 
           {sellerReviews.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               {sellerReviews.slice(0, 6).map((r, i) => (
                 <div
                   key={`${r.reviewer_username}-${r.created_at}-${i}`}
-                  className="rounded-2xl bg-dark-900 border border-dark-800 px-3.5 py-3"
+                  className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3.5"
                 >
-                  <div className="flex items-center gap-2.5 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-semibold overflow-hidden shrink-0">
+                  <div className="flex items-center gap-2.5 mb-2.5">
+                    <div className="w-9 h-9 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-semibold overflow-hidden shrink-0">
                       {r.reviewer_avatar ? (
                         <img src={r.reviewer_avatar} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -625,26 +625,26 @@ export default function ListingPage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-white truncate">
+                      <div className="text-base font-medium text-white truncate">
                         {r.reviewer_username}
                       </div>
                       <div className="flex items-center gap-0.5 text-[#5B8CFF] mt-0.5">
                         {Array.from({ length: 5 }).map((_, si) => (
                           <Star
                             key={si}
-                            size={11}
+                            size={12}
                             fill={si < (r.rating || 0) ? 'currentColor' : 'none'}
                             className={si < (r.rating || 0) ? '' : 'text-dark-600'}
                           />
                         ))}
                       </div>
                     </div>
-                    <span className="text-[11px] text-dark-500 shrink-0">
+                    <span className="text-xs text-dark-500 shrink-0">
                       {formatDate(r.created_at)}
                     </span>
                   </div>
                   {r.comment && (
-                    <p className="text-sm text-dark-300 leading-relaxed whitespace-pre-wrap line-clamp-4">
+                    <p className="text-sm lg:text-base text-dark-300 leading-relaxed whitespace-pre-wrap line-clamp-4">
                       {r.comment}
                     </p>
                   )}
@@ -652,9 +652,9 @@ export default function ListingPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-5 text-center max-w-xl">
-              <p className="text-sm text-dark-400">Пока нет отзывов об этом продавце</p>
-              <p className="text-xs text-dark-500 mt-1">Оставьте отзыв после завершённой сделки</p>
+            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-5 py-6 text-center max-w-xl">
+              <p className="text-base text-dark-400">Пока нет отзывов об этом продавце</p>
+              <p className="text-sm text-dark-500 mt-1.5">Оставьте отзыв после завершённой сделки</p>
             </div>
           )}
         </section>
@@ -662,14 +662,14 @@ export default function ListingPage() {
         {/* Other listings from seller */}
         {sellerOther?.length > 0 && (
           <section>
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <h2 className="font-bold text-lg text-white">Другие товары продавца</h2>
+            <div className="flex items-center justify-between gap-3 mb-4 lg:mb-5">
+              <h2 className="font-bold text-xl lg:text-2xl text-white">Другие товары продавца</h2>
               <Link
                 to={`/users/${listing.seller_username}`}
-                className="text-sm text-[#5B8CFF] hover:underline flex items-center gap-0.5"
+                className="text-sm lg:text-base text-[#5B8CFF] hover:underline flex items-center gap-0.5"
               >
                 Все товары
-                <ChevronRight size={16} />
+                <ChevronRight size={18} />
               </Link>
             </div>
             <div className={LISTING_GRID_CLASS}>
