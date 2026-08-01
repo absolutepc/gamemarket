@@ -5,6 +5,7 @@ import useAuthStore from '../store/authStore';
 import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import ThemeToggle from './ThemeToggle';
+import { PAGE_WIDTH_CLASS } from './ListingCard';
 
 /** Product detail: /listings/:id (not create/edit) */
 function isListingDetailPath(pathname) {
@@ -27,7 +28,7 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       {!hideChrome && (
         <header className="sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl border-b border-dark-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 lg:py-0 lg:h-16 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
+          <div className={`${PAGE_WIDTH_CLASS} py-3 lg:py-0 lg:h-16 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4`}>
             {/* Top row: brand + theme (mobile); brand inline on desktop */}
             <div className="flex items-center justify-between gap-3 lg:contents">
               <Link to="/" className="flex items-center gap-2 shrink-0">

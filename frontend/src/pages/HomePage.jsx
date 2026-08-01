@@ -8,7 +8,7 @@ import {
   Film, Clock, Puzzle, Palette, GraduationCap, ShoppingBag,
 } from 'lucide-react';
 import api from '../utils/api';
-import ListingCard, { LISTING_GRID_CLASS } from '../components/ListingCard';
+import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import HomeHeroSlider from '../components/HomeHeroSlider';
 import { ASSORTMENT, ASSORTMENT_PREVIEW_COUNT, HOME_TOP_14 } from '../data/assortment';
@@ -183,7 +183,7 @@ export default function HomePage() {
       </section>
 
       {/* Steam top-up promo — Playerok-style featured block */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2">
+      <section className={`${PAGE_WIDTH_CLASS} pt-4 pb-2`}>
         <Link
           to="/catalog?search=Steam"
           className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 rounded-2xl bg-dark-900 border border-dark-800
@@ -213,7 +213,7 @@ export default function HomePage() {
         </Link>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2">
+      <section className={`${PAGE_WIDTH_CLASS} pt-5 pb-2`}>
         <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
           {LISTING_TYPE_OPTIONS.map((opt) => {
             const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
@@ -233,7 +233,7 @@ export default function HomePage() {
       </section>
 
       <section className="py-6 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className={PAGE_WIDTH_CLASS}>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold">Ассортимент</h2>
             <Link to="/catalog" className="flex items-center gap-1 text-[#2B71F3] hover:text-blue-400 text-sm font-medium transition-colors">

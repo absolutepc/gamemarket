@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { SlidersHorizontal, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
 import api from '../utils/api';
-import ListingCard, { LISTING_GRID_CLASS } from '../components/ListingCard';
+import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
@@ -49,7 +49,7 @@ export default function CatalogPage() {
   const activeTypeLabel = LISTING_TYPE_OPTIONS.find((o) => o.value === filters.type)?.label;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className={`${PAGE_WIDTH_CLASS} py-8`}>
       <Seo
         title={
           filters.search

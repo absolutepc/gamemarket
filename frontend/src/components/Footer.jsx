@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { PAGE_WIDTH_CLASS } from './ListingCard';
 
 const SOCIALS = [
   {
@@ -60,7 +61,7 @@ const INFO_LINKS = [
 export default function Footer() {
   return (
     <footer className="mt-16 border-t border-dark-800 bg-dark-900/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
+      <div className={`${PAGE_WIDTH_CLASS} py-10 sm:py-12`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
           {/* Left: socials (swapped with payments vs Playerok) — gran-pc style */}
           <div>

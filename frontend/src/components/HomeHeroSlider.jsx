@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Trophy, ShoppingBag, Store, ArrowRight, Shield,
 } from 'lucide-react';
+import { PAGE_WIDTH_CLASS } from './ListingCard';
 
 const AUTO_MS = 7000;
 
@@ -137,8 +138,8 @@ export default function HomeHeroSlider() {
           }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-6 sm:pt-5 sm:pb-8 lg:py-10
-                        min-h-[560px] sm:min-h-[520px] lg:min-h-[440px] flex flex-col">
+        <div className={`relative ${PAGE_WIDTH_CLASS} pt-3 pb-6 sm:pt-5 sm:pb-8 lg:py-10
+                        min-h-[560px] sm:min-h-[520px] lg:min-h-[440px] flex flex-col`}>
           {slide.tone === 'contest' && (
             <div className="flex justify-center lg:justify-start mb-2 sm:mb-3 shrink-0">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200">

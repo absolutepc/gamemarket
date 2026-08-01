@@ -6,9 +6,12 @@ import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
+/** Wide page shell — fits 5 listing columns like Playerok */
+export const PAGE_WIDTH_CLASS = 'max-w-[1440px] mx-auto px-4 sm:px-6';
+
 /** Same listing grid in home / catalog / profile */
 export const LISTING_GRID_CLASS =
-  'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3';
+  'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3';
 
 function filledStarsCount(rating) {
   const value = parseFloat(rating) || 0;
