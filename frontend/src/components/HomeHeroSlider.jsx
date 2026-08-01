@@ -117,6 +117,13 @@ export default function HomeHeroSlider() {
     >
       <div className={`relative overflow-hidden bg-gradient-to-br ${TONE_BG[slide.tone]}`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(43,113,243,0.14),_transparent_50%)] pointer-events-none" />
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)',
+            backgroundSize: '24px 24px',
+          }}
+        />
 
         <div
           className={`relative ${PAGE_WIDTH_CLASS} py-5 sm:py-7 lg:py-8
