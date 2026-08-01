@@ -87,7 +87,9 @@ export default function ProfileMenuModal({ open, onClose }) {
     ? 'Вы вошли с VK ID'
     : user.auth_provider === 'apple'
       ? 'Вы вошли с Apple ID'
-      : 'Вы вошли по email';
+      : user.auth_provider === 'google'
+        ? 'Вы вошли с Google'
+        : 'Вы вошли по email';
 
   const closeAll = () => {
     setShowNotifications(false);

@@ -199,6 +199,8 @@ function oauthProviderConfig() {
   const base = frontendBaseUrl();
   const vkAppId = envCredential('VK_APP_ID');
   const appleClientId = envCredential('APPLE_CLIENT_ID');
+  const googleClientId = envCredential('GOOGLE_CLIENT_ID');
+  const googleClientSecret = envCredential('GOOGLE_CLIENT_SECRET');
   return {
     vk: {
       enabled: Boolean(vkAppId),
@@ -209,6 +211,11 @@ function oauthProviderConfig() {
       enabled: Boolean(appleClientId),
       clientId: appleClientId,
       redirectUri: `${base}/auth/apple/callback`,
+    },
+    google: {
+      enabled: Boolean(googleClientId && googleClientSecret),
+      clientId: googleClientId,
+      redirectUri: `${base}/auth/google/callback`,
     },
   };
 }
@@ -225,6 +232,11 @@ router.get('/vk/config', (req, res) => {
 router.get('/apple/config', (req, res) => {
   const { apple } = oauthProviderConfig();
   res.json(apple);
+});
+
+router.get('/google/config', (req, res) => {
+  const { google } = oauthProviderConfig();
+  res.json(google);
 });
 
 router.post('/vk',
@@ -405,6 +417,119 @@ router.post('/apple',
       const updated = await pool.query(
         `UPDATE users SET auth_provider='apple', updated_at=NOW() WHERE id=$1 RETURNING *`,
         [user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    const accessToken = await issueSession(res, req, user);
+    res.json({ accessToken, user: publicUser(user) });
+  }
+);
+
+router.post('/google',
+  authLimiter,
+  [
+    body('code').trim().notEmpty(),
+    body('code_verifier').trim().isLength({ min: 43, max: 128 }),
+    body('redirect_uri').trim().isURL({ require_tld: false }),
+    body('state').optional().trim(),
+  ],
+  validate,
+  async (req, res) => {
+    const clientId = envCredential('GOOGLE_CLIENT_ID');
+    const clientSecret = envCredential('GOOGLE_CLIENT_SECRET');
+    if (!clientId || !clientSecret) {
+      return res.status(503).json({ error: 'Google вход не настроен (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)' });
+    }
+
+    const { code, code_verifier, redirect_uri } = req.body;
+    const tokenBody = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      code_verifier,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri,
+    });
+
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenBody,
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || tokenData.error || !tokenData.access_token) {
+      return res.status(401).json({
+        error: tokenData.error_description || tokenData.error || 'Google token exchange failed',
+      });
+    }
+
+    const infoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const googleUser = await infoRes.json();
+    if (!infoRes.ok || !googleUser.sub) {
+      return res.status(401).json({
+        error: googleUser.error_description || googleUser.error || 'Google userinfo failed',
+      });
+    }
+
+    const googleId = String(googleUser.sub);
+    const email = (typeof googleUser.email === 'string' && googleUser.email.includes('@'))
+      ? googleUser.email
+      : `google_${googleId.slice(0, 24)}@google.users.local`;
+    const given = String(googleUser.given_name || googleUser.name || 'user')
+      .replace(/[^a-zA-Z0-9_]/g, '')
+      .slice(0, 20) || 'user';
+    let username = `g_${given}_${googleId.slice(-8)}`.slice(0, 50).toLowerCase();
+    const avatar = typeof googleUser.picture === 'string' ? googleUser.picture : null;
+
+    let { rows } = await pool.query('SELECT * FROM users WHERE google_id=$1', [googleId]);
+    let user = rows[0];
+
+    if (!user && googleUser.email) {
+      const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [googleUser.email]);
+      if (byEmail.rows[0]) {
+        const linked = await pool.query(
+          `UPDATE users SET google_id=$1, auth_provider='google',
+             avatar_url=COALESCE(avatar_url, $2),
+             is_verified=COALESCE($3, is_verified),
+             updated_at=NOW()
+           WHERE id=$4
+           RETURNING *`,
+          [googleId, avatar, googleUser.email_verified === true, byEmail.rows[0].id]
+        );
+        user = linked.rows[0];
+      }
+    }
+
+    if (!user) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const exists = await pool.query(
+          'SELECT id FROM users WHERE username=$1 OR email=$2',
+          [username, email]
+        );
+        if (!exists.rows.length) break;
+        username = `g_${googleId.slice(-10)}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
+      }
+      const inserted = await pool.query(
+        `INSERT INTO users (username, email, password_hash, avatar_url, google_id, auth_provider, is_verified)
+         VALUES ($1,$2,NULL,$3,$4,'google',$5)
+         RETURNING *`,
+        [username, email, avatar, googleId, googleUser.email_verified === true]
+      );
+      user = inserted.rows[0];
+    } else if (user.is_banned) {
+      return res.status(403).json({ error: 'Account suspended' });
+    } else {
+      const updated = await pool.query(
+        `UPDATE users SET
+           auth_provider='google',
+           avatar_url=COALESCE(avatar_url, $1),
+           updated_at=NOW()
+         WHERE id=$2
+         RETURNING *`,
+        [avatar, user.id]
       );
       user = updated.rows[0];
     }

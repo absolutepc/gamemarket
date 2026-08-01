@@ -5,6 +5,7 @@ import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import { startVkLogin } from '../utils/vkAuth';
 import { startAppleLogin } from '../utils/appleAuth';
+import { startGoogleLogin } from '../utils/googleAuth';
 
 function VkIcon() {
   return (
@@ -22,6 +23,17 @@ function AppleIcon() {
   );
 }
 
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden>
+      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.2 14.6 2.2 12 2.2 6.9 2.2 2.7 6.4 2.7 11.5S6.9 20.8 12 20.8c5.4 0 9-3.8 9-9.1 0-.6-.1-1.1-.2-1.5H12z" />
+      <path fill="#34A853" d="M3.9 7.3l3.2 2.3C8 7.4 9.9 6.1 12 6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.2 14.6 2.2 12 2.2 8.3 2.2 5.1 4.3 3.9 7.3z" />
+      <path fill="#FBBC05" d="M12 20.8c2.5 0 4.7-.8 6.2-2.3l-3-2.5c-.8.6-1.9 1-3.2 1-2.5 0-4.6-1.7-5.4-3.9l-3.2 2.5c1.3 2.7 4.1 5.2 8.6 5.2z" />
+      <path fill="#4285F4" d="M21 11.5c0-.6-.1-1.1-.2-1.5H12v3.9h5.5c-.3 1.4-1.1 2.4-2.2 3.1l3 2.5c1.8-1.6 2.7-4 2.7-8z" />
+    </svg>
+  );
+}
+
 export default function SocialLoginButtons({ className = '', dividerLabel = 'или по email' }) {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -31,12 +43,17 @@ export default function SocialLoginButtons({ className = '', dividerLabel = 'и�
   useEffect(() => {
     api.get('/auth/providers')
       .then((r) => setProviders(r.data))
-      .catch(() => setProviders({ vk: { enabled: false }, apple: { enabled: false } }));
+      .catch(() => setProviders({
+        vk: { enabled: false },
+        apple: { enabled: false },
+        google: { enabled: false },
+      }));
   }, []);
 
   const vkEnabled = Boolean(providers?.vk?.enabled);
   const appleEnabled = Boolean(providers?.apple?.enabled);
-  const anyEnabled = vkEnabled || appleEnabled;
+  const googleEnabled = Boolean(providers?.google?.enabled);
+  const anyEnabled = vkEnabled || appleEnabled || googleEnabled;
 
   if (providers === null) {
     return (
@@ -55,6 +72,16 @@ export default function SocialLoginButtons({ className = '', dividerLabel = 'и�
       await startVkLogin(providers.vk);
     } catch (err) {
       toast.error(err.message || 'VK ID недоступен');
+      setBusy(null);
+    }
+  };
+
+  const onGoogle = async () => {
+    setBusy('google');
+    try {
+      await startGoogleLogin(providers.google);
+    } catch (err) {
+      toast.error(err.message || 'Google недоступен');
       setBusy(null);
     }
   };
@@ -83,6 +110,19 @@ export default function SocialLoginButtons({ className = '', dividerLabel = 'и�
   return (
     <div className={`mb-4 ${className}`}>
       <div className="flex flex-col gap-2.5">
+        {googleEnabled && (
+          <button
+            type="button"
+            onClick={onGoogle}
+            disabled={Boolean(busy)}
+            className="w-full h-11 rounded-xl font-semibold flex items-center justify-center gap-2
+                       bg-white hover:bg-gray-100 text-black transition-colors disabled:opacity-50
+                       ring-1 ring-dark-700"
+          >
+            <GoogleIcon />
+            {busy === 'google' ? 'Переход...' : 'Войти через Google'}
+          </button>
+        )}
         {vkEnabled && (
           <button
             type="button"

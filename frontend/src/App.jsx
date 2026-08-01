@@ -20,6 +20,7 @@ import ChatsPage from './pages/ChatsPage';
 import ChatPage from './pages/ChatPage';
 import VkCallbackPage from './pages/VkCallbackPage';
 import AppleCallbackPage from './pages/AppleCallbackPage';
+import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import AdminDisputesPage from './pages/AdminDisputesPage';
 import AdminAssortmentPage from './pages/AdminAssortmentPage';
 import AppsPage from './pages/AppsPage';
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="register" element={<RegisterPage />} />
         <Route path="auth/vk/callback" element={<VkCallbackPage />} />
         <Route path="auth/apple/callback" element={<AppleCallbackPage />} />
+        <Route path="auth/google/callback" element={<GoogleCallbackPage />} />
         <Route path="rules" element={<RulesPage />} />
         <Route path="faq" element={<FaqPage />} />
         <Route path="support" element={<SupportPage />} />

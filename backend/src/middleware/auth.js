@@ -18,7 +18,7 @@ function authenticate(required = true) {
     try {
       const payload = jwt.verify(token, JWT_SECRET);
       const { rows } = await pool.query(
-        'SELECT id, username, email, role, is_banned, balance, frozen_balance, avatar_url, rating, sales_count, auth_provider, vk_id, apple_id, last_seen_at FROM users WHERE id = $1',
+        'SELECT id, username, email, role, is_banned, balance, frozen_balance, avatar_url, rating, sales_count, auth_provider, vk_id, apple_id, google_id, last_seen_at FROM users WHERE id = $1',
         [payload.sub]
       );
       if (!rows[0]) return res.status(401).json({ error: 'User not found' });
