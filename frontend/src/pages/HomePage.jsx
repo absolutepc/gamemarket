@@ -161,8 +161,8 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => scrollAssortment(-1)}
-              className={`${glassArrowClass} left-0 -translate-x-1/2`}
-              style={{ top: Math.max(24, tileWidth / 2) }}
+              className={`${glassArrowClass} left-0 -translate-x-1/2 -translate-y-1/2`}
+              style={{ top: Math.max(24, tileWidth / 2 + 4) }}
               aria-label="Назад"
             >
               <ChevronLeft size={22} />
@@ -172,8 +172,8 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => scrollAssortment(1)}
-              className={`${glassArrowClass} right-0 translate-x-1/2`}
-              style={{ top: Math.max(24, tileWidth / 2) }}
+              className={`${glassArrowClass} right-0 translate-x-1/2 -translate-y-1/2`}
+              style={{ top: Math.max(24, tileWidth / 2 + 4) }}
               aria-label="Вперёд"
             >
               <ChevronRight size={22} />
