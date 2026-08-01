@@ -40,17 +40,48 @@ const SLIDES = [
 
 function ContestVisual() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center lg:justify-start">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_45%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
-      <img
-        src="/banners/macbook-air-15.webp"
-        alt="MacBook Air 15″ — приз конкурса"
-        className="relative z-10 w-full max-w-[420px] lg:max-w-none lg:w-[95%] h-auto
-                   max-h-[260px] sm:max-h-[300px] lg:max-h-[340px] object-contain object-left
-                   select-none pointer-events-none"
-        draggable={false}
-      />
-    </div>
+    <>
+      {/* Mobile: tags under MacBook (pre-today layout) */}
+      <div className="relative w-full h-full max-w-md mx-auto flex flex-col items-center justify-center lg:hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_40%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
+        <div className="relative z-10 w-[78%] max-w-[280px] sm:max-w-[320px]">
+          <img
+            src="/banners/macbook-air-15.webp"
+            alt="MacBook Air 15″ — приз конкурса"
+            className="w-full h-auto max-h-[150px] sm:max-h-[170px] object-contain drop-shadow-[0_16px_40px_rgba(0,0,0,0.5)] select-none pointer-events-none"
+            draggable={false}
+          />
+          <div className="mt-2 flex flex-col items-center gap-1.5">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-0.5 text-[10px] text-dark-200 backdrop-blur-sm">
+              <Trophy size={11} className="text-amber-300" />
+              256 ГБ · 2 приза / месяц
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 backdrop-blur-sm">
+                <Store size={12} className="text-[#2B71F3] shrink-0" />
+                <span className="text-[11px] font-medium whitespace-nowrap">1× продавцам</span>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 backdrop-blur-sm">
+                <ShoppingBag size={12} className="text-emerald-400 shrink-0" />
+                <span className="text-[11px] font-medium whitespace-nowrap">1× покупателям</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop: MacBook only — tags stay in text column */}
+      <div className="relative w-full h-full hidden lg:flex items-center justify-start">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_45%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
+        <img
+          src="/banners/macbook-air-15.webp"
+          alt="MacBook Air 15″ — приз конкурса"
+          className="relative z-10 w-[95%] h-auto max-h-[340px] object-contain object-left
+                     select-none pointer-events-none"
+          draggable={false}
+        />
+      </div>
+    </>
   );
 }
 
@@ -163,8 +194,13 @@ export default function HomeHeroSlider() {
                   {slide.subtitle}
                 </p>
 
-                {/* Reserve tag row height on all slides so CTAs stay aligned */}
-                <div className={`flex flex-wrap items-center gap-2 mb-4 sm:mb-5 min-h-[34px] ${slide.tone === 'contest' ? '' : 'invisible'}`} aria-hidden={slide.tone !== 'contest'}>
+                {/* Desktop: tags in text column (mobile tags are under MacBook) */}
+                <div
+                  className={`hidden lg:flex flex-wrap items-center gap-2 mb-4 sm:mb-5 min-h-[34px] ${
+                    slide.tone === 'contest' ? '' : 'invisible'
+                  }`}
+                  aria-hidden={slide.tone !== 'contest'}
+                >
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-1 text-[11px] text-dark-200">
                     <Trophy size={12} className="text-amber-300" />
                     256 ГБ · 2 приза / месяц
