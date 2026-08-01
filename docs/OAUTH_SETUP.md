@@ -1,93 +1,81 @@
 # OAuth: VK ID и Apple ID
 
-Вход через соцсети настраивается переменными окружения на **backend**. Кнопки на `/login` и `/register` появляются только когда соответствующий провайдер включён.
+Вход через соцсети настраивается переменными на **backend** (Railway).
+Кнопки на `/login` появляются только при **реальных** ключах (не заглушках вроде `ваш_app_id`).
 
-## Общие требования
-
-На backend (Railway → Backend → Variables):
+## 0. Общие переменные backend
 
 ```
-FRONTEND_URL=https://lootz.ru
-ALLOWED_ORIGINS=https://lootz.ru,https://www.lootz.ru,https://gamemarket-production-92a3.up.railway.app
+FRONTEND_URL=https://www.lootz.ru
+ALLOWED_ORIGINS=https://www.lootz.ru,https://lootz.ru,https://gamemarket-production-92a3.up.railway.app
 ```
 
-`FRONTEND_URL` должен совпадать с доменом, с которого открывается сайт (без слэша в конце). После смены переменных — Redeploy backend.
+После смены — **Redeploy** backend.
 
 ---
 
-## VK ID
+## 1. VK ID — по шагам
 
-### 1. Кабинет VK
-
-1. Создайте приложение на [id.vk.com](https://id.vk.com)
-2. В Trusted redirect URI добавьте:
+### A. Кабинет
+1. Откройте https://id.vk.com/about/business (не dev.vk.com с играми)
+2. Войдите → создайте/подтвердите профиль бизнеса при необходимости
+3. **Добавить приложение** → платформа **Web**
+4. Название: `Lootz`
+5. Базовый домен: `www.lootz.ru`
+6. Доверенный redirect URL (вставить как есть):
    ```
-   https://lootz.ru/auth/vk/callback
+   https://www.lootz.ru/auth/vk/callback
    ```
-   (и при необходимости Railway URL: `https://<frontend>.up.railway.app/auth/vk/callback`)
-3. Скопируйте **App ID** и **Secure key** (client secret)
+7. Создать → скопировать:
+   - **ID приложения** (число, например `54123456`)
+   - **Защищённый ключ**
 
-### 2. Переменные backend
-
+### B. Railway → backend → Variables
 ```
-VK_APP_ID=12345678
-VK_CLIENT_SECRET=xxxxxxxx
+VK_APP_ID=54123456
+VK_CLIENT_SECRET=реальный_защищённый_ключ
 ```
+Redeploy backend.
 
-### 3. Проверка
-
-- Откройте `/login` — видна кнопка «Войти через VK ID»
-- После входа создаётся/линкуется пользователь с `auth_provider=vk`
+### C. Проверка
+`/login` → кнопка «Войти через VK ID» → вход создаёт пользователя.
 
 ---
 
-## Apple ID (Sign in with Apple)
+## 2. Apple ID — по шагам
 
-### 1. Apple Developer
+Нужен аккаунт [Apple Developer](https://developer.apple.com/account) (платный).
 
-1. В [Apple Developer](https://developer.apple.com/account) создайте **App ID** с capability **Sign In with Apple**
-2. Создайте **Services ID** (это и есть `APPLE_CLIENT_ID`, например `ru.lootz.web`)
-3. Для Services ID включите Sign In with Apple → Configure:
-   - Domains: `lootz.ru` (и Railway-домен фронта при тестах)
+### A. Identifiers
+1. Certificates, Identifiers & Profiles → **Identifiers**
+2. Создайте **App ID** с capability **Sign In with Apple**
+3. Создайте **Services ID** (это client id), пример: `ru.lootz.web`
+4. У Services ID → Sign In with Apple → Configure:
+   - Domains: `www.lootz.ru`, `lootz.ru`
    - Return URLs:
      ```
-     https://lootz.ru/auth/apple/callback
+     https://www.lootz.ru/auth/apple/callback
      ```
-4. Сохраните Services ID identifier
+5. Сохраните Services ID string
 
-Для веб-входа через popup достаточно `APPLE_CLIENT_ID` — backend проверяет `identity_token` по публичным ключам Apple (JWKS). Приватный ключ (.p8) не обязателен для этого потока.
-
-### 2. Переменные backend
-
+### B. Railway → backend → Variables
 ```
 APPLE_CLIENT_ID=ru.lootz.web
 ```
+Redeploy backend.
 
-### 3. Проверка
-
-- `/login` — кнопка «Войти через Apple»
-- Первый вход: Apple может отдать имя/email один раз — они сохраняются на сервере
-- Пользователь создаётся с `auth_provider=apple`
+### C. Проверка
+`/login` → «Войти через Apple».
 
 ---
 
-## API
+## Частые ошибки
 
-| Метод | Путь | Назначение |
-|-------|------|------------|
-| GET | `/api/auth/providers` | `{ vk, apple }` — enabled + client/redirect |
-| GET | `/api/auth/vk/config` | конфиг VK |
-| POST | `/api/auth/vk` | обмен code → сессия |
-| GET | `/api/auth/apple/config` | конфиг Apple |
-| POST | `/api/auth/apple` | `{ identityToken, user? }` → сессия |
+| Проблема | Причина |
+|----------|---------|
+| Кнопок нет | Пустые или заглушечные `VK_APP_ID` / `APPLE_CLIENT_ID` |
+| VK: redirect mismatch | В кабинете URL ≠ `https://www.lootz.ru/auth/vk/callback` |
+| Apple: invalid client | Domains/Return URL не совпадают с сайтом |
+| Cookies не держатся | `FRONTEND_URL` / `ALLOWED_ORIGINS` без `www.lootz.ru` |
 
----
-
-## Troubleshooting
-
-| Симптом | Что проверить |
-|---------|----------------|
-| Кнопок нет | `VK_APP_ID` / `APPLE_CLIENT_ID` не заданы на backend |
-| VK: redirect mismatch | URI в кабинете VK = `{FRONTEND_URL}/auth/vk/callback` один в один |
-| Apple: invalid client | Domains/Return URLs в Services ID; сайт открыт по HTTPS |
-| CORS / cookies | `ALLOWED_ORIGINS` включает текущий origin; prod cookies `SameSite=None; Secure` |
+Проверка API: `GET /api/auth/providers` → у `vk`/`apple` должно быть `"enabled": true` и **реальный** `appId`/`clientId`.
