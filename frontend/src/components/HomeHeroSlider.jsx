@@ -40,27 +40,33 @@ const SLIDES = [
 
 function ContestVisual() {
   return (
-    <div className="relative w-full h-full flex flex-col items-center lg:items-start justify-center overflow-visible">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_45%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
+    <div className="relative w-full h-full flex flex-col items-center lg:items-start justify-center">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at 35% 42%, rgba(43,113,243,0.32), transparent 58%)',
+        }}
+      />
       <div className="relative z-10 w-full max-w-[380px] lg:max-w-none lg:w-[92%] flex flex-col items-center lg:items-start">
         <img
           src="/banners/macbook-air-15.webp"
           alt="MacBook Air 15″ — приз конкурса"
           className="w-full h-auto max-h-[240px] sm:max-h-[280px] lg:max-h-[320px] object-contain object-left
-                     drop-shadow-[0_16px_40px_rgba(0,0,0,0.5)] select-none pointer-events-none"
+                     select-none pointer-events-none"
           draggable={false}
         />
         <div className="mt-3 flex flex-col items-center lg:items-start gap-1.5">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-0.5 text-[10px] text-dark-200 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-0.5 text-[10px] text-dark-200">
             <Trophy size={11} className="text-amber-300" />
             256 ГБ · 2 приза / месяц
           </div>
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5">
-            <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5">
               <Store size={12} className="text-[#2B71F3] shrink-0" />
               <span className="text-[11px] font-medium whitespace-nowrap">1× продавцам</span>
             </div>
-            <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5">
               <ShoppingBag size={12} className="text-emerald-400 shrink-0" />
               <span className="text-[11px] font-medium whitespace-nowrap">1× покупателям</span>
             </div>
@@ -73,13 +79,16 @@ function ContestVisual() {
 
 function EscrowVisual() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-visible">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.22),transparent_55%)] pointer-events-none" />
+    <div className="relative w-full h-full flex items-center justify-center">
       <div
-        className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/30
-                   flex items-center justify-center"
-        style={{ boxShadow: '0 0 40px rgba(16,185,129,0.18)' }}
-      >
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 50%, rgba(16,185,129,0.2), transparent 58%)',
+        }}
+      />
+      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/20
+                      flex items-center justify-center">
         <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" strokeWidth={1.75} />
       </div>
     </div>
@@ -88,13 +97,16 @@ function EscrowVisual() {
 
 function SellVisual() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-visible">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(43,113,243,0.28),transparent_55%)] pointer-events-none" />
+    <div className="relative w-full h-full flex items-center justify-center">
       <div
-        className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/30
-                   flex items-center justify-center"
-        style={{ boxShadow: '0 0 40px rgba(43,113,243,0.2)' }}
-      >
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle at 50% 50%, rgba(43,113,243,0.26), transparent 58%)',
+        }}
+      />
+      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/20
+                      flex items-center justify-center">
         <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" strokeWidth={1.75} />
       </div>
     </div>
@@ -134,21 +146,24 @@ export default function HomeHeroSlider() {
 
   return (
     <section
-      className="relative border-b border-dark-800"
+      className="relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className={`relative overflow-hidden bg-gradient-to-br ${TONE_BG[slide.tone]}`}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(43,113,243,0.14),_transparent_50%)] pointer-events-none" />
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
+      {/* No overflow-hidden here — it clipped glows into a hard line under icons */}
+      <div className={`relative bg-gradient-to-br ${TONE_BG[slide.tone]}`}>
+        <div
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)',
-            backgroundSize: '24px 24px',
+            background:
+              'radial-gradient(ellipse at top right, rgba(43,113,243,0.12), transparent 55%)',
           }}
         />
 
-        <div className={`relative ${PAGE_WIDTH_CLASS} py-5 sm:py-7 lg:py-8
-                        h-[520px] sm:h-[480px] lg:h-[420px] flex flex-col`}>
+        <div
+          className={`relative ${PAGE_WIDTH_CLASS} py-5 sm:py-7 lg:py-8
+                      h-[520px] sm:h-[480px] lg:h-[420px] flex flex-col`}
+        >
           <div className="flex-1 grid lg:grid-cols-[1.05fr_0.95fr] gap-4 lg:gap-6 items-center min-h-0">
             <div className="order-2 lg:order-1 min-h-0 flex flex-col justify-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3 w-fit">
@@ -169,31 +184,39 @@ export default function HomeHeroSlider() {
               </p>
 
               <div className="flex flex-wrap gap-2.5 sm:gap-3">
-                <Link to={slide.cta.to} className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base">
+                <Link
+                  to={slide.cta.to}
+                  className="btn-primary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center gap-2 text-sm sm:text-base no-underline"
+                >
                   {slide.cta.label} <ArrowRight size={16} />
                 </Link>
                 {slide.secondary && (
-                  <Link to={slide.secondary.to} className="btn-secondary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center text-sm sm:text-base">
+                  <Link
+                    to={slide.secondary.to}
+                    className="btn-secondary h-10 sm:h-12 px-4 sm:px-5 inline-flex items-center text-sm sm:text-base no-underline"
+                  >
                     {slide.secondary.label}
                   </Link>
                 )}
               </div>
             </div>
 
-            <div className="order-1 lg:order-2 h-[200px] sm:h-[220px] lg:h-full min-h-0 flex items-center justify-center overflow-visible">
+            <div className="order-1 lg:order-2 h-[210px] sm:h-[240px] lg:h-full min-h-0 flex items-center justify-center lg:justify-start">
               {Visual ? <Visual /> : null}
             </div>
           </div>
 
-          <div className="mt-4 sm:mt-5 flex items-center shrink-0">
-            <div className="flex w-full max-w-xs gap-2">
+          <div className="pt-4 sm:pt-5 flex items-center shrink-0 border-0">
+            <div className="flex w-full max-w-[200px] gap-1.5" role="tablist" aria-label="Слайды">
               {SLIDES.map((s, i) => (
                 <button
                   key={s.id}
                   type="button"
+                  role="tab"
+                  aria-selected={i === index}
                   aria-label={`Слайд ${i + 1}`}
                   onClick={() => goTo(i)}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
+                  className={`h-1 flex-1 rounded-full border-0 outline-none shadow-none ring-0 appearance-none ${
                     i === index ? 'bg-[#2B71F3]' : 'bg-dark-700 hover:bg-dark-600'
                   }`}
                 />
@@ -202,6 +225,7 @@ export default function HomeHeroSlider() {
           </div>
         </div>
       </div>
+      <div className="h-px bg-dark-800" aria-hidden />
     </section>
   );
 }
