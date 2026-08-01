@@ -10,6 +10,7 @@ import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
+import GuaranteeModal from '../components/GuaranteeModal';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { formatPrice, formatDate, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
@@ -94,6 +95,7 @@ export default function ListingPage() {
   const setUser = useAuthStore((s) => s.setUser);
   const [imgIdx, setImgIdx] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [guaranteeOpen, setGuaranteeOpen] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
   const { data: listing, isLoading } = useQuery({
@@ -367,14 +369,15 @@ export default function ListingPage() {
         </div>
       )}
 
-      <Link
-        to="/faq"
-        className="flex items-center gap-2.5 py-1 group"
+      <button
+        type="button"
+        onClick={() => setGuaranteeOpen(true)}
+        className="flex items-center gap-2.5 py-1 group w-full text-left"
       >
         <Shield size={18} className="text-[#5B8CFF] shrink-0" />
         <span className="flex-1 text-sm text-white font-medium">Гарантия Lootz</span>
         <ChevronRight size={18} className="text-dark-500 group-hover:text-white transition-colors" />
-      </Link>
+      </button>
     </div>
   );
 
@@ -690,6 +693,7 @@ export default function ListingPage() {
         isPending={buyMutation.isPending}
         onConfirm={({ buyerData, comment }) => buyMutation.mutate({ buyerData, comment })}
       />
+      <GuaranteeModal open={guaranteeOpen} onClose={() => setGuaranteeOpen(false)} />
     </div>
   );
 }
