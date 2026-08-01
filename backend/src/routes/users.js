@@ -25,9 +25,19 @@ router.get('/me/listings', authenticate(), async (req, res) => {
   res.json(rows);
 });
 
+const RESERVED_USERNAMES = new Set([
+  'admin', 'administrator', 'api', 'auth', 'login', 'register', 'logout',
+  'me', 'settings', 'support', 'help', 'faq', 'wallet', 'chats', 'chat',
+  'listings', 'listing', 'catalog', 'apps', 'users', 'user', 'null',
+  'undefined', 'root', 'system', 'moderator', 'mod', 'lootz', 'official',
+]);
+
 router.put('/me/profile',
   authenticate(),
   [
+    body('username').optional().trim().isLength({ min: 3, max: 30 })
+      .matches(/^[a-zA-Z0-9_]+$/)
+      .withMessage('Имя: 3–30 символов, латиница, цифры и _'),
     body('bio').optional({ nullable: true }).trim().isLength({ max: 500 }),
     body('avatar_url').optional({ nullable: true }).custom((v) => {
       if (v === null || v === '' || v === undefined) return true;
@@ -50,10 +60,30 @@ router.put('/me/profile',
     const avatarUrl = req.body.avatar_url !== undefined
       ? (req.body.avatar_url || null)
       : undefined;
+    let username;
+    if (req.body.username !== undefined) {
+      username = String(req.body.username).trim();
+      if (RESERVED_USERNAMES.has(username.toLowerCase())) {
+        return res.status(400).json({ error: 'Это имя занято системой' });
+      }
+      if (username.toLowerCase() !== String(req.user.username || '').toLowerCase()) {
+        const taken = await pool.query(
+          'SELECT id FROM users WHERE LOWER(username)=LOWER($1) AND id<>$2',
+          [username, req.user.id]
+        );
+        if (taken.rows[0]) {
+          return res.status(409).json({ error: 'Это имя уже занято' });
+        }
+      }
+    }
 
     const fields = [];
     const values = [];
     let i = 1;
+    if (username !== undefined) {
+      fields.push(`username=$${i++}`);
+      values.push(username);
+    }
     if (bio !== undefined) {
       fields.push(`bio=$${i++}`);
       values.push(bio);

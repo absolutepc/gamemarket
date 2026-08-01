@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, MessageCircle, LogOut, ChevronRight, Wallet, Camera } from 'lucide-react';
+import { X, MessageCircle, LogOut, ChevronRight, Wallet, Camera, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
@@ -31,14 +31,19 @@ export default function ProfileMenuModal({ open, onClose }) {
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifLabel, setNotifLabel] = useState(prefsSummary);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [nameBusy, setNameBusy] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => {
     if (!open) {
       setShowNotifications(false);
+      setEditingName(false);
       return undefined;
     }
     setNotifLabel(prefsSummary());
+    setNameDraft(user?.username || '');
     const onKey = (e) => { if (e.key === 'Escape' && !showNotifications) onClose(); };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -46,7 +51,7 @@ export default function ProfileMenuModal({ open, onClose }) {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [open, onClose, showNotifications]);
+  }, [open, onClose, showNotifications, user?.username]);
 
   if (!open || !user) return null;
 
@@ -81,6 +86,32 @@ export default function ProfileMenuModal({ open, onClose }) {
     onClose();
     await logout();
     navigate('/');
+  };
+
+  const saveUsername = async () => {
+    const next = nameDraft.trim();
+    if (!next || next === user.username) {
+      setEditingName(false);
+      setNameDraft(user.username || '');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(next)) {
+      toast.error('Имя: 3–30 символов, латиница, цифры и _');
+      return;
+    }
+    setNameBusy(true);
+    try {
+      const { data } = await api.put('/users/me/profile', { username: next });
+      setUser({ ...user, username: data.username });
+      toast.success('Имя обновлено');
+      setEditingName(false);
+      onClose();
+      navigate(`/users/${data.username}`, { replace: true });
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Не удалось сменить имя');
+    } finally {
+      setNameBusy(false);
+    }
   };
 
   const authLabel = user.auth_provider === 'vk'
@@ -158,6 +189,67 @@ export default function ProfileMenuModal({ open, onClose }) {
                 </button>
               )}
               <p className="mt-2 text-sm text-dark-300">{authLabel}</p>
+
+              <div className="mt-4 w-full text-left">
+                <label className="text-xs text-dark-500 mb-1.5 block">Имя на сайте</label>
+                {editingName ? (
+                  <div className="space-y-2">
+                    <input
+                      className="input py-2.5 text-sm"
+                      value={nameDraft}
+                      onChange={(e) => setNameDraft(e.target.value.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 30))}
+                      placeholder="username"
+                      autoFocus
+                      disabled={nameBusy}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveUsername();
+                        if (e.key === 'Escape') {
+                          setEditingName(false);
+                          setNameDraft(user.username || '');
+                        }
+                      }}
+                    />
+                    <p className="text-[11px] text-dark-500">Латиница, цифры и _ · 3–30 символов</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={saveUsername}
+                        disabled={nameBusy}
+                        className="btn-primary flex-1 text-sm py-2"
+                      >
+                        {nameBusy ? 'Сохранение…' : 'Сохранить'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingName(false);
+                          setNameDraft(user.username || '');
+                        }}
+                        disabled={nameBusy}
+                        className="btn-secondary text-sm py-2"
+                      >
+                        Отмена
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNameDraft(user.username || '');
+                      setEditingName(true);
+                    }}
+                    className="w-full flex items-center justify-between gap-2 rounded-xl bg-dark-800/80 border border-dark-700 px-3.5 py-2.5
+                               hover:border-dark-600 transition-colors"
+                  >
+                    <span className="font-medium text-white truncate">{user.username}</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-brand-400 shrink-0">
+                      <Pencil size={12} /> Изменить
+                    </span>
+                  </button>
+                )}
+              </div>
+
               <Link
                 to="/wallet"
                 onClick={onClose}
