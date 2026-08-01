@@ -60,9 +60,9 @@ function BuyActions({
       <button
         type="button"
         onClick={() => setCheckoutOpen(true)}
-        className="w-full h-12 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500
+        className="w-full h-12 lg:h-13 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500
                    hover:from-emerald-400 hover:to-teal-400 active:scale-[0.99]
-                   text-white font-bold text-base transition-colors"
+                   text-white font-bold text-base lg:text-lg transition-colors"
       >
         Купить
       </button>
@@ -288,26 +288,26 @@ export default function ListingPage() {
   const purchasePanel = (
     <div className="lg:sticky lg:top-24 space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-3xl font-extrabold text-emerald-400 leading-none">
+        <span className="text-3xl lg:text-4xl font-extrabold text-emerald-400 leading-none">
           {formatPrice(listing.price)}
         </span>
         {hasDiscount && (
           <>
-            <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5">
+            <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-bold px-2.5 py-0.5">
               -{listing.discount_percent}%
             </span>
-            <span className="text-base text-dark-500 line-through">
+            <span className="text-lg text-dark-500 line-through">
               {formatPrice(listing.original_price)}
             </span>
           </>
         )}
       </div>
 
-      <h1 className="text-lg lg:text-xl font-bold leading-snug text-white">
+      <h1 className="text-xl lg:text-2xl font-bold leading-snug text-white">
         {listing.title}
       </h1>
 
-      <div className="flex items-center gap-2 flex-wrap text-sm">
+      <div className="flex items-center gap-2 flex-wrap text-sm lg:text-base">
         {(sellerRating > 0 || listing.seller_reviews > 0) && (
           <div className="flex items-center gap-1.5">
             <div className="flex items-center gap-0.5 text-[#5B8CFF]">
@@ -316,7 +316,7 @@ export default function ListingPage() {
                 return (
                   <Star
                     key={i}
-                    size={14}
+                    size={15}
                     fill={filled ? 'currentColor' : 'none'}
                     className={filled ? '' : 'text-dark-600'}
                   />
@@ -324,32 +324,32 @@ export default function ListingPage() {
               })}
             </div>
             {sellerRating > 0 && (
-              <span className="text-[#5B8CFF] font-medium tabular-nums text-xs">
+              <span className="text-[#5B8CFF] font-medium tabular-nums text-sm">
                 {sellerRating.toFixed(1)}
               </span>
             )}
             <Link
               to={`/users/${listing.seller_username}`}
-              className="text-[#5B8CFF] text-xs hover:underline"
+              className="text-[#5B8CFF] text-sm hover:underline"
             >
               {formatReviewsCount(listing.seller_reviews)}
             </Link>
           </div>
         )}
-        <span className="flex items-center gap-1 text-dark-500 text-xs">
-          <Eye size={12} />{listing.views_count}
+        <span className="flex items-center gap-1 text-dark-500 text-sm">
+          <Eye size={14} />{listing.views_count}
         </span>
-        <span className="flex items-center gap-1 text-dark-500 text-xs">
-          <Clock size={12} />{formatDate(listing.created_at)}
+        <span className="flex items-center gap-1 text-dark-500 text-sm">
+          <Clock size={14} />{formatDate(listing.created_at)}
         </span>
       </div>
 
-      <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3.5">
-        <div className="font-semibold text-sm text-white mb-1 flex items-center gap-2">
-          <Package size={16} className="text-dark-300" />
+      <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-4">
+        <div className="font-semibold text-base text-white mb-1.5 flex items-center gap-2">
+          <Package size={18} className="text-dark-300" />
           Способ получения
         </div>
-        <p className="text-sm text-dark-300 leading-relaxed">
+        <p className="text-base text-dark-300 leading-relaxed">
           <span className="text-white font-medium">{deliveryLabel}.</span>{' '}
           {deliveryHint}
         </p>
