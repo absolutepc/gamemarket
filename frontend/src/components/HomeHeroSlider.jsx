@@ -313,7 +313,7 @@ export default function HomeHeroSlider() {
           </div>
 
           <div className="mt-4 sm:mt-5 flex items-center shrink-0">
-            <div className="flex w-full max-w-xs gap-2">
+            <div className="flex w-full max-w-md gap-2">
               {SLIDES.map((s, i) => (
                 <button
                   key={s.id}
