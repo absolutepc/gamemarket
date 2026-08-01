@@ -1,7 +1,13 @@
 import { useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../utils/api';
-import { ASSORTMENT, HOME_TOP_14, ASSORTMENT_TABS, assortmentByTab as assortmentByTabBase } from '../data/assortment';
+import {
+  ASSORTMENT,
+  HOME_CAROUSEL_PINNED,
+  ASSORTMENT_TABS,
+  assortmentByTab as assortmentByTabBase,
+  buildHomeCarousel,
+} from '../data/assortment';
 import { normalizeAssortmentKey } from '../utils/assortmentIcons';
 
 /**
@@ -38,18 +44,34 @@ export function filterVisibleAssortment(items, hiddenKeys) {
 export function useVisibleAssortment() {
   const { hiddenKeys, isLoading } = useHiddenAssortmentKeys();
 
+  const { data: popularData } = useQuery({
+    queryKey: ['assortment-popular'],
+    queryFn: () => api.get('/assortment/popular').then((r) => r.data),
+    staleTime: 120_000,
+    retry: 1,
+  });
+
   const items = useMemo(
     () => filterVisibleAssortment(ASSORTMENT, hiddenKeys),
     [hiddenKeys]
   );
 
+  const homeCarousel = useMemo(() => {
+    const popularNames = popularData?.names || [];
+    return filterVisibleAssortment(
+      buildHomeCarousel(items, popularNames),
+      hiddenKeys
+    );
+  }, [items, popularData, hiddenKeys]);
+
+  /** First pinned block (for compact mobile strip) */
   const homeTop = useMemo(() => {
-    const top = filterVisibleAssortment(HOME_TOP_14, hiddenKeys);
-    if (top.length >= HOME_TOP_14.length) return top;
-    const used = new Set(top.map((i) => i.name));
-    const fill = items.filter((i) => !used.has(i.name));
-    return [...top, ...fill].slice(0, HOME_TOP_14.length);
-  }, [hiddenKeys, items]);
+    const pinnedCatalogs = new Set(HOME_CAROUSEL_PINNED.map((p) => p.catalog));
+    const pinned = homeCarousel.filter(
+      (i) => pinnedCatalogs.has(i.catalog) || pinnedCatalogs.has(i.name)
+    );
+    return pinned.length ? pinned : homeCarousel.slice(0, HOME_CAROUSEL_PINNED.length);
+  }, [homeCarousel]);
 
   const byTab = useCallback(
     (tabId) => filterVisibleAssortment(assortmentByTabBase(tabId), hiddenKeys),
@@ -59,6 +81,7 @@ export function useVisibleAssortment() {
   return {
     items,
     homeTop,
+    homeCarousel,
     byTab,
     tabs: ASSORTMENT_TABS,
     hiddenKeys,

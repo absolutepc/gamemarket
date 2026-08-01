@@ -1,20 +1,122 @@
-/** Fixed home carousel order (first 14) — do not reorder without product request */
-export const HOME_TOP_14 = [
-  { name: 'Claude', search: 'Claude', icon: '/assortment/claude.png', kind: 'app' },
-  { name: 'Cursor', search: 'Cursor', icon: '/assortment/cursor.png', kind: 'app' },
-  { name: 'Arena Breakout', search: 'Arena Breakout', icon: '/assortment/arena-breakout.png', kind: 'mobile' },
-  { name: 'PUBG', search: 'PUBG', icon: '/assortment/pubg.png', kind: 'pc' },
-  { name: 'PUBG Mobile', search: 'PUBG Mobile', icon: '/assortment/pubg-mobile.png', kind: 'mobile' },
-  { name: 'Telegram', search: 'Telegram', icon: '/assortment/telegram.png', kind: 'app' },
-  { name: 'ЧатГПТ', search: 'ChatGPT', icon: '/assortment/chatgpt.png', kind: 'app' },
-  { name: 'Apple', search: 'Apple', icon: '/assortment/apple.png', kind: 'app' },
-  { name: 'PlayStation', search: 'PlayStation', icon: '/assortment/playstation.png', kind: 'app' },
-  { name: 'Discord', search: 'Discord', icon: '/assortment/discord.png', kind: 'app' },
-  { name: 'Steam', search: 'Steam', icon: '/assortment/steam.png', kind: 'app' },
-  { name: 'Valorant', search: 'Valorant', icon: '/assortment/valorant.png', kind: 'pc' },
-  { name: 'Escape From Tarkov', search: 'Tarkov', icon: '/assortment/escape-from-tarkov.png', kind: 'pc' },
-  { name: 'CS2', search: 'Counter-Strike', icon: '/assortment/cs2.png', kind: 'pc' },
+/** Pinned home carousel order — do not reorder without product request */
+export const HOME_CAROUSEL_PINNED = [
+  { catalog: 'Claude', name: 'Claude AI' },
+  { catalog: 'Cursor', name: 'Cursor AI' },
+  { catalog: 'Arena Breakout', name: 'Arena Breakout' },
+  { catalog: 'PUBG', name: 'PUBG' },
+  { catalog: 'Kimi', name: 'Kimi' },
+  { catalog: 'Steam', name: 'Steam' },
+  { catalog: 'PUBG Mobile', name: 'PUBG Mobile' },
+  { catalog: 'Telegram', name: 'Telegram' },
+  { catalog: 'Apple', name: 'Apple' },
+  { catalog: 'CoD Mobile', name: 'CoD Mobile' },
+  { catalog: 'Standoff 2', name: 'Standoff 2' },
+  { catalog: 'ЧатГПТ', name: 'ChatGPT' },
+  { catalog: 'Suno', name: 'Suno' },
+  { catalog: 'Escape From Tarkov', name: 'Escape From Tarkov' },
+  { catalog: 'Xbox', name: 'Xbox' },
+  { catalog: 'Netflix', name: 'Netflix' },
+  { catalog: 'CS2', name: 'CS2' },
+  { catalog: 'Grok', name: 'Grok' },
+  { catalog: 'Kling', name: 'Kling' },
+  { catalog: 'Clash of Clans', name: 'Clash of Clans' },
+  { catalog: 'Clash Royale', name: 'Clash Royale' },
+  { catalog: 'Midjourney', name: 'Midjourney' },
 ];
+
+/**
+ * Fallback “popular” tail when live sales stats are empty.
+ * Live order from /api/assortment/popular overrides this.
+ */
+export const HOME_CAROUSEL_FALLBACK_TAIL = [
+  'Discord', 'TikTok', 'Valorant', 'Dota 2', 'GTA 5', 'Roblox', 'Brawl Stars',
+  'Free Fire', 'Mobile Legends', 'Genshin', 'Faceit', 'Spotify', 'YouTube',
+  'PlayStation', 'Battle.net', 'Epic Games', 'Adobe', 'CapCut', 'Perplexity',
+  'DeepSeek', 'Leonardo AI', 'Twitch', 'GeForce NOW', 'EA Play',
+];
+
+/** @deprecated use HOME_CAROUSEL_PINNED — kept for imports */
+export const HOME_TOP_14 = HOME_CAROUSEL_PINNED.map((p) => ({
+  name: p.name,
+  search: p.catalog,
+  icon: '',
+  kind: 'app',
+  catalog: p.catalog,
+}));
+
+/** Build home carousel: pinned → popular (sales/listings) → fallback → rest */
+export function buildHomeCarousel(items, popularNames = []) {
+  const byCatalog = new Map(items.map((i) => [i.name, i]));
+  const byKey = new Map();
+  const norm = (v) =>
+    String(v || '')
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[^a-z0-9а-я]+/gi, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+
+  const aliases = {
+    chatgpt: 'ЧатГПТ',
+    'claude ai': 'Claude',
+    'cursor ai': 'Cursor',
+    'cs 2': 'CS2',
+    'counter strike 2': 'CS2',
+    'counter-strike 2': 'CS2',
+    'standoff2': 'Standoff 2',
+    'cod mobile': 'CoD Mobile',
+    'call of duty mobile': 'CoD Mobile',
+  };
+
+  for (const item of items) {
+    byKey.set(norm(item.name), item.name);
+    byKey.set(norm(item.search), item.name);
+  }
+  for (const [alias, catalog] of Object.entries(aliases)) {
+    if (byCatalog.has(catalog)) byKey.set(alias, catalog);
+  }
+
+  const resolveCatalogName = (raw) => {
+    if (!raw) return null;
+    if (byCatalog.has(raw)) return raw;
+    return byKey.get(norm(raw)) || null;
+  };
+
+  const used = new Set();
+  const out = [];
+
+  const pushCatalog = (catalogName, displayName) => {
+    if (!catalogName || used.has(catalogName)) return;
+    const item = byCatalog.get(catalogName);
+    if (!item) return;
+    used.add(catalogName);
+    out.push({
+      ...item,
+      name: displayName || item.name,
+      catalog: catalogName,
+      search: item.search || catalogName,
+    });
+  };
+
+  for (const p of HOME_CAROUSEL_PINNED) {
+    pushCatalog(p.catalog, p.name);
+  }
+
+  for (const name of popularNames) {
+    const catalog = resolveCatalogName(name);
+    if (catalog) pushCatalog(catalog, byCatalog.get(catalog)?.name || catalog);
+  }
+
+  for (const name of HOME_CAROUSEL_FALLBACK_TAIL) {
+    pushCatalog(name, name);
+  }
+
+  for (const item of items) {
+    pushCatalog(item.name, item.name);
+  }
+
+  return out;
+}
 
 /** Playerok-style assortment: curated apps → mobile → PC */
 export const ASSORTMENT = [
@@ -695,7 +797,7 @@ export const ASSORTMENT = [
   { name: 'AAR Labs', search: 'AAR Labs', icon: '/assortment/aar-labs.png', kind: 'pc' },
 ];
 
-export const ASSORTMENT_PREVIEW_COUNT = HOME_TOP_14.length;
+export const ASSORTMENT_PREVIEW_COUNT = HOME_CAROUSEL_PINNED.length;
 
 export const ASSORTMENT_TABS = [
   { id: 'games', label: 'Игры' },

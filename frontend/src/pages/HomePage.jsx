@@ -39,6 +39,7 @@ const LISTING_TYPE_ICONS = {
 
 const DESKTOP_VISIBLE = 16; // exact items per page — no partial peek
 const DESKTOP_ITEMS = 31; // + mosaic folder = 32
+const MOBILE_ITEMS = 22; // pinned carousel block
 const CAT_PAGE_SIZE = 10; // exact categories on first page — no 11th peek
 
 export default function HomePage() {
@@ -55,17 +56,17 @@ export default function HomePage() {
 
   const catPage1 = useMemo(() => LISTING_TYPE_OPTIONS.slice(0, CAT_PAGE_SIZE), []);
   const catPage2 = useMemo(() => LISTING_TYPE_OPTIONS.slice(CAT_PAGE_SIZE), []);
-  const { items: visibleAssortment, homeTop } = useVisibleAssortment();
+  const { items: visibleAssortment, homeCarousel } = useVisibleAssortment();
 
-  // Desktop: 31 games + mosaic folder = 32; mobile: top-14 + folder
+  // Desktop: 31 items + mosaic; mobile: pinned 22 + mosaic
   const previewItems = useMemo(
-    () => (isDesktop ? visibleAssortment.slice(0, DESKTOP_ITEMS) : homeTop),
-    [isDesktop, visibleAssortment, homeTop]
+    () => homeCarousel.slice(0, isDesktop ? DESKTOP_ITEMS : MOBILE_ITEMS),
+    [isDesktop, homeCarousel]
   );
   const moreCount = Math.max(0, visibleAssortment.length - previewItems.length);
   const mosaicIcons = useMemo(
-    () => visibleAssortment.slice(previewItems.length, previewItems.length + 4).map((p) => p.icon),
-    [visibleAssortment, previewItems.length]
+    () => homeCarousel.slice(previewItems.length, previewItems.length + 4).map((p) => p.icon),
+    [homeCarousel, previewItems.length]
   );
 
   const updateScrollEdges = () => {
