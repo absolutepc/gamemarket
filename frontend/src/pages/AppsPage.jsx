@@ -145,7 +145,7 @@ export default function AppsPage() {
                 }}
               />
             </div>
-            <span className="w-full text-center text-[11px] sm:text-xs text-white/90 group-hover:text-white leading-tight line-clamp-2 px-0.5">
+            <span className="w-full text-center text-[11px] sm:text-xs text-white/90 group-hover:text-white leading-tight truncate px-0.5">
               {item.name}
             </span>
           </Link>
