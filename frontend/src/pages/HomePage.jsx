@@ -42,11 +42,14 @@ const DESKTOP_ITEMS = 31; // + mosaic folder = 32
 
 export default function HomePage() {
   const scrollRef = useRef(null);
+  const catScrollRef = useRef(null);
   const [tileWidth, setTileWidth] = useState(72);
   const [gapPx, setGapPx] = useState(12);
   const [isDesktop, setIsDesktop] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canCatLeft, setCanCatLeft] = useState(false);
+  const [canCatRight, setCanCatRight] = useState(false);
 
   // Desktop: 31 games + mosaic folder = 32; mobile: top-14 + folder
   const previewItems = useMemo(
@@ -66,6 +69,15 @@ export default function HomePage() {
     const left = el.scrollLeft;
     setCanScrollLeft(left > 6);
     setCanScrollRight(maxScroll > 6 && left < maxScroll - 6);
+  };
+
+  const updateCatScrollEdges = () => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const left = el.scrollLeft;
+    setCanCatLeft(left > 6);
+    setCanCatRight(maxScroll > 6 && left < maxScroll - 6);
   };
 
   useEffect(() => {
@@ -104,6 +116,25 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    const el = catScrollRef.current;
+    if (!el) return undefined;
+    const onScroll = () => updateCatScrollEdges();
+    const onResize = () => requestAnimationFrame(updateCatScrollEdges);
+    updateCatScrollEdges();
+    const ro = new ResizeObserver(onResize);
+    ro.observe(el);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    el.addEventListener('scrollend', onScroll);
+    window.addEventListener('resize', onResize);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('scrollend', onScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  useEffect(() => {
     requestAnimationFrame(updateScrollEdges);
   }, [previewItems.length, tileWidth, gapPx]);
 
@@ -135,6 +166,18 @@ export default function HomePage() {
     }
   };
 
+  const scrollCategories = (dir) => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    const step = Math.max(240, Math.floor(el.clientWidth * 0.75));
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    let target = el.scrollLeft + dir * step;
+    if (dir > 0) target = Math.min(maxScroll, target);
+    else target = Math.max(0, target);
+    el.scrollTo({ left: target, behavior: 'smooth' });
+    window.setTimeout(updateCatScrollEdges, 400);
+  };
+
   const glassArrowClass =
     'hidden lg:flex absolute z-20 w-11 h-11 rounded-full items-center justify-center ' +
     'bg-white/10 hover:bg-white/20 text-white border border-white/20 ' +
@@ -151,17 +194,17 @@ export default function HomePage() {
       <HomeHeroSlider />
 
       {/* Assortment: 16 exact per desktop page, side glass arrows */}
-      <section className={`${PAGE_WIDTH_CLASS} pt-5 lg:pt-6 pb-1`}>
+      <section className={`${PAGE_WIDTH_CLASS} pt-5 lg:pt-6 pb-1 overflow-x-clip`}>
         <div className="flex items-center justify-between mb-2.5 lg:mb-3">
           <h2 className="text-base lg:text-lg font-bold">Игры и сервисы</h2>
         </div>
 
-        <div className="relative">
+        <div className="relative overflow-hidden">
           {canScrollLeft && (
             <button
               type="button"
               onClick={() => scrollAssortment(-1)}
-              className={`${glassArrowClass} left-0 -translate-x-1/2 -translate-y-1/2`}
+              className={`${glassArrowClass} left-1 -translate-y-1/2`}
               style={{ top: Math.max(24, tileWidth / 2 + 4) }}
               aria-label="Назад"
             >
@@ -172,7 +215,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => scrollAssortment(1)}
-              className={`${glassArrowClass} right-0 translate-x-1/2 -translate-y-1/2`}
+              className={`${glassArrowClass} right-1 -translate-y-1/2`}
               style={{ top: Math.max(24, tileWidth / 2 + 4) }}
               aria-label="Вперёд"
             >
@@ -283,22 +326,49 @@ export default function HomePage() {
         </Link>
       </section>
 
-      <section className={`${PAGE_WIDTH_CLASS} pt-5 pb-2`}>
-        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-          {LISTING_TYPE_OPTIONS.map((opt) => {
-            const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
-            return (
-              <Link
-                key={opt.value}
-                to={`/catalog?type=${encodeURIComponent(opt.value)}`}
-                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
-                           hover:border-[#2B71F3]/40 text-sm transition-colors"
-              >
-                <Icon size={14} className="text-[#2B71F3]" />
-                {opt.label}
-              </Link>
-            );
-          })}
+      <section className={`${PAGE_WIDTH_CLASS} pt-5 pb-2 overflow-x-clip`}>
+        <div className="relative overflow-hidden">
+          {canCatLeft && (
+            <button
+              type="button"
+              onClick={() => scrollCategories(-1)}
+              className={`${glassArrowClass} left-1 top-1/2 -translate-y-1/2`}
+              aria-label="Категории назад"
+            >
+              <ChevronLeft size={22} />
+            </button>
+          )}
+          {canCatRight && (
+            <button
+              type="button"
+              onClick={() => scrollCategories(1)}
+              className={`${glassArrowClass} right-1 top-1/2 -translate-y-1/2`}
+              aria-label="Категории вперёд"
+            >
+              <ChevronRight size={22} />
+            </button>
+          )}
+
+          <div
+            ref={catScrollRef}
+            className="flex gap-2 overflow-x-auto lg:overflow-x-hidden scroll-smooth py-1
+                       [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {LISTING_TYPE_OPTIONS.map((opt) => {
+              const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
+              return (
+                <Link
+                  key={opt.value}
+                  to={`/catalog?type=${encodeURIComponent(opt.value)}`}
+                  className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
+                             hover:border-[#2B71F3]/40 text-sm transition-colors"
+                >
+                  <Icon size={14} className="text-[#2B71F3]" />
+                  {opt.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </section>
 
