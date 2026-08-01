@@ -15,6 +15,29 @@ function frontendBaseUrl() {
   return (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
 }
 
+/** Treat empty / example placeholders as unset */
+function envCredential(name) {
+  const raw = String(process.env[name] || '').trim();
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  const placeholders = [
+    'ваш_app_id',
+    'ваш_secret',
+    'ваш_services_id',
+    'your_app_id',
+    'your_secret',
+    'your_services_id',
+    'changeme',
+    'xxx',
+    'xxxxxxxx',
+    '12345678',
+  ];
+  if (placeholders.includes(lower)) return null;
+  if (/^ваш[_-]/i.test(raw)) return null;
+  if (/^your[_-]/i.test(raw)) return null;
+  return raw;
+}
+
 function generateTokens(userId) {
   const accessToken = jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
   const refreshToken = crypto.randomBytes(48).toString('hex');
@@ -174,8 +197,8 @@ async function issueSession(res, req, user) {
 
 function oauthProviderConfig() {
   const base = frontendBaseUrl();
-  const vkAppId = process.env.VK_APP_ID || null;
-  const appleClientId = process.env.APPLE_CLIENT_ID || null;
+  const vkAppId = envCredential('VK_APP_ID');
+  const appleClientId = envCredential('APPLE_CLIENT_ID');
   return {
     vk: {
       enabled: Boolean(vkAppId),
@@ -215,7 +238,7 @@ router.post('/vk',
   ],
   validate,
   async (req, res) => {
-    const appId = process.env.VK_APP_ID;
+    const appId = envCredential('VK_APP_ID');
     if (!appId) return res.status(503).json({ error: 'VK ID не настроен (VK_APP_ID)' });
 
     const { code, code_verifier, redirect_uri, state } = req.body;
@@ -317,7 +340,7 @@ router.post('/apple',
   ],
   validate,
   async (req, res) => {
-    if (!process.env.APPLE_CLIENT_ID) {
+    if (!envCredential('APPLE_CLIENT_ID')) {
       return res.status(503).json({ error: 'Apple ID не настроен (APPLE_CLIENT_ID)' });
     }
 
