@@ -32,7 +32,7 @@ export default function AppsPage() {
   const suggestTopic = activeTab === 'apps' ? 'suggest_app' : activeTab === 'mobile' ? 'suggest_mobile' : 'suggest_game';
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8 pb-28">
+    <div className="max-w-[1440px] mx-auto px-3 sm:px-6 py-6 sm:py-8 pb-28">
       <Seo
         title="Игры и сервисы"
         description="Все игры, мобильные игры и приложения Lootz — выберите направление и перейдите к лотам."
