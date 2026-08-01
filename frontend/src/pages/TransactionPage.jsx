@@ -103,8 +103,10 @@ export default function TransactionPage() {
 
   if (!tx) return <div className="text-center py-20 text-dark-400">Сделка не найдена</div>;
 
-  const isBuyer = String(user?.id) === String(tx.buyer_id);
-  const isSeller = String(user?.id) === String(tx.seller_id);
+  // Prefer server-side role flags (JWT) — localStorage user.id can be missing/stale
+  const isBuyer = tx.is_buyer ?? String(user?.id) === String(tx.buyer_id);
+  const isSeller = tx.is_seller ?? String(user?.id) === String(tx.seller_id);
+  const canConfirm = tx.can_confirm ?? (isBuyer && tx.status === 'awaiting_confirmation');
   const status = TX_STATUS[tx.status] || { label: tx.status, color: 'badge-gray' };
 
   return (
@@ -223,7 +225,7 @@ export default function TransactionPage() {
               {tx.confirm_deadline_at ? ` до ${formatDate(tx.confirm_deadline_at)}` : ''}.
             </p>
           )}
-          {isBuyer && tx.status === 'awaiting_confirmation' && (
+          {canConfirm && (
             <button
               onClick={() => confirmMutation.mutate()}
               disabled={confirmMutation.isPending}

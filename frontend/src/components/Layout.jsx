@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingBag, Plus, Search, MessageCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import Footer from './Footer';
@@ -13,13 +13,17 @@ function isListingDetailPath(pathname) {
 }
 
 export default function Layout() {
-  const { user } = useAuthStore();
+  const { user, accessToken, hydrateUser } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [search, setSearch] = useState('');
   const listingDetail = isListingDetailPath(pathname);
   // Mobile product page uses its own sticky bar; desktop keeps global nav (Playerok-style)
   const hideHeaderMobile = listingDetail;
+
+  useEffect(() => {
+    if (accessToken) hydrateUser();
+  }, [accessToken, hydrateUser]);
 
   const handleSearch = (e) => {
     e.preventDefault();
