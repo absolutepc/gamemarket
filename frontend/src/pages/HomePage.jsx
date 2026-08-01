@@ -11,7 +11,7 @@ import api from '../utils/api';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import HomeHeroSlider from '../components/HomeHeroSlider';
-import { ASSORTMENT, ASSORTMENT_PREVIEW_COUNT, HOME_TOP_14 } from '../data/assortment';
+import { ASSORTMENT, HOME_TOP_14 } from '../data/assortment';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const LISTING_TYPE_ICONS = {
@@ -41,15 +41,29 @@ export default function HomePage() {
   const scrollRef = useRef(null);
   const [tileWidth, setTileWidth] = useState(72);
   const [gapPx, setGapPx] = useState(12);
-  const tileCount = HOME_TOP_14.length + 1; // preview + mosaic
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // Explicit top-14 list (not a slice of a reordered catalog)
-  const previewItems = HOME_TOP_14;
-  const moreCount = Math.max(0, ASSORTMENT.length - ASSORTMENT_PREVIEW_COUNT);
-  const mosaicIcons = useMemo(
-    () => ASSORTMENT.slice(ASSORTMENT_PREVIEW_COUNT, ASSORTMENT_PREVIEW_COUNT + 4).map((p) => p.icon),
-    []
+  // Desktop: 31 games + mosaic folder = 32; mobile: top-14 + folder
+  const previewItems = useMemo(
+    () => (isDesktop ? ASSORTMENT.slice(0, 31) : HOME_TOP_14),
+    [isDesktop]
   );
+  const moreCount = Math.max(0, ASSORTMENT.length - previewItems.length);
+  const mosaicIcons = useMemo(
+    () => ASSORTMENT.slice(previewItems.length, previewItems.length + 4).map((p) => p.icon),
+    [previewItems.length]
+  );
+
+  const updateScrollEdges = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const left = el.scrollLeft;
+    setCanScrollLeft(left > 4);
+    setCanScrollRight(maxScroll > 4 && left < maxScroll - 4);
+  };
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -57,28 +71,29 @@ export default function HomePage() {
 
     const update = () => {
       const desktop = window.matchMedia('(min-width: 1024px)').matches;
-      const gap = desktop ? 14 : 12;
+      setIsDesktop(desktop);
+      const gap = desktop ? 16 : 12;
       setGapPx(gap);
-
-      if (desktop) {
-        // Fill the same PAGE_WIDTH container evenly (aligned with Steam / listings)
-        const w = el.clientWidth;
-        const size = Math.floor((w - gap * (tileCount - 1)) / tileCount);
-        setTileWidth(Math.max(56, Math.min(96, size)));
-      } else {
-        setTileWidth(72);
-      }
+      // Compact Playerok-size tiles; row scrolls instead of stretching to fill
+      setTileWidth(desktop ? 64 : 72);
+      requestAnimationFrame(updateScrollEdges);
     };
 
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
+    el.addEventListener('scroll', updateScrollEdges, { passive: true });
     window.addEventListener('resize', update);
     return () => {
       ro.disconnect();
+      el.removeEventListener('scroll', updateScrollEdges);
       window.removeEventListener('resize', update);
     };
-  }, [tileCount]);
+  }, []);
+
+  useEffect(() => {
+    requestAnimationFrame(updateScrollEdges);
+  }, [previewItems.length, tileWidth, gapPx]);
 
   const { data: listings } = useQuery({
     queryKey: ['listings', 'featured'],
@@ -103,98 +118,107 @@ export default function HomePage() {
 
       <HomeHeroSlider />
 
-      {/* Assortment — same width shell as Steam / listings, evenly filled on desktop */}
+      {/* Assortment carousel — Playerok: right arrow at start, left appears after scroll */}
       <section className={`${PAGE_WIDTH_CLASS} pt-5 lg:pt-6 pb-1`}>
         <div className="flex items-center justify-between mb-2.5 lg:mb-3">
           <h2 className="text-base lg:text-lg font-bold">Игры и сервисы</h2>
-          <div className="hidden sm:flex lg:hidden items-center gap-1.5">
+        </div>
+
+        <div className="relative">
+          {canScrollLeft && (
             <button
               type="button"
               onClick={() => scrollAssortment(-1)}
-              className="w-8 h-8 rounded-full bg-dark-800/80 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
+              className="hidden lg:flex absolute left-0 top-[28px] -translate-y-1/2 z-20
+                         w-10 h-10 rounded-full bg-[#2B71F3] text-white shadow-lg
+                         items-center justify-center hover:bg-[#2563eb] transition-colors"
               aria-label="Назад"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={20} />
             </button>
+          )}
+          {canScrollRight && (
             <button
               type="button"
               onClick={() => scrollAssortment(1)}
-              className="w-8 h-8 rounded-full bg-dark-800/80 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
+              className="hidden lg:flex absolute right-0 top-[28px] -translate-y-1/2 z-20
+                         w-10 h-10 rounded-full bg-[#2B71F3] text-white shadow-lg
+                         items-center justify-center hover:bg-[#2563eb] transition-colors"
               aria-label="Вперёд"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={20} />
             </button>
-          </div>
-        </div>
+          )}
 
-        <div
-          ref={scrollRef}
-          className="flex overflow-x-auto lg:overflow-visible pt-1 pb-3 scroll-smooth
-                     [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ gap: `${gapPx}px` }}
-        >
-          {previewItems.map((item) => (
+          <div
+            ref={scrollRef}
+            className="flex overflow-x-auto pt-1 pb-3 scroll-smooth
+                       [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ gap: `${gapPx}px` }}
+          >
+            {previewItems.map((item) => (
+              <Link
+                key={item.search + item.name}
+                to={`/catalog?search=${encodeURIComponent(item.search)}`}
+                className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
+                style={{ width: tileWidth }}
+              >
+                <div
+                  className="w-full aspect-square rounded-full overflow-hidden
+                              bg-dark-800 ring-1 ring-white/10
+                              group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200"
+                >
+                  <img
+                    src={item.icon}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/assortment/other-apps.png';
+                    }}
+                  />
+                </div>
+                <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
+                  {item.name}
+                </span>
+              </Link>
+            ))}
+
+            {/* End tile: mosaic folder → all games & services */}
             <Link
-              key={item.search + item.name}
-              to={`/catalog?search=${encodeURIComponent(item.search)}`}
-              className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
+              to="/apps?tab=games"
+              className="shrink-0 group flex flex-col items-center gap-1.5"
               style={{ width: tileWidth }}
+              aria-label="Все игры и сервисы"
             >
               <div
-                className="w-full aspect-square rounded-[18%] overflow-hidden
+                className="w-full aspect-square rounded-full overflow-hidden
                             bg-dark-800 ring-1 ring-white/10
-                            group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200"
+                            group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200
+                            grid grid-cols-2 grid-rows-2 gap-[2px] p-[3px]"
               >
-                <img
-                  src={item.icon}
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assortment/other-apps.png';
-                  }}
-                />
+                {mosaicIcons.map((src, i) => (
+                  <img
+                    key={`${src}-${i}`}
+                    src={src}
+                    alt=""
+                    className="w-full h-full object-cover rounded-full"
+                    loading="lazy"
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/assortment/other-apps.png';
+                    }}
+                  />
+                ))}
               </div>
-              <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
-                {item.name}
+              <span className="text-[11px] lg:text-[12px] text-[#2B71F3] font-semibold text-center leading-tight">
+                +{moreCount.toLocaleString('ru-RU')}
               </span>
             </Link>
-          ))}
-
-          {/* Last tile: mosaic → all games & services */}
-          <Link
-            to="/apps?tab=games"
-            className="shrink-0 group flex flex-col items-center gap-1.5"
-            style={{ width: tileWidth }}
-            aria-label="Все игры и сервисы"
-          >
-            <div
-              className="w-full aspect-square rounded-[18%] overflow-hidden
-                          bg-dark-800 ring-1 ring-white/10
-                          group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200
-                          grid grid-cols-2 grid-rows-2 gap-[2px] p-[2px]"
-            >
-              {mosaicIcons.map((src, i) => (
-                <img
-                  key={`${src}-${i}`}
-                  src={src}
-                  alt=""
-                  className="w-full h-full object-cover rounded-[28%]"
-                  loading="lazy"
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assortment/other-apps.png';
-                  }}
-                />
-              ))}
-            </div>
-            <span className="text-[11px] lg:text-[12px] text-[#2B71F3] font-semibold text-center leading-tight">
-              +{moreCount.toLocaleString('ru-RU')}
-            </span>
-          </Link>
+          </div>
         </div>
       </section>
 
