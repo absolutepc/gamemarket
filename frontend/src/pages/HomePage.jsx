@@ -39,10 +39,10 @@ const LISTING_TYPE_ICONS = {
 
 export default function HomePage() {
   const scrollRef = useRef(null);
-  const [itemWidth, setItemWidth] = useState(0);
-  const gapPx = 6;
-  const sidePad = 12;
-  const visibleCount = 5;
+  // Compact Playerok-style tiles: fixed icon size (not stretched to 5-across)
+  const [tileWidth, setTileWidth] = useState(72);
+  const [gapPx, setGapPx] = useState(12);
+  const sidePad = 16;
 
   // Explicit top-14 list (not a slice of a reordered catalog)
   const previewItems = HOME_TOP_14;
@@ -53,16 +53,15 @@ export default function HomePage() {
   );
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return undefined;
     const update = () => {
-      const w = Math.max(0, el.clientWidth - sidePad * 2);
-      setItemWidth((w - gapPx * (visibleCount - 1)) / visibleCount);
+      // Desktop: dense ~64px icons like Playerok; mobile: slightly larger for touch
+      const desktop = window.matchMedia('(min-width: 1024px)').matches;
+      setTileWidth(desktop ? 64 : 72);
+      setGapPx(desktop ? 16 : 12);
     };
     update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
   const { data: listings } = useQuery({
@@ -73,11 +72,9 @@ export default function HomePage() {
   const scrollAssortment = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
-    // Move by exactly one "page" of 5 items
-    const amount = itemWidth
-      ? (itemWidth + gapPx) * visibleCount
-      : el.clientWidth - sidePad * 2;
-    el.scrollBy({ left: dir * amount, behavior: 'smooth' });
+    const step = tileWidth + gapPx;
+    const page = Math.max(1, Math.floor((el.clientWidth - sidePad * 2) / step));
+    el.scrollBy({ left: dir * step * page, behavior: 'smooth' });
   };
 
   return (
@@ -90,49 +87,47 @@ export default function HomePage() {
 
       <HomeHeroSlider />
 
-      {/* Assortment of games & services — Playerok-style: 5 per page, 14 + "all" */}
-      <section className="pt-8 pb-2">
-        <div className="px-3 sm:px-4 flex items-center justify-between mb-3">
-          <h2 className="text-lg sm:text-xl font-bold">Игры и сервисы</h2>
-          <div className="hidden lg:flex items-center gap-2">
+      {/* Assortment — compact Playerok-style icon row */}
+      <section className="pt-5 lg:pt-6 pb-1">
+        <div className="px-4 flex items-center justify-between mb-2.5 lg:mb-3">
+          <h2 className="text-base lg:text-lg font-bold">Игры и сервисы</h2>
+          <div className="hidden lg:flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => scrollAssortment(-1)}
-              className="w-9 h-9 rounded-full bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
+              className="w-8 h-8 rounded-full bg-dark-800/80 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
               aria-label="Назад"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
             <button
               type="button"
               onClick={() => scrollAssortment(1)}
-              className="w-9 h-9 rounded-full bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
+              className="w-8 h-8 rounded-full bg-dark-800/80 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
               aria-label="Вперёд"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
 
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto pt-2 pb-4 scroll-smooth snap-x snap-mandatory
+          className="flex overflow-x-auto pt-1 pb-3 scroll-smooth
                      [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ gap: `${gapPx}px`, paddingLeft: sidePad, paddingRight: sidePad }}
         >
-          {previewItems.map((item, index) => (
+          {previewItems.map((item) => (
             <Link
               key={item.search + item.name}
               to={`/catalog?search=${encodeURIComponent(item.search)}`}
-              className={`shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10 ${
-                index % visibleCount === 0 ? 'snap-start' : ''
-              }`}
-              style={itemWidth ? { width: itemWidth } : { width: `calc((100% - ${sidePad * 2}px - ${gapPx * 4}px) / 5)` }}
+              className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
+              style={{ width: tileWidth }}
             >
               <div
-                className="w-full aspect-square rounded-[22%] overflow-hidden
-                            bg-dark-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-1 ring-white/10
-                            group-hover:scale-105 group-hover:ring-[#2B71F3]/50 transition-all duration-200"
+                className="w-full aspect-square rounded-[18%] overflow-hidden
+                            bg-dark-800 ring-1 ring-white/10
+                            group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200"
               >
                 <img
                   src={item.icon}
@@ -146,24 +141,24 @@ export default function HomePage() {
                   }}
                 />
               </div>
-              <span className="text-[10px] sm:text-[11px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
+              <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
                 {item.name}
               </span>
             </Link>
           ))}
 
-          {/* 15th tile: mosaic → all games & services (Playerok-style) */}
+          {/* Last tile: mosaic → all games & services */}
           <Link
             to="/apps?tab=games"
             className="shrink-0 group flex flex-col items-center gap-1.5"
-            style={itemWidth ? { width: itemWidth } : { width: `calc((100% - ${sidePad * 2}px - ${gapPx * 4}px) / 5)` }}
+            style={{ width: tileWidth }}
             aria-label="Все игры и сервисы"
           >
             <div
-              className="w-full aspect-square rounded-[22%] overflow-hidden
-                          bg-dark-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-1 ring-white/10
-                          group-hover:scale-105 group-hover:ring-[#2B71F3]/50 transition-all duration-200
-                          grid grid-cols-2 grid-rows-2 gap-[3px] p-[3px]"
+              className="w-full aspect-square rounded-[18%] overflow-hidden
+                          bg-dark-800 ring-1 ring-white/10
+                          group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200
+                          grid grid-cols-2 grid-rows-2 gap-[2px] p-[2px]"
             >
               {mosaicIcons.map((src, i) => (
                 <img
@@ -180,7 +175,7 @@ export default function HomePage() {
                 />
               ))}
             </div>
-            <span className="text-[10px] sm:text-[11px] text-[#2B71F3] font-semibold text-center leading-tight">
+            <span className="text-[11px] lg:text-[12px] text-[#2B71F3] font-semibold text-center leading-tight">
               +{moreCount.toLocaleString('ru-RU')}
             </span>
           </Link>
