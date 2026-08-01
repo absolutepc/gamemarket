@@ -40,21 +40,22 @@ const SLIDES = [
 
 function ContestVisual() {
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_40%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
-      <div className="relative z-10 w-[70%] max-w-[260px] sm:max-w-[300px] flex flex-col items-center">
+    <div className="relative w-full h-full flex flex-col items-center lg:items-start justify-center overflow-visible">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_45%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
+      <div className="relative z-10 w-full max-w-[380px] lg:max-w-none lg:w-[92%] flex flex-col items-center lg:items-start">
         <img
           src="/banners/macbook-air-15.webp"
           alt="MacBook Air 15″ — приз конкурса"
-          className="w-full h-auto max-h-[160px] sm:max-h-[190px] object-contain drop-shadow-[0_16px_40px_rgba(0,0,0,0.5)] select-none pointer-events-none"
+          className="w-full h-auto max-h-[240px] sm:max-h-[280px] lg:max-h-[320px] object-contain object-left
+                     drop-shadow-[0_16px_40px_rgba(0,0,0,0.5)] select-none pointer-events-none"
           draggable={false}
         />
-        <div className="mt-2 flex flex-col items-center gap-1.5">
+        <div className="mt-3 flex flex-col items-center lg:items-start gap-1.5">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-0.5 text-[10px] text-dark-200 backdrop-blur-sm">
             <Trophy size={11} className="text-amber-300" />
             256 ГБ · 2 приза / месяц
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5">
             <div className="flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 backdrop-blur-sm">
               <Store size={12} className="text-[#2B71F3] shrink-0" />
               <span className="text-[11px] font-medium whitespace-nowrap">1× продавцам</span>
