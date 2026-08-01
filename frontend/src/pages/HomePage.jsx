@@ -276,7 +276,7 @@ export default function HomePage() {
                     }}
                   />
                 </div>
-                <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
+                <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight truncate w-full px-0.5 transition-colors">
                   {item.name}
                 </span>
               </Link>
