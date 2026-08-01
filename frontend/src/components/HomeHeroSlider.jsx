@@ -72,10 +72,14 @@ function ContestVisual() {
 
 function EscrowVisual() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.22),transparent_55%)]" />
-      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shadow-2xl">
-        <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" />
+    <div className="relative w-full h-full flex items-center justify-center overflow-visible">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.22),transparent_55%)] pointer-events-none" />
+      <div
+        className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-emerald-500/15 border border-emerald-500/30
+                   flex items-center justify-center"
+        style={{ boxShadow: '0 0 40px rgba(16,185,129,0.18)' }}
+      >
+        <Shield size={48} className="text-emerald-400 sm:w-14 sm:h-14" strokeWidth={1.75} />
       </div>
     </div>
   );
@@ -83,10 +87,14 @@ function EscrowVisual() {
 
 function SellVisual() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(43,113,243,0.28),transparent_55%)]" />
-      <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/30 flex items-center justify-center shadow-2xl">
-        <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" />
+    <div className="relative w-full h-full flex items-center justify-center overflow-visible">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(43,113,243,0.28),transparent_55%)] pointer-events-none" />
+      <div
+        className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-3xl bg-[#2B71F3]/15 border border-[#2B71F3]/30
+                   flex items-center justify-center"
+        style={{ boxShadow: '0 0 40px rgba(43,113,243,0.2)' }}
+      >
+        <Store size={48} className="text-[#2B71F3] sm:w-14 sm:h-14" strokeWidth={1.75} />
       </div>
     </div>
   );
@@ -171,44 +179,28 @@ export default function HomeHeroSlider() {
               </div>
             </div>
 
-            <div className="order-1 lg:order-2 h-[200px] sm:h-[220px] lg:h-full min-h-0 flex items-center">
+            <div className="order-1 lg:order-2 h-[200px] sm:h-[220px] lg:h-full min-h-0 flex items-center justify-center overflow-visible">
               {Visual ? <Visual /> : null}
             </div>
           </div>
 
-          <div className="mt-4 sm:mt-5 flex items-center justify-between gap-4 shrink-0">
-            <div className="flex flex-1 gap-2 max-w-xs">
+          <div className="mt-4 sm:mt-5 flex items-center shrink-0">
+            <div className="flex w-full max-w-xs gap-2">
               {SLIDES.map((s, i) => (
                 <button
                   key={s.id}
                   type="button"
                   aria-label={`Слайд ${i + 1}`}
                   onClick={() => goTo(i)}
-                  className="relative h-1 flex-1 rounded-full bg-dark-700 overflow-hidden"
-                >
-                  <span
-                    className={`absolute inset-y-0 left-0 rounded-full bg-[#2B71F3] transition-all ${
-                      i === index ? 'w-full' : i < index ? 'w-full opacity-40' : 'w-0'
-                    }`}
-                    style={
-                      i === index && !paused
-                        ? { animation: `heroProgress ${AUTO_MS}ms linear forwards` }
-                        : undefined
-                    }
-                  />
-                </button>
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    i === index ? 'bg-[#2B71F3]' : 'bg-dark-700 hover:bg-dark-600'
+                  }`}
+                />
               ))}
             </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes heroProgress {
-          from { width: 0%; }
-          to { width: 100%; }
-        }
-      `}</style>
     </section>
   );
 }
