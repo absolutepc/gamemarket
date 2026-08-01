@@ -355,7 +355,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => scrollCategories(-1)}
-              className={`${glassArrowClass} left-0 -translate-x-1/2 top-[calc(50%-4px)] -translate-y-1/2`}
+              className={`${glassArrowClass} left-0 -translate-x-1/2 top-1/2 -translate-y-1/2`}
               aria-label="Категории назад"
             >
               <ChevronLeft size={22} />
@@ -365,7 +365,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => scrollCategories(1)}
-              className={`${glassArrowClass} right-0 translate-x-1/2 top-[calc(50%-4px)] -translate-y-1/2`}
+              className={`${glassArrowClass} right-0 translate-x-1/2 top-1/2 -translate-y-1/2`}
               aria-label="Категории вперёд"
             >
               <ChevronRight size={22} />
