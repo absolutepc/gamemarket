@@ -33,14 +33,16 @@ export default function Layout() {
           hideHeaderMobile ? 'hidden lg:block' : ''
         }`}
       >
-        <div className={`${PAGE_WIDTH_CLASS} py-3 lg:py-0 lg:h-16 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4`}>
+        <div className={`${PAGE_WIDTH_CLASS} py-3.5 lg:py-0 lg:h-20 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5`}>
           {/* Top row: brand + theme (mobile); brand inline on desktop */}
           <div className="flex items-center justify-between gap-3 lg:contents">
-            <Link to="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
-                <Shield size={16} className="text-white" />
+            <Link to="/" className="flex items-center gap-2.5 shrink-0">
+              <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center">
+                <Shield size={20} className="text-white" />
               </div>
-              <span className="font-bold text-lg text-[#5B8CFF]">Lootz</span>
+              <span className="font-bold text-2xl lg:text-[1.75rem] leading-none tracking-tight text-[#5B8CFF]">
+                Lootz
+              </span>
             </Link>
 
             <div className="flex items-center gap-2 lg:order-last shrink-0">
@@ -56,14 +58,14 @@ export default function Layout() {
               <div className="hidden lg:flex items-center gap-1 sm:gap-2">
                 {user ? (
                   <>
-                    <Link to="/listings/create" className="btn-primary text-sm flex items-center gap-1.5">
-                      <Plus size={15} /> Продать
+                    <Link to="/listings/create" className="btn-primary text-sm flex items-center gap-1.5 h-11 px-4">
+                      <Plus size={16} /> Продать
                     </Link>
-                    <Link to="/chats" className="btn-ghost p-2" title="Чаты">
-                      <MessageCircle size={18} />
+                    <Link to="/chats" className="btn-ghost p-2.5" title="Чаты">
+                      <MessageCircle size={20} />
                     </Link>
-                    <Link to="/transactions" className="btn-ghost p-2" title="Сделки">
-                      <ShoppingBag size={18} />
+                    <Link to="/transactions" className="btn-ghost p-2.5" title="Сделки">
+                      <ShoppingBag size={20} />
                     </Link>
                     <Link
                       to={`/users/${user.username}`}
@@ -71,9 +73,9 @@ export default function Layout() {
                       title="Личный кабинет"
                     >
                       {user.avatar_url ? (
-                        <img src={user.avatar_url} className="w-8 h-8 rounded-full object-cover" alt="" />
+                        <img src={user.avatar_url} className="w-9 h-9 rounded-full object-cover" alt="" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-semibold">
+                        <div className="w-9 h-9 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-semibold">
                           {user.username[0].toUpperCase()}
                         </div>
                       )}
@@ -81,8 +83,8 @@ export default function Layout() {
                   </>
                 ) : (
                   <>
-                    <Link to="/login" className="btn-ghost text-sm">Войти</Link>
-                    <Link to="/register" className="btn-primary text-sm">Регистрация</Link>
+                    <Link to="/login" className="btn-ghost text-sm h-11 px-3 inline-flex items-center">Войти</Link>
+                    <Link to="/register" className="btn-primary text-sm h-11 px-4 inline-flex items-center">Регистрация</Link>
                   </>
                 )}
               </div>
@@ -94,10 +96,10 @@ export default function Layout() {
           </div>
 
           {/* Search — full width below brand on mobile; center on desktop */}
-          <form onSubmit={handleSearch} className="w-full lg:flex-1 lg:max-w-xl lg:mx-auto relative order-last lg:order-none">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
+          <form onSubmit={handleSearch} className="w-full lg:flex-1 lg:max-w-2xl lg:mx-auto relative order-last lg:order-none">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
             <input
-              className="input pl-9 h-10 text-sm rounded-full lg:rounded-xl"
+              className="input pl-10 h-11 text-sm lg:text-base rounded-full lg:rounded-xl"
               placeholder="Поиск игр, подписок и приложений..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}

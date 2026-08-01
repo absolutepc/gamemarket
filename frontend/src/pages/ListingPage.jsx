@@ -286,7 +286,7 @@ export default function ListingPage() {
   );
 
   const purchasePanel = (
-    <div className="lg:sticky lg:top-20 space-y-4">
+    <div className="lg:sticky lg:top-24 space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-3xl font-extrabold text-emerald-400 leading-none">
           {formatPrice(listing.price)}
