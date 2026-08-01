@@ -12,6 +12,32 @@ export function normalizeAssortmentKey(value) {
     .replace(/\s+/g, ' ');
 }
 
+/** Map legacy / alternate listing.game values onto current catalog names */
+const NAME_ALIASES = {
+  chatgpt: 'чатгпт',
+  'chatgpt plus': 'чатгпт',
+  'chatgpt team': 'чатгпт',
+  'chatgpt api': 'чатгпт',
+  openai: 'чатгпт',
+  'claude ai': 'claude',
+  'claude pro': 'claude',
+  'claude team': 'claude',
+  'cursor ai': 'cursor',
+  'cursor pro': 'cursor',
+  'app store': 'apple',
+  itunes: 'apple',
+  'ea sports': 'ea play',
+  crunchyroll: 'кранчролл',
+  'amazon prime': 'prime video',
+  'character.ai': 'character ai',
+  'runway ml': 'runway',
+  'rockstar launcher': 'rockstar games',
+};
+
+function applyAlias(q) {
+  return NAME_ALIASES[q] || q;
+}
+
 const INDEX = ASSORTMENT.map((item) => ({
   ...item,
   key: normalizeAssortmentKey(item.name),
@@ -28,8 +54,9 @@ const INDEX_BY_LENGTH = [...INDEX].sort(
  * Exact name/search first, then longest partial match.
  */
 export function resolveAssortmentItem(gameOrSearch) {
-  const q = normalizeAssortmentKey(gameOrSearch);
-  if (!q) return null;
+  const raw = normalizeAssortmentKey(gameOrSearch);
+  if (!raw) return null;
+  const q = applyAlias(raw);
 
   const exact = INDEX.find((item) => item.key === q || item.searchKey === q);
   if (exact) return exact;
