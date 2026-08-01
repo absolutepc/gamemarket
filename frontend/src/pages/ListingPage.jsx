@@ -60,7 +60,7 @@ function BuyActions({
       <button
         type="button"
         onClick={() => setCheckoutOpen(true)}
-        className="w-full h-12 lg:h-13 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500
+        className="w-full h-12 lg:h-14 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500
                    hover:from-emerald-400 hover:to-teal-400 active:scale-[0.99]
                    text-white font-bold text-base lg:text-lg transition-colors"
       >
