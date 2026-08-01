@@ -39,10 +39,9 @@ const LISTING_TYPE_ICONS = {
 
 export default function HomePage() {
   const scrollRef = useRef(null);
-  // Compact Playerok-style tiles: fixed icon size (not stretched to 5-across)
   const [tileWidth, setTileWidth] = useState(72);
   const [gapPx, setGapPx] = useState(12);
-  const sidePad = 16;
+  const tileCount = HOME_TOP_14.length + 1; // preview + mosaic
 
   // Explicit top-14 list (not a slice of a reordered catalog)
   const previewItems = HOME_TOP_14;
@@ -53,16 +52,33 @@ export default function HomePage() {
   );
 
   useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return undefined;
+
     const update = () => {
-      // Desktop: dense ~64px icons like Playerok; mobile: slightly larger for touch
       const desktop = window.matchMedia('(min-width: 1024px)').matches;
-      setTileWidth(desktop ? 64 : 72);
-      setGapPx(desktop ? 16 : 12);
+      const gap = desktop ? 14 : 12;
+      setGapPx(gap);
+
+      if (desktop) {
+        // Fill the same PAGE_WIDTH container evenly (aligned with Steam / listings)
+        const w = el.clientWidth;
+        const size = Math.floor((w - gap * (tileCount - 1)) / tileCount);
+        setTileWidth(Math.max(56, Math.min(96, size)));
+      } else {
+        setTileWidth(72);
+      }
     };
+
     update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
     window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, [tileCount]);
 
   const { data: listings } = useQuery({
     queryKey: ['listings', 'featured'],
@@ -73,7 +89,7 @@ export default function HomePage() {
     const el = scrollRef.current;
     if (!el) return;
     const step = tileWidth + gapPx;
-    const page = Math.max(1, Math.floor((el.clientWidth - sidePad * 2) / step));
+    const page = Math.max(1, Math.floor(el.clientWidth / step));
     el.scrollBy({ left: dir * step * page, behavior: 'smooth' });
   };
 
@@ -87,9 +103,9 @@ export default function HomePage() {
 
       <HomeHeroSlider />
 
-      {/* Assortment — compact Playerok-style icon row */}
-      <section className="pt-5 lg:pt-6 pb-1">
-        <div className="px-4 flex items-center justify-between mb-2.5 lg:mb-3">
+      {/* Assortment — same width shell as Steam / listings, evenly filled on desktop */}
+      <section className={`${PAGE_WIDTH_CLASS} pt-5 lg:pt-6 pb-1`}>
+        <div className="flex items-center justify-between mb-2.5 lg:mb-3">
           <h2 className="text-base lg:text-lg font-bold">Игры и сервисы</h2>
           <div className="hidden lg:flex items-center gap-1.5">
             <button
@@ -113,9 +129,9 @@ export default function HomePage() {
 
         <div
           ref={scrollRef}
-          className="flex overflow-x-auto pt-1 pb-3 scroll-smooth
+          className="flex overflow-x-auto lg:overflow-visible pt-1 pb-3 scroll-smooth
                      [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ gap: `${gapPx}px`, paddingLeft: sidePad, paddingRight: sidePad }}
+          style={{ gap: `${gapPx}px` }}
         >
           {previewItems.map((item) => (
             <Link
