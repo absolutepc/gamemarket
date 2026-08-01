@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
@@ -24,6 +24,14 @@ import AdminDisputesPage from './pages/AdminDisputesPage';
 import AppsPage from './pages/AppsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import useAuthStore from './store/authStore';
+
+/** /users without username → own profile or login */
+function UsersIndexRedirect() {
+  const user = useAuthStore((s) => s.user);
+  if (user?.username) return <Navigate to={`/users/${user.username}`} replace />;
+  return <Navigate to="/login" replace />;
+}
 
 export default function App() {
   return (
@@ -33,6 +41,7 @@ export default function App() {
         <Route path="apps" element={<AppsPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="listings/:id" element={<ListingPage />} />
+        <Route path="users" element={<UsersIndexRedirect />} />
         <Route path="users/:username" element={<ProfilePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
@@ -56,6 +65,7 @@ export default function App() {
         <Route element={<AdminRoute />}>
           <Route path="admin/disputes" element={<AdminDisputesPage />} />
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );
