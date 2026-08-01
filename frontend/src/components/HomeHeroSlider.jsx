@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ChevronLeft, ChevronRight, Trophy, ShoppingBag, Store, ArrowRight, Shield,
+  Trophy, ShoppingBag, Store, ArrowRight, Shield,
 } from 'lucide-react';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
 
@@ -198,24 +198,6 @@ export default function HomeHeroSlider() {
                   />
                 </button>
               ))}
-            </div>
-            <div className="hidden lg:flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => go(-1)}
-                className="w-9 h-9 rounded-full bg-dark-800/80 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
-                aria-label="Предыдущий слайд"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={() => go(1)}
-                className="w-9 h-9 rounded-full bg-dark-800/80 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
-                aria-label="Следующий слайд"
-              >
-                <ChevronRight size={18} />
-              </button>
             </div>
           </div>
         </div>
