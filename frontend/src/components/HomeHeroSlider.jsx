@@ -149,7 +149,7 @@ export default function HomeHeroSlider() {
 
         <div className={`relative ${PAGE_WIDTH_CLASS} py-5 sm:py-7 lg:py-8
                         h-[520px] sm:h-[480px] lg:h-[420px] flex flex-col`}>
-          <div className="flex-1 grid lg:grid-cols-2 gap-4 lg:gap-10 items-center min-h-0">
+          <div className="flex-1 grid lg:grid-cols-[1.05fr_0.95fr] gap-4 lg:gap-6 items-center min-h-0">
             <div className="order-2 lg:order-1 min-h-0 flex flex-col justify-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3 w-fit">
                 {slide.tone === 'contest' ? (
