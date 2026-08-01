@@ -1,10 +1,11 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Shield, ShoppingBag, Plus, Search, MessageCircle } from 'lucide-react';
+import { ShoppingBag, Plus, Search, MessageCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import ThemeToggle from './ThemeToggle';
+import LootzLogo from './LootzLogo';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
 
 /** Product detail: /listings/:id (not create/edit) */
@@ -38,9 +39,7 @@ export default function Layout() {
           <div className="flex items-center justify-between gap-3 lg:contents">
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               <Link to="/" className="flex items-center gap-2.5 no-underline">
-                <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center overflow-hidden shadow-none ring-0">
-                  <Shield size={20} className="text-white" />
-                </div>
+                <LootzLogo className="w-10 h-10" />
                 <span className="font-bold text-2xl lg:text-[1.75rem] leading-none tracking-tight text-[#5B8CFF]">
                   Lootz
                 </span>

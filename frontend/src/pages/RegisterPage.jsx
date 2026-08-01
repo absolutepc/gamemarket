@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Shield, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import SocialLoginButtons from '../components/SocialLoginButtons';
+import LootzLogo from '../components/LootzLogo';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -31,9 +32,7 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Shield size={22} className="text-white" />
-          </div>
+          <LootzLogo className="w-12 h-12 mx-auto mb-4" rounded="rounded-2xl" />
           <h1 className="text-2xl font-bold">Регистрация</h1>
           <p className="text-dark-400 text-sm mt-1">Создайте аккаунт на Lootz</p>
         </div>
