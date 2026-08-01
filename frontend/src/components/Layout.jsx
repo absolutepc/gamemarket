@@ -70,7 +70,7 @@ export default function Layout() {
                       <ShoppingBag size={20} />
                     </Link>
                     <Link
-                      to={`/users/${user.username || ''}`}
+                      to={user.username ? `/users/${user.username}` : '/login'}
                       className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                       title="Личный кабинет"
                     >

@@ -6,7 +6,7 @@ export default function MobileBottomNav() {
   const { user } = useAuthStore();
   const { pathname } = useLocation();
 
-  const profileTo = user ? `/users/${user.username}` : '/login';
+  const profileTo = user?.username ? `/users/${user.username}` : '/login';
   const chatsTo = user ? '/chats' : '/login';
   const dealsTo = user ? '/transactions' : '/login';
   const sellTo = user ? '/listings/create' : '/login';

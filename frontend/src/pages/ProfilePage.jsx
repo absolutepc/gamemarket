@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera } from 'lucide-react';
@@ -37,9 +37,10 @@ export default function ProfilePage() {
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileRef = useRef(null);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, isError } = useQuery({
     queryKey: ['profile', username],
     queryFn: () => api.get(`/users/${username}`).then((r) => r.data),
+    enabled: Boolean(username),
   });
 
   const deleteMutation = useMutation({
@@ -79,6 +80,10 @@ export default function ProfilePage() {
     }
   };
 
+  if (!username) {
+    return <Navigate to="/users" replace />;
+  }
+
   if (isLoading) return (
     <div className={`${PAGE_WIDTH_CLASS} py-8 animate-pulse`}>
       <div className="flex gap-5 mb-8">
@@ -91,7 +96,7 @@ export default function ProfilePage() {
     </div>
   );
 
-  if (!profile) return <div className="text-center py-20 text-dark-400">Пользователь не найден</div>;
+  if (isError || !profile) return <div className="text-center py-20 text-dark-400">Пользователь не найден</div>;
 
   const rating = parseFloat(profile.rating) || 0;
   const avatarUrl = isOwn ? (currentUser?.avatar_url || profile.avatar_url) : profile.avatar_url;
