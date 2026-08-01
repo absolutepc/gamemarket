@@ -297,6 +297,12 @@ export default function CreateListingPage() {
       <div className="card p-5 sm:p-6">
         {step === 0 && (
           <div className="flex flex-col gap-5">
+            <AssortmentPicker
+              value={form.game}
+              onChange={(name) => patchForm('game', name)}
+              required
+            />
+
             <div>
               <label className="text-sm font-medium mb-1.5 block">Заголовок *</label>
               <input
@@ -356,12 +362,6 @@ export default function CreateListingPage() {
                 ))}
               </select>
             </div>
-
-            <AssortmentPicker
-              value={form.game}
-              onChange={(name) => patchForm('game', name)}
-              required
-            />
 
             <div className="grid grid-cols-2 gap-4">
               <div>
