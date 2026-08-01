@@ -39,6 +39,7 @@ const LISTING_TYPE_ICONS = {
 
 const DESKTOP_VISIBLE = 16; // exact items per page — no partial peek
 const DESKTOP_ITEMS = 31; // + mosaic folder = 32
+const CAT_PAGE_SIZE = 10; // exact categories on first page — no 11th peek
 
 export default function HomePage() {
   const scrollRef = useRef(null);
@@ -50,6 +51,10 @@ export default function HomePage() {
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [canCatLeft, setCanCatLeft] = useState(false);
   const [canCatRight, setCanCatRight] = useState(false);
+  const [catViewport, setCatViewport] = useState(0);
+
+  const catPage1 = useMemo(() => LISTING_TYPE_OPTIONS.slice(0, CAT_PAGE_SIZE), []);
+  const catPage2 = useMemo(() => LISTING_TYPE_OPTIONS.slice(CAT_PAGE_SIZE), []);
 
   // Desktop: 31 games + mosaic folder = 32; mobile: top-14 + folder
   const previewItems = useMemo(
@@ -123,7 +128,11 @@ export default function HomePage() {
     const el = catScrollRef.current;
     if (!el) return undefined;
     const onScroll = () => updateCatScrollEdges();
-    const onResize = () => requestAnimationFrame(updateCatScrollEdges);
+    const onResize = () => {
+      setCatViewport(el.clientWidth);
+      requestAnimationFrame(updateCatScrollEdges);
+    };
+    setCatViewport(el.clientWidth);
     updateCatScrollEdges();
     const ro = new ResizeObserver(onResize);
     ro.observe(el);
@@ -169,13 +178,27 @@ export default function HomePage() {
   const scrollCategories = (dir) => {
     const el = catScrollRef.current;
     if (!el) return;
+    const pageWidth = catViewport || el.clientWidth;
     const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
-    const step = Math.max(240, Math.floor(el.clientWidth * 0.75));
-    let target = el.scrollLeft + dir * step;
-    if (dir > 0) target = Math.min(maxScroll, target);
-    else target = Math.max(0, target);
+    let target = dir > 0 ? pageWidth : 0;
+    target = Math.max(0, Math.min(maxScroll, target));
     el.scrollTo({ left: target, behavior: 'smooth' });
     window.setTimeout(updateCatScrollEdges, 400);
+  };
+
+  const renderCatChip = (opt) => {
+    const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
+    return (
+      <Link
+        key={opt.value}
+        to={`/catalog?type=${encodeURIComponent(opt.value)}`}
+        className="min-w-0 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
+                   hover:border-[#2B71F3]/40 text-sm transition-colors"
+      >
+        <Icon size={14} className="text-[#2B71F3] shrink-0" />
+        <span className="truncate">{opt.label}</span>
+      </Link>
+    );
   };
 
   const glassArrowClass =
@@ -351,23 +374,39 @@ export default function HomePage() {
 
           <div
             ref={catScrollRef}
-            className="flex gap-2 overflow-x-auto lg:overflow-x-hidden scroll-smooth pb-2
+            className="flex overflow-x-auto lg:overflow-x-hidden scroll-smooth pb-2
                        [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {LISTING_TYPE_OPTIONS.map((opt) => {
-              const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
-              return (
-                <Link
-                  key={opt.value}
-                  to={`/catalog?type=${encodeURIComponent(opt.value)}`}
-                  className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
-                             hover:border-[#2B71F3]/40 text-sm transition-colors"
-                >
-                  <Icon size={14} className="text-[#2B71F3]" />
-                  {opt.label}
-                </Link>
-              );
-            })}
+            <div
+              className="shrink-0 grid gap-2"
+              style={{
+                width: catViewport ? `${catViewport}px` : '100%',
+                gridTemplateColumns: `repeat(${CAT_PAGE_SIZE}, minmax(0, 1fr))`,
+              }}
+            >
+              {catPage1.map(renderCatChip)}
+            </div>
+            {catPage2.length > 0 && (
+              <div
+                className="shrink-0 flex gap-2"
+                style={{ minWidth: catViewport ? `${catViewport}px` : '100%' }}
+              >
+                {catPage2.map((opt) => {
+                  const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
+                  return (
+                    <Link
+                      key={opt.value}
+                      to={`/catalog?type=${encodeURIComponent(opt.value)}`}
+                      className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
+                                 hover:border-[#2B71F3]/40 text-sm transition-colors"
+                    >
+                      <Icon size={14} className="text-[#2B71F3] shrink-0" />
+                      {opt.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </section>
