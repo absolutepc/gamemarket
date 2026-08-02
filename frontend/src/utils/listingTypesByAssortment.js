@@ -768,6 +768,25 @@ const PHOTOROOM_LABELS = {
   other: 'Другое',
 };
 
+/** Picsart */
+const PICSART_TYPES = [
+  'subscription',
+  'account',
+  'topup',
+  'services',
+  'design',
+  'other',
+];
+
+const PICSART_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  topup: 'Пополнение баланса',
+  services: 'Услуги',
+  design: 'Дизайн',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
