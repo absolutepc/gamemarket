@@ -427,6 +427,21 @@ const ROCKSTAR_LABELS = {
   boosting: 'Буст',
 };
 
+/** Windows */
+const WINDOWS_TYPES = [
+  'license',
+  'software',
+  'other',
+  'services',
+];
+
+const WINDOWS_LABELS = {
+  license: 'Лицензия',
+  software: 'Программное обеспечение',
+  other: 'Другое',
+  services: 'Услуги',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -602,6 +617,12 @@ function isRockstar(name, search = '') {
   );
 }
 
+function isWindows(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'windows' || n.startsWith('windows ') || s.includes('windows');
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -648,6 +669,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isRockstar(item?.name || name, item?.search)) {
     return ROCKSTAR_TYPES;
+  }
+  if (isWindows(item?.name || name, item?.search)) {
+    return WINDOWS_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -703,6 +727,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isAdobe(itemName, itemSearch) && ADOBE_LABELS)
     || (isFaceit(itemName, itemSearch) && FACEIT_LABELS)
     || (isRockstar(itemName, itemSearch) && ROCKSTAR_LABELS)
+    || (isWindows(itemName, itemSearch) && WINDOWS_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)

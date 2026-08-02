@@ -239,6 +239,20 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Individual', 'Team', 'Enterprise', 'Education'],
     },
   ],
+  software: [
+    {
+      key: 'edition',
+      label: 'Редакция',
+      required: false,
+      options: ['Home', 'Pro', 'Enterprise', 'Education', 'Другое'],
+    },
+    {
+      key: 'delivery',
+      label: 'Формат',
+      required: false,
+      options: ['Цифровой ключ', 'ISO / образ', 'Установка', 'Другое'],
+    },
+  ],
   training: [
     {
       key: 'format',

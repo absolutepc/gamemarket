@@ -62,6 +62,7 @@ const LISTING_TYPES = [
   'design',
   'training',
   'license',
+  'software',
   'giftcard',
   'steam_rewards',
   'stars',

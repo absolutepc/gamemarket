@@ -21,6 +21,7 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'design', label: 'Дизайн' },
   { value: 'training', label: 'Обучение' },
   { value: 'license', label: 'Лицензия' },
+  { value: 'software', label: 'Программное обеспечение' },
   { value: 'giftcard', label: 'Подарочные карты' },
   { value: 'steam_rewards', label: 'Награды Steam' },
   // Telegram / social
