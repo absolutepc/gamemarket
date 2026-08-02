@@ -495,6 +495,23 @@ const SPLICE_LABELS = {
   other: 'Другое',
 };
 
+/** GeoGuessr */
+const GEOGUESSR_TYPES = [
+  'subscription',
+  'account',
+  'coins',
+  'services',
+  'other',
+];
+
+const GEOGUESSR_LABELS = {
+  subscription: 'Подписка',
+  account: 'Аккаунты',
+  coins: 'Монеты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1204,6 +1221,16 @@ function isSplice(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'splice' || n.startsWith('splice ') || s.includes('splice');
+}
+
+function isGeoguessr(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'geoguessr'
+    || n.startsWith('geoguessr ')
+    || s.includes('geoguessr')
+  );
 }
 
 function isApple(name, search = '') {
