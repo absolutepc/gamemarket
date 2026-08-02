@@ -517,19 +517,21 @@ export default function CreateListingPage() {
       />
 
       <div className="sticky top-0 lg:top-20 z-40 bg-dark-950/95 backdrop-blur border-b border-dark-800">
-        <div className="max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 h-12 flex items-center gap-2">
-          <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
-            <ChevronLeft size={20} />
-          </button>
-          <h1 className="flex-1 text-center text-[15px] font-semibold truncate">
-            {stepId === 'images' ? `Фото ${images.length}/${MAX_IMAGES}` : STEPS[step].title}
-          </h1>
-          <button type="button" onClick={closeWizard} className="btn-ghost p-2 -mr-2" aria-label="Закрыть">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="h-1 bg-dark-800">
-          <div className="h-full bg-[#2B71F3] transition-all duration-300" style={{ width: `${progress}%` }} />
+        <div className="max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="h-12 flex items-center gap-2">
+            <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
+              <ChevronLeft size={20} />
+            </button>
+            <h1 className="flex-1 text-center text-[15px] font-semibold truncate">
+              {stepId === 'images' ? `Фото ${images.length}/${MAX_IMAGES}` : STEPS[step].title}
+            </h1>
+            <button type="button" onClick={closeWizard} className="btn-ghost p-2 -mr-2" aria-label="Закрыть">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="h-1 bg-dark-800 rounded-full overflow-hidden">
+            <div className="h-full bg-[#2B71F3] transition-all duration-300" style={{ width: `${progress}%` }} />
+          </div>
         </div>
       </div>
 
