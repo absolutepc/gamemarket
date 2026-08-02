@@ -1050,6 +1050,21 @@ const KREA_LABELS = {
   other: 'Другое',
 };
 
+/** Crosshair X */
+const CROSSHAIR_X_TYPES = [
+  'other',
+  'account',
+  'keys',
+  'services',
+];
+
+const CROSSHAIR_X_LABELS = {
+  other: 'Другое',
+  account: 'Аккаунты',
+  keys: 'Ключи',
+  services: 'Услуги',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
