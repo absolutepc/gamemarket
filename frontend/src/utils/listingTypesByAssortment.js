@@ -73,7 +73,6 @@ const GAME_PLATFORM_NAMES = new Set([
   'epic games',
   'nintendo',
   'origin',
-  'ubisoft',
   'gog',
   'riot',
   'valorant',
