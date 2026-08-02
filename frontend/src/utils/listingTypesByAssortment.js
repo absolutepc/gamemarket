@@ -418,6 +418,23 @@ const DESIGN_CATALOG_LABELS = {
   other: 'Другое',
 };
 
+/** Voicemod */
+const VOICEMOD_TYPES = [
+  'keys',
+  'account',
+  'other',
+  'services',
+  'rental',
+];
+
+const VOICEMOD_LABELS = {
+  keys: 'Ключи',
+  account: 'Аккаунты',
+  other: 'Другое',
+  services: 'Услуги',
+  rental: 'Аренда',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1087,6 +1104,12 @@ function isDesignCatalog(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'дизайн' || n.startsWith('дизайн ') || s === 'дизайн';
+}
+
+function isVoicemod(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'voicemod' || n.startsWith('voicemod ') || s.includes('voicemod');
 }
 
 function isApple(name, search = '') {
