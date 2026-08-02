@@ -329,6 +329,23 @@ const NETFLIX_LABELS = {
   other: 'Другое',
 };
 
+/** Chai */
+const CHAI_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const CHAI_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -955,6 +972,18 @@ function isNetflix(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'netflix' || n.startsWith('netflix ') || s.includes('netflix');
+}
+
+function isChai(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'chai'
+    || n === 'chai ai'
+    || n.startsWith('chai ')
+    || s.includes('chai ai')
+    || (s.includes('chai') && s.includes('ai'))
+  );
 }
 
 function isApple(name, search = '') {
