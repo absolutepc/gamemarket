@@ -46,14 +46,6 @@ const STEPS = [
 
 const TAB_ICONS = { games: Gamepad2, mobile: Smartphone, apps: Layers };
 
-const POPULAR_TYPES = [
-  { value: 'donate', label: 'Донат' },
-  { value: 'subscription', label: 'Подписки' },
-  { value: 'topup', label: 'Пополнение' },
-  { value: 'item', label: 'Предметы' },
-  { value: 'account', label: 'Аккаунты' },
-];
-
 const ACCESS_OPTIONS = [
   {
     value: 'full',
@@ -121,6 +113,7 @@ export default function CreateListingPage() {
   const [compressing, setCompressing] = useState(false);
   const [assortmentTab, setAssortmentTab] = useState('games');
   const [assortmentQ, setAssortmentQ] = useState('');
+  const [feeFilterOn, setFeeFilterOn] = useState(false);
   const [accessType, setAccessType] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [productLogin, setProductLogin] = useState('');
@@ -217,6 +210,20 @@ export default function CreateListingPage() {
         || item.search.toLowerCase().includes(query)
     );
   }, [assortmentQ, tabItems, visibleAssortment]);
+
+  /** When 7.5% toggle is on: expand each app into reduced-fee listing types */
+  const expandedFeeOffers = useMemo(() => {
+    if (!feeFilterOn) return [];
+    const offers = [];
+    for (const item of filteredAssortment) {
+      const types = listingTypeOptionsForAssortment(item)
+        .filter((o) => isReducedFeeListingType(o.value));
+      for (const type of types) {
+        offers.push({ item, type });
+      }
+    }
+    return offers;
+  }, [feeFilterOn, filteredAssortment]);
 
   const typeOptions = useMemo(
     () => listingTypeOptionsForAssortment(form.game || selectedGame),
@@ -380,6 +387,19 @@ export default function CreateListingPage() {
     patchForm('game', item.name);
     setStep(1);
     setAssortmentQ('');
+  };
+
+  const pickExpandedOffer = (item, typeValue) => {
+    setForm((prev) => ({
+      ...prev,
+      game: item.name,
+      listing_type: typeValue,
+      category_id: categoryIdForListingType(typeValue, categories) || prev.category_id,
+    }));
+    setAttributes({});
+    setAccessType('');
+    setAssortmentQ('');
+    setStep(2);
   };
 
   const pickType = (value) => {
@@ -548,7 +568,7 @@ export default function CreateListingPage() {
               />
             </div>
 
-            <div className="flex gap-2 overflow-x-auto mb-4" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-2 overflow-x-auto mb-3" style={{ scrollbarWidth: 'none' }}>
               {ASSORTMENT_TABS.map((tab) => {
                 const active = assortmentTab === tab.id;
                 const Icon = TAB_ICONS[tab.id] || Layers;
@@ -569,53 +589,85 @@ export default function CreateListingPage() {
               })}
             </div>
 
-            <div className="flex gap-2 overflow-x-auto mb-5" style={{ scrollbarWidth: 'none' }}>
-              {POPULAR_TYPES.filter((t) => {
-                if (!form.game) return true;
-                return listingTypeOptionsForAssortment(form.game).some((o) => o.value === t.value);
-              }).map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => {
-                    patchForm('listing_type', t.value);
-                  }}
-                  className="relative shrink-0 rounded-full px-3.5 py-2 text-sm bg-dark-900 border border-dark-800 text-dark-200"
-                >
-                  {t.label}
-                  {isReducedFeeListingType(t.value) && (
-                    <span className="absolute -top-1.5 -right-1">
-                      <FeeBadge />
-                    </span>
-                  )}
-                </button>
-              ))}
+            <div className="flex items-center gap-2.5 mb-4 px-0.5">
+              <div className="flex items-center gap-1.5 text-sm text-emerald-400 font-medium">
+                <Tag size={14} />
+                Платёж {formatFeePercent(FEE_REDUCED)}
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={feeFilterOn}
+                aria-label={`Показать типы лотов с комиссией ${formatFeePercent(FEE_REDUCED)}`}
+                onClick={() => setFeeFilterOn((v) => !v)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${
+                  feeFilterOn ? 'bg-[#2B71F3]' : 'bg-dark-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                    feeFilterOn ? 'translate-x-5' : ''
+                  }`}
+                />
+              </button>
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
-              {filteredAssortment.slice(0, 80).map((item) => (
-                <button
-                  key={item.name}
-                  type="button"
-                  onClick={() => pickGame(item)}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10 group-active:scale-95 transition-transform">
-                    <img
-                      src={item.icon || FALLBACK_ICON}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
-                    />
-                  </div>
-                  <span className="text-[11px] text-dark-300 text-center line-clamp-2 leading-tight w-full">
-                    {item.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {!filteredAssortment.length && (
+            {feeFilterOn ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
+                {expandedFeeOffers.slice(0, 240).map(({ item, type }) => (
+                  <button
+                    key={`${item.name}:${type.value}`}
+                    type="button"
+                    onClick={() => pickExpandedOffer(item, type.value)}
+                    className="flex flex-col items-center gap-1 group text-left"
+                  >
+                    <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10 group-active:scale-95 transition-transform">
+                      <img
+                        src={item.icon || FALLBACK_ICON}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
+                      />
+                      <span className="absolute top-0 left-0">
+                        <FeeBadge className="rounded-none rounded-br-md" />
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-white text-center line-clamp-1 leading-tight w-full font-medium">
+                      {item.name}
+                    </span>
+                    <span className="text-[10px] text-dark-400 text-center line-clamp-1 leading-tight w-full">
+                      {type.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
+                {filteredAssortment.slice(0, 80).map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => pickGame(item)}
+                    className="flex flex-col items-center gap-1.5 group"
+                  >
+                    <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10 group-active:scale-95 transition-transform">
+                      <img
+                        src={item.icon || FALLBACK_ICON}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
+                      />
+                    </div>
+                    <span className="text-[11px] text-dark-300 text-center line-clamp-2 leading-tight w-full">
+                      {item.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {!(feeFilterOn ? expandedFeeOffers.length : filteredAssortment.length) && (
               <p className="text-center text-dark-400 text-sm py-10">Ничего не найдено</p>
             )}
           </div>
