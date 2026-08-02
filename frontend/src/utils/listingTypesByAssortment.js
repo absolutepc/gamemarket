@@ -329,6 +329,29 @@ const XBOX_LABELS = {
   ubisoft_plus: 'Ubisoft+',
 };
 
+/** Google Play */
+const GOOGLE_PLAY_TYPES = [
+  'clean_account',
+  'subscription',
+  'giftcard',
+  'games',
+  'region_change',
+  'game_account',
+  'other',
+  'services',
+];
+
+const GOOGLE_PLAY_LABELS = {
+  clean_account: 'Чистые аккаунты',
+  subscription: 'Подписки',
+  giftcard: 'Подарочные карты',
+  games: 'Игры',
+  region_change: 'Смена региона',
+  game_account: 'Аккаунты с играми',
+  other: 'Другое',
+  services: 'Услуги',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -455,6 +478,18 @@ function isXbox(name, search = '') {
   return n === 'xbox' || n.startsWith('xbox ') || s.includes('xbox');
 }
 
+function isGooglePlay(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'google play'
+    || n === 'googleplay'
+    || n.startsWith('google play ')
+    || s.includes('google play')
+    || s.includes('googleplay')
+  );
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -486,6 +521,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isXbox(item?.name || name, item?.search)) {
     return XBOX_TYPES;
+  }
+  if (isGooglePlay(item?.name || name, item?.search)) {
+    return GOOGLE_PLAY_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -535,7 +573,8 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
   const itemSearch = typeof gameOrItem === 'object' ? gameOrItem?.search : '';
   const labelMap =
     (isPlaystation(itemName, itemSearch) && PLAYSTATION_LABELS)
-    || (isXbox(itemName, itemSearch) && XBOX_LABELS)
+    ||     (isXbox(itemName, itemSearch) && XBOX_LABELS)
+    || (isGooglePlay(itemName, itemSearch) && GOOGLE_PLAY_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
