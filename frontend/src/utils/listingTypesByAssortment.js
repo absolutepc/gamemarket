@@ -1444,6 +1444,12 @@ function isOpenrouter(name, search = '') {
   );
 }
 
+function isCanva(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'canva' || n.startsWith('canva ') || s.includes('canva');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1795,6 +1801,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isOpenrouter(item?.name || name, item?.search)) {
     return OPENROUTER_TYPES;
   }
+  if (isCanva(item?.name || name, item?.search)) {
+    return CANVA_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1864,6 +1873,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isJetbrains(itemName, itemSearch) && JETBRAINS_LABELS)
     || (isHiggsfield(itemName, itemSearch) && HIGGSFIELD_LABELS)
     || (isOpenrouter(itemName, itemSearch) && OPENROUTER_LABELS)
+    || (isCanva(itemName, itemSearch) && CANVA_LABELS)
     || null;
 
   return allowed
