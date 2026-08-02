@@ -82,6 +82,11 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'mana', label: 'Мана' },
   // Ahrefs
   { value: 'addons', label: 'Аддоны' },
+  // Discord
+  { value: 'nitro', label: 'Nitro' },
+  { value: 'decorations', label: 'Украшения' },
+  // Nintendo
+  { value: 'nintendo_switch_online', label: 'Nintendo Switch Online' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

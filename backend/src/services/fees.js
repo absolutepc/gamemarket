@@ -2,7 +2,7 @@
  * Lootz fees: Playerok-like tiers, ~2.5% lower.
  * Playerok ~10% / ~20%  →  Lootz 7.5% / 17.5%
  *
- * 7.5%: донат, подписки, пополнение баланса, ключи, скины, игры
+ * 7.5%: донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
  * 17.5%: всё остальное
  */
 
@@ -21,6 +21,16 @@ const REDUCED_LISTING_TYPES = new Set([
   'keys',
   'skins',
   'games',
+  'item',
+  'giftcard',
+  'stars',
+  'nft_gifts',
+  'stickers',
+  'coins',
+  'promotion',
+  'boosting',
+  'game_account',
+  'packs',
   'license',
   'software',
   'ps_plus',
@@ -48,6 +58,9 @@ const REDUCED_LISTING_TYPES = new Set([
   'trovo_ace',
   'mana',
   'addons',
+  'nitro',
+  'decorations',
+  'nintendo_switch_online',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

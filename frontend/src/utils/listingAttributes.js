@@ -601,6 +601,30 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Site Audit', 'Content Explorer', 'Другое'],
     },
   ],
+  nitro: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '1 год'],
+    },
+  ],
+  decorations: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Аватар', 'Баннер', 'Эффект', 'Набор', 'Другое'],
+    },
+  ],
+  nintendo_switch_online: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '12 месяцев', 'Семейный'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

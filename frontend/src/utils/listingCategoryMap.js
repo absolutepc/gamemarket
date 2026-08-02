@@ -70,6 +70,9 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   trovo_ace: 'subscriptions',
   mana: 'topups',
   addons: 'other',
+  nitro: 'subscriptions',
+  decorations: 'other',
+  nintendo_switch_online: 'subscriptions',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

@@ -70,6 +70,9 @@ export const OFFER_PATH_BY_TYPE = {
   trovo_ace: 'trovo-ace',
   mana: 'mana',
   addons: 'addons',
+  nitro: 'nitro',
+  decorations: 'decorations',
+  nintendo_switch_online: 'nintendo-switch-online',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -158,6 +161,9 @@ export function offerTypeLabel(type) {
     trovo_ace: 'Trovo Ace',
     mana: 'ману',
     addons: 'аддоны',
+    nitro: 'Nitro',
+    decorations: 'украшения',
+    nintendo_switch_online: 'Nintendo Switch Online',
   };
   return map[type] || 'товары';
 }

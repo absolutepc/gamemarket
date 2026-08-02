@@ -1,6 +1,6 @@
 /**
  * Lootz fees: like Playerok, but 2.5% lower.
- * 7.5%: донат, подписки, пополнение баланса, ключи, скины, игры
+ * 7.5%: донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
  * 17.5%: всё остальное
  */
 
@@ -19,6 +19,16 @@ export const REDUCED_LISTING_TYPES = new Set([
   'keys',
   'skins',
   'games',
+  'item',
+  'giftcard',
+  'stars',
+  'nft_gifts',
+  'stickers',
+  'coins',
+  'promotion',
+  'boosting',
+  'game_account',
+  'packs',
   'license',
   'software',
   'ps_plus',
@@ -46,6 +56,9 @@ export const REDUCED_LISTING_TYPES = new Set([
   'trovo_ace',
   'mana',
   'addons',
+  'nitro',
+  'decorations',
+  'nintendo_switch_online',
 ]);
 
 export function isReducedFeeListingType(listingType) {
