@@ -631,7 +631,6 @@ const AI_SERVICE_NAMES = new Set([
   'gemini',
   'kimi',
   'perplexity',
-  'нейросети',
   'runway',
   'deepseek',
   'midjourney',
@@ -668,6 +667,16 @@ function isSuno(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'suno' || n.startsWith('suno ') || s.includes('suno');
+}
+
+function isNeiroseti(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'нейросети'
+    || n.startsWith('нейросети ')
+    || s.includes('нейросети')
+  );
 }
 
 function isApple(name, search = '') {
@@ -931,6 +940,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isSuno(item?.name || name, item?.search)) {
     return SUNO_TYPES;
   }
+  if (isNeiroseti(item?.name || name, item?.search)) {
+    return NEIROSETI_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -970,6 +982,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isSpotify(itemName, itemSearch) && SPOTIFY_LABELS)
     || (isSoundcloud(itemName, itemSearch) && SOUNDCLOUD_LABELS)
     || (isSuno(itemName, itemSearch) && SUNO_LABELS)
+    || (isNeiroseti(itemName, itemSearch) && NEIROSETI_LABELS)
     || null;
 
   return allowed
