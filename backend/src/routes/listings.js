@@ -99,6 +99,7 @@ const LISTING_TYPES = [
   'design_packs',
   'mochi',
   'servers',
+  'gold',
   'ps_plus',
   'ea_play',
   'youtube_music',

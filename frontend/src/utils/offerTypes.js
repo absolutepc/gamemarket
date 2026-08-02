@@ -64,6 +64,7 @@ export const OFFER_PATH_BY_TYPE = {
   design_packs: 'design-packs',
   mochi: 'mochi',
   servers: 'servers',
+  gold: 'gold',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -146,6 +147,7 @@ export function offerTypeLabel(type) {
     design_packs: 'паки для дизайна',
     mochi: 'Mochi',
     servers: 'сервера',
+    gold: 'GOLD',
   };
   return map[type] || 'товары';
 }

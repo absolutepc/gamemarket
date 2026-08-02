@@ -943,6 +943,23 @@ const OBS_STUDIO_LABELS = {
   account: 'Аккаунты',
 };
 
+/** Clip Studio Paint */
+const CLIP_STUDIO_PAINT_TYPES = [
+  'other',
+  'keys',
+  'subscription',
+  'gold',
+  'services',
+];
+
+const CLIP_STUDIO_PAINT_LABELS = {
+  other: 'Другое',
+  keys: 'Ключи',
+  subscription: 'Подписки',
+  gold: 'GOLD',
+  services: 'Услуги',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1890,6 +1907,17 @@ function isObsStudio(name, search = '') {
   );
 }
 
+function isClipStudioPaint(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'clip studio paint'
+    || n === 'clip studio'
+    || n.startsWith('clip studio ')
+    || s.includes('clip studio')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2298,6 +2326,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isObsStudio(item?.name || name, item?.search)) {
     return OBS_STUDIO_TYPES;
   }
+  if (isClipStudioPaint(item?.name || name, item?.search)) {
+    return CLIP_STUDIO_PAINT_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2386,6 +2417,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isDzen(itemName, itemSearch) && DZEN_LABELS)
     || (isAbleton(itemName, itemSearch) && ABLETON_LABELS)
     || (isObsStudio(itemName, itemSearch) && OBS_STUDIO_LABELS)
+    || (isClipStudioPaint(itemName, itemSearch) && CLIP_STUDIO_PAINT_LABELS)
     || null;
 
   return allowed

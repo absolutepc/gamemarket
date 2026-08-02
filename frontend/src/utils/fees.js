@@ -41,6 +41,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'plugins',
   'zems',
   'mochi',
+  'gold',
 ]);
 
 export function isReducedFeeListingType(listingType) {

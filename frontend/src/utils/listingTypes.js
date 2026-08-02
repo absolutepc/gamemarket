@@ -72,6 +72,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'mochi', label: 'Mochi' },
   // TeamSpeak
   { value: 'servers', label: 'Сервера' },
+  // Clip Studio Paint
+  { value: 'gold', label: 'GOLD' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },
