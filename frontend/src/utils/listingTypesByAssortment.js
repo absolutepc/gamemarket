@@ -787,6 +787,21 @@ const PICSART_LABELS = {
   other: 'Другое',
 };
 
+/** n8n */
+const N8N_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const N8N_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
