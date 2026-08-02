@@ -1592,6 +1592,12 @@ function isEpicGames(name, search = '') {
   );
 }
 
+function isNotion(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'notion' || n.startsWith('notion ') || s.includes('notion');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1961,6 +1967,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isEpicGames(item?.name || name, item?.search)) {
     return EPIC_GAMES_TYPES;
   }
+  if (isNotion(item?.name || name, item?.search)) {
+    return NOTION_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2036,6 +2045,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isLagofast(itemName, itemSearch) && LAGOFAST_LABELS)
     || (isLovable(itemName, itemSearch) && LOVABLE_LABELS)
     || (isEpicGames(itemName, itemSearch) && EPIC_GAMES_LABELS)
+    || (isNotion(itemName, itemSearch) && NOTION_LABELS)
     || null;
 
   return allowed
