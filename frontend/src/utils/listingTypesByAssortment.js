@@ -1208,6 +1208,19 @@ const GEFORCE_NOW_LABELS = {
   other: 'Другое',
 };
 
+/** Хостинг */
+const HOSTING_TYPES = [
+  'topup',
+  'services',
+  'other',
+];
+
+const HOSTING_LABELS = {
+  topup: 'Пополнение баланса',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2300,6 +2313,13 @@ function isGeforceNow(name, search = '') {
   );
 }
 
+function isHosting(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'хостинг' || n.startsWith('хостинг ') || s.includes('хостинг')
+    || n === 'hosting' || n.startsWith('hosting ') || s.includes('hosting');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2759,6 +2779,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isGeforceNow(item?.name || name, item?.search)) {
     return GEFORCE_NOW_TYPES;
   }
+  if (isHosting(item?.name || name, item?.search)) {
+    return HOSTING_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2864,6 +2887,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isMimo(itemName, itemSearch) && MIMO_LABELS)
     || (isYappy(itemName, itemSearch) && YAPPY_LABELS)
     || (isGeforceNow(itemName, itemSearch) && GEFORCE_NOW_LABELS)
+    || (isHosting(itemName, itemSearch) && HOSTING_LABELS)
     || null;
 
   return allowed
