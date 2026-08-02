@@ -72,7 +72,6 @@ const GAME_PLATFORM_TYPES = [
 const GAME_PLATFORM_NAMES = new Set([
   'epic games',
   'nintendo',
-  'battle.net',
   'rockstar games',
   'ea play',
   'faceit',
@@ -352,6 +351,25 @@ const GOOGLE_PLAY_LABELS = {
   services: 'Услуги',
 };
 
+/** Battle.net */
+const BATTLENET_TYPES = [
+  'topup',
+  'games',
+  'region_change',
+  'game_account',
+  'services',
+  'other',
+];
+
+const BATTLENET_LABELS = {
+  topup: 'Пополнение баланса',
+  games: 'Игры',
+  region_change: 'Смена региона',
+  game_account: 'Аккаунты с играми',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -490,6 +508,20 @@ function isGooglePlay(name, search = '') {
   );
 }
 
+function isBattlenet(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'battle.net'
+    || n === 'battlenet'
+    || n === 'battle net'
+    || n.startsWith('battle.net ')
+    || n.startsWith('battlenet ')
+    || s.includes('battle.net')
+    || s.includes('battlenet')
+  );
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -524,6 +556,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isGooglePlay(item?.name || name, item?.search)) {
     return GOOGLE_PLAY_TYPES;
+  }
+  if (isBattlenet(item?.name || name, item?.search)) {
+    return BATTLENET_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -575,6 +610,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     (isPlaystation(itemName, itemSearch) && PLAYSTATION_LABELS)
     ||     (isXbox(itemName, itemSearch) && XBOX_LABELS)
     || (isGooglePlay(itemName, itemSearch) && GOOGLE_PLAY_LABELS)
+    || (isBattlenet(itemName, itemSearch) && BATTLENET_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
