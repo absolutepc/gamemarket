@@ -280,6 +280,23 @@ const GEARUP_LABELS = {
   other: 'Другое',
 };
 
+/** PolyBuzz */
+const POLYBUZZ_TYPES = [
+  'subscription',
+  'coins',
+  'account',
+  'services',
+  'other',
+];
+
+const POLYBUZZ_LABELS = {
+  subscription: 'Подписки',
+  coins: 'Монеты',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -881,6 +898,18 @@ function isGearup(name, search = '') {
     || n.startsWith('gear up ')
     || s.includes('gearup')
     || s.includes('gear up')
+  );
+}
+
+function isPolybuzz(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'polybuzz'
+    || n === 'poly buzz'
+    || n.startsWith('polybuzz ')
+    || s.includes('polybuzz')
+    || s.includes('poly buzz')
   );
 }
 
