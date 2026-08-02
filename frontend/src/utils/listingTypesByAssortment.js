@@ -1336,6 +1336,18 @@ function isFigma(name, search = '') {
   return n === 'figma' || n.startsWith('figma ') || s.includes('figma');
 }
 
+function isTradingview(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'tradingview'
+    || n === 'trading view'
+    || n.startsWith('tradingview ')
+    || s.includes('tradingview')
+    || s.includes('trading view')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1675,6 +1687,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isFigma(item?.name || name, item?.search)) {
     return FIGMA_TYPES;
   }
+  if (isTradingview(item?.name || name, item?.search)) {
+    return TRADINGVIEW_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1740,6 +1755,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isEmochi(itemName, itemSearch) && EMOCHI_LABELS)
     || (isSnapchat(itemName, itemSearch) && SNAPCHAT_LABELS)
     || (isFigma(itemName, itemSearch) && FIGMA_LABELS)
+    || (isTradingview(itemName, itemSearch) && TRADINGVIEW_LABELS)
     || null;
 
   return allowed
