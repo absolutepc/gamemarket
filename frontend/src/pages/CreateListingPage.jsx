@@ -613,13 +613,13 @@ export default function CreateListingPage() {
             </div>
 
             {feeFilterOn ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
                 {expandedFeeOffers.slice(0, 240).map(({ item, type }) => (
                   <button
                     key={`${item.name}:${type.value}`}
                     type="button"
                     onClick={() => pickExpandedOffer(item, type.value)}
-                    className="flex flex-col items-center gap-1 group text-left"
+                    className="flex flex-col items-center gap-1.5 group text-left"
                   >
                     <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10 group-active:scale-95 transition-transform">
                       <img
