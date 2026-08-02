@@ -527,6 +527,23 @@ const MESHY_LABELS = {
   other: 'Другое',
 };
 
+/** Emochi */
+const EMOCHI_TYPES = [
+  'subscription',
+  'mochi',
+  'account',
+  'services',
+  'other',
+];
+
+const EMOCHI_LABELS = {
+  subscription: 'Подписки',
+  mochi: 'Mochi',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1254,6 +1271,12 @@ function isMeshy(name, search = '') {
   return n === 'meshy' || n.startsWith('meshy ') || s.includes('meshy');
 }
 
+function isEmochi(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'emochi' || n.startsWith('emochi ') || s.includes('emochi');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1584,6 +1607,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isMeshy(item?.name || name, item?.search)) {
     return MESHY_TYPES;
   }
+  if (isEmochi(item?.name || name, item?.search)) {
+    return EMOCHI_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1646,6 +1672,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isSplice(itemName, itemSearch) && SPLICE_LABELS)
     || (isGeoguessr(itemName, itemSearch) && GEOGUESSR_LABELS)
     || (isMeshy(itemName, itemSearch) && MESHY_LABELS)
+    || (isEmochi(itemName, itemSearch) && EMOCHI_LABELS)
     || null;
 
   return allowed

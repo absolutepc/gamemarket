@@ -537,6 +537,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Шрифты', 'Текстуры', 'Иконки', 'Шаблоны', 'Микс', 'Другое'],
     },
   ],
+  mochi: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

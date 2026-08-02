@@ -97,6 +97,7 @@ const LISTING_TYPES = [
   'product_design',
   'images',
   'design_packs',
+  'mochi',
   'ps_plus',
   'ea_play',
   'youtube_music',

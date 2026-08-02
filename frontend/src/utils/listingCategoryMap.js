@@ -62,6 +62,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   product_design: 'other',
   images: 'other',
   design_packs: 'items',
+  mochi: 'topups',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
