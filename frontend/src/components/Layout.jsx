@@ -24,9 +24,8 @@ export default function Layout() {
   const [search, setSearch] = useState('');
   const listingDetail = isListingDetailPath(pathname);
   const listingWizard = isListingWizardPath(pathname);
-  // Mobile product page uses its own sticky bar; desktop keeps global nav (Playerok-style)
-  const hideHeaderMobile = listingDetail;
-  const hideChrome = listingWizard;
+  // Product detail + sell wizard: hide site header on mobile only (desktop keeps Playerok-style nav)
+  const hideHeaderMobile = listingDetail || listingWizard;
 
   useEffect(() => {
     if (accessToken) hydrateUser();
@@ -40,7 +39,6 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       <BrandJsonLd />
-      {!hideChrome && (
       <header
         className={`sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl border-b border-dark-800 ${
           hideHeaderMobile ? 'hidden lg:block' : ''
@@ -126,10 +124,9 @@ export default function Layout() {
           </form>
         </div>
       </header>
-      )}
 
       <main className={
-        hideChrome
+        listingWizard
           ? 'flex-1'
           : listingDetail
             ? 'flex-1 pb-8 lg:pb-0'
@@ -138,7 +135,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      {!hideChrome && (
+      {!listingWizard && (
         <>
           <div className={`pb-24 lg:pb-0 ${listingDetail ? '[&>footer]:mt-6' : ''}`}>
             <Footer />

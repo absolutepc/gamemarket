@@ -516,7 +516,7 @@ export default function CreateListingPage() {
         noindex
       />
 
-      <div className="sticky top-0 z-40 bg-dark-950/95 backdrop-blur border-b border-dark-800">
+      <div className="sticky top-0 lg:top-20 z-40 bg-dark-950/95 backdrop-blur border-b border-dark-800">
         <div className="max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 h-12 flex items-center gap-2">
           <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
             <ChevronLeft size={20} />
