@@ -1959,6 +1959,17 @@ function isCrunchyroll(name, search = '') {
   );
 }
 
+function isTangoLive(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'tango live'
+    || n === 'tango'
+    || n.startsWith('tango live ')
+    || s.includes('tango live')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2373,6 +2384,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isCrunchyroll(item?.name || name, item?.search)) {
     return CRUNCHYROLL_TYPES;
   }
+  if (isTangoLive(item?.name || name, item?.search)) {
+    return TANGO_LIVE_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2463,6 +2477,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isObsStudio(itemName, itemSearch) && OBS_STUDIO_LABELS)
     || (isClipStudioPaint(itemName, itemSearch) && CLIP_STUDIO_PAINT_LABELS)
     || (isCrunchyroll(itemName, itemSearch) && CRUNCHYROLL_LABELS)
+    || (isTangoLive(itemName, itemSearch) && TANGO_LIVE_LABELS)
     || null;
 
   return allowed
