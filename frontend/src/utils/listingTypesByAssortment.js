@@ -363,6 +363,27 @@ const ZOOM_LABELS = {
   other: 'Другое',
 };
 
+/** ZEPETO */
+const ZEPETO_TYPES = [
+  'zems',
+  'account',
+  'packs',
+  'services',
+  'other',
+  'coins',
+  'rental',
+];
+
+const ZEPETO_LABELS = {
+  zems: 'Земы',
+  account: 'Аккаунты',
+  packs: 'Наборы',
+  services: 'Услуги',
+  other: 'Другое',
+  coins: 'Монеты',
+  rental: 'Аренда',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1009,6 +1030,19 @@ function isZoom(name, search = '') {
   return n === 'zoom' || n.startsWith('zoom ') || s.includes('zoom');
 }
 
+function isZepeto(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'zepeto'
+    || n === 'zapeto'
+    || n.startsWith('zepeto ')
+    || n.startsWith('zapeto ')
+    || s.includes('zepeto')
+    || s.includes('zapeto')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1309,6 +1343,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isZoom(item?.name || name, item?.search)) {
     return ZOOM_TYPES;
   }
+  if (isZepeto(item?.name || name, item?.search)) {
+    return ZEPETO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1361,6 +1398,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isNetflix(itemName, itemSearch) && NETFLIX_LABELS)
     || (isChai(itemName, itemSearch) && CHAI_LABELS)
     || (isZoom(itemName, itemSearch) && ZOOM_LABELS)
+    || (isZepeto(itemName, itemSearch) && ZEPETO_LABELS)
     || null;
 
   return allowed

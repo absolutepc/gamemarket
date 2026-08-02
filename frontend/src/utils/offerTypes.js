@@ -57,6 +57,8 @@ export const OFFER_PATH_BY_TYPE = {
   promocodes: 'promocodes',
   plugins: 'plugins',
   guides: 'guides',
+  zems: 'zems',
+  packs: 'packs',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -132,6 +134,8 @@ export function offerTypeLabel(type) {
     promocodes: 'промокоды',
     plugins: 'плагины',
     guides: 'руководства',
+    zems: 'земы',
+    packs: 'наборы',
   };
   return map[type] || 'товары';
 }

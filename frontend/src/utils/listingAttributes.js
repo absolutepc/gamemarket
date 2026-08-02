@@ -497,6 +497,22 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['PDF', 'Видео', 'Статья', 'Другое'],
     },
   ],
+  zems: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
+  packs: [
+    {
+      key: 'pack_type',
+      label: 'Тип набора',
+      required: false,
+      options: ['Одежда', 'Аксессуары', 'Микс', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

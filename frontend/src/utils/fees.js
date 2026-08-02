@@ -39,6 +39,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'beans',
   'promocodes',
   'plugins',
+  'zems',
 ]);
 
 export function isReducedFeeListingType(listingType) {

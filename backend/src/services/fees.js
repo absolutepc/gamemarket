@@ -41,6 +41,7 @@ const REDUCED_LISTING_TYPES = new Set([
   'beans',
   'promocodes',
   'plugins',
+  'zems',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

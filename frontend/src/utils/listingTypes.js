@@ -61,6 +61,9 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'plugins', label: 'Плагины' },
   // Zoom
   { value: 'guides', label: 'Руководства' },
+  // ZEPETO
+  { value: 'zems', label: 'Земы' },
+  { value: 'packs', label: 'Наборы' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

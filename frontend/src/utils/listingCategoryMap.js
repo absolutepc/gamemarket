@@ -57,6 +57,8 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   promocodes: 'gift-cards',
   plugins: 'other',
   guides: 'other',
+  zems: 'topups',
+  packs: 'items',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

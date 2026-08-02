@@ -92,6 +92,8 @@ const LISTING_TYPES = [
   'promocodes',
   'plugins',
   'guides',
+  'zems',
+  'packs',
   'ps_plus',
   'ea_play',
   'youtube_music',
