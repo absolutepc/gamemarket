@@ -1613,6 +1613,18 @@ function isNotion(name, search = '') {
   return n === 'notion' || n.startsWith('notion ') || s.includes('notion');
 }
 
+function isPhotoroom(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'photoroom'
+    || n === 'photo room'
+    || n.startsWith('photoroom ')
+    || s.includes('photoroom')
+    || s.includes('photo room')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1985,6 +1997,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isNotion(item?.name || name, item?.search)) {
     return NOTION_TYPES;
   }
+  if (isPhotoroom(item?.name || name, item?.search)) {
+    return PHOTOROOM_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2061,6 +2076,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isLovable(itemName, itemSearch) && LOVABLE_LABELS)
     || (isEpicGames(itemName, itemSearch) && EPIC_GAMES_LABELS)
     || (isNotion(itemName, itemSearch) && NOTION_LABELS)
+    || (isPhotoroom(itemName, itemSearch) && PHOTOROOM_LABELS)
     || null;
 
   return allowed
