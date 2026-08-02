@@ -866,6 +866,23 @@ const WALLPAPER_ENGINE_LABELS = {
   keys: 'Ключи',
 };
 
+/** TeamSpeak */
+const TEAMSPEAK_TYPES = [
+  'servers',
+  'other',
+  'account',
+  'guides',
+  'services',
+];
+
+const TEAMSPEAK_LABELS = {
+  servers: 'Сервера',
+  other: 'Другое',
+  account: 'Аккаунты',
+  guides: 'Руководства',
+  services: 'Услуги',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1772,6 +1789,18 @@ function isWallpaperEngine(name, search = '') {
   );
 }
 
+function isTeamspeak(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'teamspeak'
+    || n === 'team speak'
+    || n.startsWith('teamspeak ')
+    || s.includes('teamspeak')
+    || s.includes('team speak')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2165,6 +2194,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isWallpaperEngine(item?.name || name, item?.search)) {
     return WALLPAPER_ENGINE_TYPES;
   }
+  if (isTeamspeak(item?.name || name, item?.search)) {
+    return TEAMSPEAK_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2248,6 +2280,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isTripo(itemName, itemSearch) && TRIPO_LABELS)
     || (isPixverse(itemName, itemSearch) && PIXVERSE_LABELS)
     || (isWallpaperEngine(itemName, itemSearch) && WALLPAPER_ENGINE_LABELS)
+    || (isTeamspeak(itemName, itemSearch) && TEAMSPEAK_LABELS)
     || null;
 
   return allowed

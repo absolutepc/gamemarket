@@ -70,6 +70,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'design_packs', label: 'Паки для дизайна' },
   // Emochi
   { value: 'mochi', label: 'Mochi' },
+  // TeamSpeak
+  { value: 'servers', label: 'Сервера' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

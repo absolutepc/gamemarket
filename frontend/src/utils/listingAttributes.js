@@ -545,6 +545,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['100', '500', '1000', '5000', '10000', 'Другое'],
     },
   ],
+  servers: [
+    {
+      key: 'slots',
+      label: 'Слоты',
+      required: false,
+      options: ['8', '16', '32', '64', '128', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',
