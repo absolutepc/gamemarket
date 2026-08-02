@@ -115,6 +115,14 @@ const AI_SERVICE_TYPES = [
   'other',
 ];
 
+/** DeepSeek: вместо подписки — пополнение баланса */
+const DEEPSEEK_TYPES = [
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
@@ -146,6 +154,12 @@ function normalizeName(name) {
     .trim();
 }
 
+function isDeepSeek(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'deepseek' || n.startsWith('deepseek ') || s.includes('deepseek');
+}
+
 function isAiService(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -167,6 +181,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
 
   if (GAME_PLATFORM_NAMES.has(name) || [...GAME_PLATFORM_NAMES].some((n) => name.includes(n))) {
     return GAME_PLATFORM_TYPES;
+  }
+  if (isDeepSeek(item?.name || name, item?.search)) {
+    return DEEPSEEK_TYPES;
   }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
