@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lootz">
+  <rect width="64" height="64" rx="14" fill="#2B71F3"/>
+  <!-- Bold white L -->
+  <path fill="#ffffff" d="M20 14h10.5v27.5H44V52H20V14z"/>
+</svg>
