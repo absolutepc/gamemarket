@@ -2295,6 +2295,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isAbleton(item?.name || name, item?.search)) {
     return ABLETON_TYPES;
   }
+  if (isObsStudio(item?.name || name, item?.search)) {
+    return OBS_STUDIO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2382,6 +2385,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isSoundpad(itemName, itemSearch) && SOUNDPAD_LABELS)
     || (isDzen(itemName, itemSearch) && DZEN_LABELS)
     || (isAbleton(itemName, itemSearch) && ABLETON_LABELS)
+    || (isObsStudio(itemName, itemSearch) && OBS_STUDIO_LABELS)
     || null;
 
   return allowed
