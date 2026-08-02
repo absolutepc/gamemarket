@@ -132,6 +132,32 @@ const KLING_TYPES = [
   'topup',
 ];
 
+/**
+ * Apple — разделы как на Playerok.
+ * Порядок важен: так показываем в визарде.
+ */
+const APPLE_TYPES = [
+  'giftcard',
+  'game_account',
+  'subscription',
+  'clean_account',
+  'other',
+  'services',
+  'region_change',
+  'rental',
+];
+
+const APPLE_LABELS = {
+  giftcard: 'Подарочные карты',
+  game_account: 'Аккаунты с играми',
+  subscription: 'Подписки',
+  clean_account: 'Чистые аккаунты',
+  other: 'Другое',
+  services: 'Услуги',
+  region_change: 'Смена региона',
+  rental: 'Аренда',
+};
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
@@ -176,6 +202,12 @@ function isKling(name, search = '') {
   return n === 'kling' || n.startsWith('kling ') || s.includes('kling');
 }
 
+function isApple(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'apple' || n.startsWith('apple ') || s.includes('apple') || n === 'app store';
+}
+
 function isAiService(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -186,6 +218,7 @@ function isAiService(name, search = '') {
 
 /**
  * Returns listing type values allowed for a selected assortment name/item.
+ * Order is preserved for UI.
  */
 export function allowedListingTypesForAssortment(gameOrItem) {
   const item = typeof gameOrItem === 'string'
@@ -195,6 +228,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   const name = normalizeName(item?.name || gameOrItem);
   const kind = item?.kind || 'app';
 
+  if (isApple(item?.name || name, item?.search)) {
+    return APPLE_TYPES;
+  }
   if (GAME_PLATFORM_NAMES.has(name) || [...GAME_PLATFORM_NAMES].some((n) => name.includes(n))) {
     return GAME_PLATFORM_TYPES;
   }
@@ -214,11 +250,19 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   return TYPES_BY_KIND[kind] || TYPES_BY_KIND.app;
 }
 
-/** LISTING_TYPE_OPTIONS filtered for the selected game/app */
-export function listingTypeOptionsForAssortment(gameOrItem, { includeGiftcard = false } = {}) {
-  const allowed = new Set(allowedListingTypesForAssortment(gameOrItem));
-  return LISTING_TYPE_OPTIONS.filter((o) => {
-    if (o.value === 'giftcard') return includeGiftcard;
-    return allowed.has(o.value);
-  });
+/** LISTING_TYPE_OPTIONS filtered for the selected game/app (keeps allowed order) */
+export function listingTypeOptionsForAssortment(gameOrItem) {
+  const allowed = allowedListingTypesForAssortment(gameOrItem);
+  const byValue = Object.fromEntries(LISTING_TYPE_OPTIONS.map((o) => [o.value, o]));
+  const apple = isApple(
+    typeof gameOrItem === 'string' ? gameOrItem : gameOrItem?.name,
+    typeof gameOrItem === 'object' ? gameOrItem?.search : ''
+  );
+
+  return allowed
+    .filter((value) => Boolean(byValue[value]))
+    .map((value) => ({
+      value,
+      label: (apple && APPLE_LABELS[value]) || byValue[value].label,
+    }));
 }

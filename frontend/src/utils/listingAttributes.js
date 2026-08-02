@@ -45,6 +45,20 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['С почтой', 'Без почты', 'Смена почты возможна'],
     },
   ],
+  clean_account: [
+    {
+      key: 'platform',
+      label: 'Платформа',
+      required: true,
+      options: ['Apple ID', 'iCloud', 'App Store', 'Другое'],
+    },
+    {
+      key: 'email_access',
+      label: 'Почта',
+      required: true,
+      options: ['С почтой', 'Без почты', 'Смена почты возможна'],
+    },
+  ],
   game_account: [
     {
       key: 'platform',
@@ -179,6 +193,20 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       label: 'Срок аренды',
       required: true,
       options: ['1 час', '6 часов', '1 день', '3 дня', '7 дней', '30 дней'],
+    },
+  ],
+  region_change: [
+    {
+      key: 'from_region',
+      label: 'Текущий регион',
+      required: false,
+      options: ['RU', 'US', 'EU', 'TR', 'KZ', 'Другое'],
+    },
+    {
+      key: 'to_region',
+      label: 'Новый регион',
+      required: true,
+      options: ['RU', 'US', 'EU', 'TR', 'KZ', 'Другое'],
     },
   ],
   mods: [

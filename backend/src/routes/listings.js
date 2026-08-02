@@ -50,16 +50,17 @@ const LISTING_TYPES = [
   'other',
   'currency',
   'game_account',
+  'clean_account',
   'boosting',
   'services',
   'skins',
   'games',
   'media',
   'rental',
+  'region_change',
   'mods',
   'design',
   'training',
-  // legacy values kept for existing listings
   'giftcard',
 ];
 

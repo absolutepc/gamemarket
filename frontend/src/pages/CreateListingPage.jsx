@@ -107,7 +107,7 @@ function ChipGroup({ label, options, value, onChange }) {
 }
 
 function needsAccessType(listingType) {
-  return ['account', 'game_account', 'subscription', 'rental'].includes(listingType);
+  return ['account', 'game_account', 'clean_account', 'subscription', 'rental'].includes(listingType);
 }
 
 export default function CreateListingPage() {
@@ -220,12 +220,10 @@ export default function CreateListingPage() {
   }, [assortmentQ, tabItems, visibleAssortment]);
 
   const typeOptions = useMemo(() => {
-    const forGame = listingTypeOptionsForAssortment(form.game || selectedGame, {
-      includeGiftcard: isEdit,
-    });
+    const forGame = listingTypeOptionsForAssortment(form.game || selectedGame);
     if (!feeFilterOn) return forGame;
     return forGame.filter((o) => isReducedFeeListingType(o.value));
-  }, [feeFilterOn, isEdit, form.game, selectedGame]);
+  }, [feeFilterOn, form.game, selectedGame]);
 
   const patchForm = (key, value) => {
     setForm((prev) => {
@@ -242,13 +240,13 @@ export default function CreateListingPage() {
   // Drop preselected type if it is not valid for the chosen game/app
   useEffect(() => {
     if (!form.game || !form.listing_type) return;
-    const allowed = listingTypeOptionsForAssortment(form.game, { includeGiftcard: isEdit });
+    const allowed = listingTypeOptionsForAssortment(form.game);
     if (!allowed.some((o) => o.value === form.listing_type)) {
       setForm((prev) => ({ ...prev, listing_type: '', category_id: '' }));
       setAttributes({});
       setAccessType('');
     }
-  }, [form.game, form.listing_type, isEdit]);
+  }, [form.game, form.listing_type]);
 
   const mutation = useMutation({
     mutationFn: (data) => (isEdit ? api.put(`/listings/${id}`, data) : api.post('/listings', data)),

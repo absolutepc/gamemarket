@@ -9,15 +9,18 @@ export const OFFER_PATH_BY_TYPE = {
   other: 'other',
   currency: 'currency',
   game_account: 'game-accounts',
+  clean_account: 'clean-accounts',
   boosting: 'boosting',
   services: 'services',
   skins: 'skins',
   games: 'games',
   media: 'media',
   rental: 'rental',
+  region_change: 'region-change',
   mods: 'mods',
   design: 'design',
   training: 'training',
+  giftcard: 'gift-cards',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -45,15 +48,18 @@ export function offerTypeLabel(type) {
     other: 'товары',
     currency: 'игровую валюту',
     game_account: 'аккаунты с играми',
+    clean_account: 'чистые аккаунты',
     boosting: 'бусты',
     services: 'услуги',
     skins: 'скины',
     games: 'игры',
     media: 'медиа',
     rental: 'аренду',
+    region_change: 'смену региона',
     mods: 'моды',
     design: 'дизайн',
     training: 'обучение',
+    giftcard: 'подарочные карты',
   };
   return map[type] || 'товары';
 }
