@@ -544,6 +544,23 @@ const EMOCHI_LABELS = {
   other: 'Другое',
 };
 
+/** Snapchat */
+const SNAPCHAT_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+  'advertising',
+];
+
+const SNAPCHAT_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+  advertising: 'Реклама',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1275,6 +1292,12 @@ function isEmochi(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'emochi' || n.startsWith('emochi ') || s.includes('emochi');
+}
+
+function isSnapchat(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'snapchat' || n.startsWith('snapchat ') || s.includes('snapchat');
 }
 
 function isApple(name, search = '') {
