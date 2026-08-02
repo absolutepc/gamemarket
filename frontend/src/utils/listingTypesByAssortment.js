@@ -2178,7 +2178,8 @@ function isKick(name, search = '') {
 function isUdio(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
-  return n === 'udio' || n.startsWith('udio ') || s.includes('udio');
+  // Exact / prefix only — "udio" is a substring of "studio"
+  return n === 'udio' || n.startsWith('udio ') || s === 'udio' || s.startsWith('udio ');
 }
 
 function isApple(name, search = '') {
