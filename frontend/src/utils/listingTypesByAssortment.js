@@ -1005,6 +1005,21 @@ const RUNWAY_LABELS = {
   other: 'Другое',
 };
 
+/** Bandicam */
+const BANDICAM_TYPES = [
+  'other',
+  'services',
+  'account',
+  'subscription',
+];
+
+const BANDICAM_LABELS = {
+  other: 'Другое',
+  services: 'Услуги',
+  account: 'Аккаунты',
+  subscription: 'Подписка',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
