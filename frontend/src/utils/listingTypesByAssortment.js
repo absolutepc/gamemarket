@@ -1644,6 +1644,12 @@ function isPhotoroom(name, search = '') {
   );
 }
 
+function isPicsart(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'picsart' || n.startsWith('picsart ') || s.includes('picsart');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2019,6 +2025,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isPhotoroom(item?.name || name, item?.search)) {
     return PHOTOROOM_TYPES;
   }
+  if (isPicsart(item?.name || name, item?.search)) {
+    return PICSART_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2096,6 +2105,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isEpicGames(itemName, itemSearch) && EPIC_GAMES_LABELS)
     || (isNotion(itemName, itemSearch) && NOTION_LABELS)
     || (isPhotoroom(itemName, itemSearch) && PHOTOROOM_LABELS)
+    || (isPicsart(itemName, itemSearch) && PICSART_LABELS)
     || null;
 
   return allowed
