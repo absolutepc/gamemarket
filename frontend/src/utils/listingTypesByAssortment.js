@@ -883,6 +883,21 @@ const TEAMSPEAK_LABELS = {
   services: 'Услуги',
 };
 
+/** Soundpad */
+const SOUNDPAD_TYPES = [
+  'other',
+  'keys',
+  'account',
+  'services',
+];
+
+const SOUNDPAD_LABELS = {
+  other: 'Другое',
+  keys: 'Ключи',
+  account: 'Аккаунты',
+  services: 'Услуги',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1799,6 +1814,12 @@ function isTeamspeak(name, search = '') {
     || s.includes('teamspeak')
     || s.includes('team speak')
   );
+}
+
+function isSoundpad(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'soundpad' || n.startsWith('soundpad ') || s.includes('soundpad');
 }
 
 function isApple(name, search = '') {
