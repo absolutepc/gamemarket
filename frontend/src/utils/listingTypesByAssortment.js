@@ -2589,6 +2589,12 @@ function isImazing(name, search = '') {
   return n === 'imazing' || n.startsWith('imazing ') || s.includes('imazing');
 }
 
+function isRecraft(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'recraft' || n.startsWith('recraft ') || s.includes('recraft');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -3084,6 +3090,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isImazing(item?.name || name, item?.search)) {
     return IMAZING_TYPES;
   }
+  if (isRecraft(item?.name || name, item?.search)) {
+    return RECRAFT_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -3201,6 +3210,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isManus(itemName, itemSearch) && MANUS_LABELS)
     || (isAhrefs(itemName, itemSearch) && AHREFS_LABELS)
     || (isImazing(itemName, itemSearch) && IMAZING_LABELS)
+    || (isRecraft(itemName, itemSearch) && RECRAFT_LABELS)
     || null;
 
   return allowed
