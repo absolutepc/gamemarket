@@ -1539,6 +1539,12 @@ function isLagofast(name, search = '') {
   );
 }
 
+function isLovable(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'lovable' || n.startsWith('lovable ') || s.includes('lovable');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1901,6 +1907,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isLagofast(item?.name || name, item?.search)) {
     return LAGOFAST_TYPES;
+  }
+  if (isLovable(item?.name || name, item?.search)) {
+    return LOVABLE_TYPES;
   }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
