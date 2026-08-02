@@ -138,6 +138,23 @@ const SUNO_LABELS = {
   other: 'Другое',
 };
 
+/** Нейросети (общий каталог) */
+const NEIROSETI_TYPES = [
+  'subscription',
+  'other',
+  'account',
+  'services',
+  'topup',
+];
+
+const NEIROSETI_LABELS = {
+  subscription: 'Подписка',
+  other: 'Другое',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  topup: 'Пополнение баланса',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
