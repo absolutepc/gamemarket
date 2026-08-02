@@ -928,6 +928,21 @@ const ABLETON_LABELS = {
   other: 'Другое',
 };
 
+/** OBS Studio */
+const OBS_STUDIO_TYPES = [
+  'other',
+  'guides',
+  'services',
+  'account',
+];
+
+const OBS_STUDIO_LABELS = {
+  other: 'Другое',
+  guides: 'Руководства',
+  services: 'Услуги',
+  account: 'Аккаунты',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1862,6 +1877,17 @@ function isAbleton(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'ableton' || n.startsWith('ableton ') || s.includes('ableton');
+}
+
+function isObsStudio(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'obs studio'
+    || n === 'obs'
+    || n.startsWith('obs studio ')
+    || s.includes('obs studio')
+  );
 }
 
 function isApple(name, search = '') {
