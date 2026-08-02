@@ -40,9 +40,9 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       <BrandJsonLd />
       <header
-        className={`sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl border-b border-dark-800 ${
-          hideHeaderMobile ? 'hidden lg:block' : ''
-        }`}
+        className={`sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl ${
+          listingWizard ? '' : 'border-b border-dark-800'
+        } ${hideHeaderMobile ? 'hidden lg:block' : ''}`}
       >
         <div className={`${PAGE_WIDTH_CLASS} py-3.5 lg:py-0 lg:h-20 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5`}>
           {/* Top row: brand + theme; actions on the right */}

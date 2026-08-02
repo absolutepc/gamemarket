@@ -516,7 +516,7 @@ export default function CreateListingPage() {
         noindex
       />
 
-      <div className="sticky top-0 lg:top-20 z-40 bg-dark-950/95 backdrop-blur border-b border-dark-800">
+      <div className="sticky top-0 lg:top-20 z-40 bg-dark-950/95 backdrop-blur">
         <div className="max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6">
           <div className="h-12 flex items-center gap-2">
             <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
@@ -529,7 +529,7 @@ export default function CreateListingPage() {
               <X size={20} />
             </button>
           </div>
-          <div className="h-1 bg-dark-800 rounded-full overflow-hidden">
+          <div className="h-1 overflow-hidden">
             <div className="h-full bg-[#2B71F3] transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
