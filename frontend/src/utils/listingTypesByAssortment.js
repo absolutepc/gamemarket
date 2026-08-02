@@ -841,6 +841,19 @@ function isFlStudio(name, search = '') {
   );
 }
 
+function isElevenlabs(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'elevenlabs'
+    || n === 'eleven labs'
+    || n.startsWith('elevenlabs ')
+    || n.startsWith('eleven labs ')
+    || s.includes('elevenlabs')
+    || s.includes('eleven labs')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1120,6 +1133,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isFlStudio(item?.name || name, item?.search)) {
     return FL_STUDIO_TYPES;
   }
+  if (isElevenlabs(item?.name || name, item?.search)) {
+    return ELEVENLABS_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1165,6 +1181,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isMicrosoftStore(itemName, itemSearch) && MICROSOFT_STORE_LABELS)
     || (isLikee(itemName, itemSearch) && LIKEE_LABELS)
     || (isFlStudio(itemName, itemSearch) && FL_STUDIO_LABELS)
+    || (isElevenlabs(itemName, itemSearch) && ELEVENLABS_LABELS)
     || null;
 
   return allowed
