@@ -35,6 +35,8 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   coins: 'topups',
   promotion: 'social',
   montage: 'social',
+  ps_plus: 'subscriptions',
+  ea_play: 'subscriptions',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

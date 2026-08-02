@@ -21,6 +21,8 @@ const REDUCED_LISTING_TYPES = new Set([
   'keys',
   'skins',
   'games',
+  'ps_plus',
+  'ea_play',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

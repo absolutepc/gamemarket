@@ -367,6 +367,34 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Reels / Shorts', 'Клип', 'Рекламный ролик', 'Другое'],
     },
   ],
+  ps_plus: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '12 месяцев'],
+    },
+    {
+      key: 'tier',
+      label: 'Уровень',
+      required: false,
+      options: ['Essential', 'Extra', 'Premium'],
+    },
+  ],
+  ea_play: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '12 месяцев'],
+    },
+    {
+      key: 'tier',
+      label: 'Уровень',
+      required: false,
+      options: ['EA Play', 'EA Play Pro'],
+    },
+  ],
 };
 
 export function getAttributeSchema(listingType) {

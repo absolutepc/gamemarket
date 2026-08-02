@@ -35,6 +35,8 @@ export const OFFER_PATH_BY_TYPE = {
   coins: 'coins',
   promotion: 'promotion',
   montage: 'montage',
+  ps_plus: 'ps-plus',
+  ea_play: 'ea-play',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(

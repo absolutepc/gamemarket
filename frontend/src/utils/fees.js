@@ -19,6 +19,8 @@ export const REDUCED_LISTING_TYPES = new Set([
   'keys',
   'skins',
   'games',
+  'ps_plus',
+  'ea_play',
 ]);
 
 export function isReducedFeeListingType(listingType) {

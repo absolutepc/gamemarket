@@ -76,6 +76,8 @@ const LISTING_TYPES = [
   'coins',
   'promotion',
   'montage',
+  'ps_plus',
+  'ea_play',
 ];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [

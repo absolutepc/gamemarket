@@ -37,6 +37,9 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'coins', label: 'Монеты' },
   { value: 'promotion', label: 'Продвижение' },
   { value: 'montage', label: 'Монтаж' },
+  // PlayStation
+  { value: 'ps_plus', label: 'PS Plus' },
+  { value: 'ea_play', label: 'EA Play' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);
