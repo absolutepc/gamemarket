@@ -1581,6 +1581,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isGeoguessr(item?.name || name, item?.search)) {
     return GEOGUESSR_TYPES;
   }
+  if (isMeshy(item?.name || name, item?.search)) {
+    return MESHY_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1642,6 +1645,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isRazerGold(itemName, itemSearch) && RAZER_GOLD_LABELS)
     || (isSplice(itemName, itemSearch) && SPLICE_LABELS)
     || (isGeoguessr(itemName, itemSearch) && GEOGUESSR_LABELS)
+    || (isMeshy(itemName, itemSearch) && MESHY_LABELS)
     || null;
 
   return allowed
