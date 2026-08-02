@@ -1398,6 +1398,21 @@ const IMAZING_LABELS = {
   other: 'Другое',
 };
 
+/** Recraft */
+const RECRAFT_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const RECRAFT_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
