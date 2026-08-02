@@ -10,6 +10,7 @@ import ProfileMenuModal from '../components/ProfileMenuModal';
 import useAuthStore from '../store/authStore';
 import { formatDate, formatPrice } from '../utils/format';
 import { compressImageFile } from '../utils/imageCompress';
+import { labelsForCriteria } from '../utils/reviewCriteria';
 
 function StarRow({ rating }) {
   return (
@@ -21,6 +22,23 @@ function StarRow({ rating }) {
           className={s <= rating ? 'text-yellow-400' : 'text-dark-700'}
           fill={s <= rating ? 'currentColor' : 'none'}
         />
+      ))}
+    </div>
+  );
+}
+
+function CriteriaTags({ criteria }) {
+  const labels = labelsForCriteria(criteria);
+  if (!labels.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {labels.map((label) => (
+        <span
+          key={label}
+          className="px-2 py-0.5 rounded-lg text-[11px] bg-dark-800 border border-dark-700 text-dark-300"
+        >
+          {label}
+        </span>
       ))}
     </div>
   );
@@ -242,6 +260,7 @@ export default function ProfilePage() {
                   <span className="ml-auto text-xs text-dark-400">{formatDate(r.created_at)}</span>
                 </div>
                 {r.comment && <p className="text-dark-300 text-sm">{r.comment}</p>}
+                <CriteriaTags criteria={r.criteria} />
               </div>
             ))}
           </div>

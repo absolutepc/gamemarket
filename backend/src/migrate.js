@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   reviewed_id UUID NOT NULL REFERENCES users(id),
   rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment TEXT,
+  criteria JSONB DEFAULT '[]',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -201,6 +202,7 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '{}';
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS buyer_data JSONB DEFAULT '{}';
 ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT;
 UPDATE listings SET status='active' WHERE status='sold';
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS criteria JSONB DEFAULT '[]';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_transaction_unique ON reviews(transaction_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_one_per_buyer_deal ON reviews(transaction_id, reviewer_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_auto_release ON transactions(auto_release_at) WHERE status='awaiting_confirmation';

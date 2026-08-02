@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const pool = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
+const { normalizeCriteria, ratingFromCriteria } = require('../utils/reviewCriteria');
 
 router.get('/me/wallet-history', authenticate(), async (req, res) => {
   const { rows } = await pool.query(
@@ -199,12 +200,23 @@ router.post('/reviews',
   strictLimiter,
   [
     body('transaction_id').isUUID(),
-    body('rating').isInt({ min: 1, max: 5 }),
+    body('rating').optional().isInt({ min: 1, max: 5 }),
+    body('criteria').isArray({ min: 1, max: 5 }),
+    body('criteria.*').isString().isLength({ min: 1, max: 40 }),
     body('comment').optional({ nullable: true }).trim().isLength({ max: 1000 }),
   ],
   validate,
   async (req, res) => {
-    const { transaction_id, rating, comment } = req.body;
+    const { transaction_id, comment } = req.body;
+    const criteria = normalizeCriteria(req.body.criteria);
+    if (!criteria || criteria.length < 1) {
+      return res.status(400).json({ error: 'Выберите хотя бы один пункт оценки' });
+    }
+    const rating = ratingFromCriteria(criteria);
+    // If client also sent rating, it must match criteria count
+    if (req.body.rating != null && Number(req.body.rating) !== rating) {
+      return res.status(400).json({ error: 'Оценка должна соответствовать числу выбранных пунктов' });
+    }
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -249,9 +261,9 @@ router.post('/reviews',
       }
 
       await client.query(
-        `INSERT INTO reviews (transaction_id, reviewer_id, reviewed_id, rating, comment)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [transaction_id, req.user.id, tx.seller_id, rating, comment || null]
+        `INSERT INTO reviews (transaction_id, reviewer_id, reviewed_id, rating, comment, criteria)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [transaction_id, req.user.id, tx.seller_id, rating, comment || null, JSON.stringify(criteria)]
       );
       await client.query(
         `UPDATE users SET
@@ -293,7 +305,8 @@ router.get('/:username', apiLimiter, async (req, res) => {
       [user.id]
     ),
     pool.query(
-      `SELECT r.rating, r.comment, r.created_at, u.username AS reviewer_username, u.avatar_url AS reviewer_avatar
+      `SELECT r.rating, r.comment, COALESCE(r.criteria, '[]'::jsonb) AS criteria, r.created_at,
+              u.username AS reviewer_username, u.avatar_url AS reviewer_avatar
        FROM reviews r JOIN users u ON u.id = r.reviewer_id
        WHERE r.reviewed_id=$1
        ORDER BY r.created_at DESC LIMIT 20`,

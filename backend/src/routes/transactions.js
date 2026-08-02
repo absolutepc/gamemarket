@@ -180,7 +180,8 @@ router.get('/:id', authenticate(), async (req, res) => {
       [req.params.id]
     ),
     pool.query(
-      'SELECT id, rating, comment, created_at FROM reviews WHERE transaction_id=$1 LIMIT 1',
+      `SELECT id, rating, comment, COALESCE(criteria, '[]'::jsonb) AS criteria, created_at
+       FROM reviews WHERE transaction_id=$1 LIMIT 1`,
       [req.params.id]
     ),
     pool.query(

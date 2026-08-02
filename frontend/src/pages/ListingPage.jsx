@@ -15,6 +15,7 @@ import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components
 import { formatPrice, formatDate, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
+import { labelsForCriteria } from '../utils/reviewCriteria';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -650,6 +651,18 @@ export default function ListingPage() {
                     <p className="text-sm lg:text-base text-dark-300 leading-relaxed whitespace-pre-wrap line-clamp-4">
                       {r.comment}
                     </p>
+                  )}
+                  {labelsForCriteria(r.criteria).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2.5">
+                      {labelsForCriteria(r.criteria).map((label) => (
+                        <span
+                          key={label}
+                          className="px-2 py-0.5 rounded-lg text-[11px] bg-dark-800 border border-dark-700 text-dark-300"
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               ))}
