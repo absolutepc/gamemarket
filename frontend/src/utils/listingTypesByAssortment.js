@@ -703,6 +703,21 @@ const LAGOFAST_LABELS = {
   account: 'Аккаунты',
 };
 
+/** Lovable */
+const LOVABLE_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const LOVABLE_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
