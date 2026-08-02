@@ -38,6 +38,11 @@ function envCredential(name) {
   return raw;
 }
 
+/** Explicit opt-in. VK / Apple are postponed until setup is ready. */
+function oauthFlagEnabled(name) {
+  return String(process.env[name] || '').trim().toLowerCase() === 'true';
+}
+
 function generateTokens(userId) {
   const accessToken = jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
   const refreshToken = crypto.randomBytes(48).toString('hex');
@@ -203,12 +208,14 @@ function oauthProviderConfig() {
   const googleClientSecret = envCredential('GOOGLE_CLIENT_SECRET');
   return {
     vk: {
-      enabled: Boolean(vkAppId),
+      // Postponed: set VK_OAUTH_ENABLED=true (+ VK_APP_ID) to show the button again
+      enabled: oauthFlagEnabled('VK_OAUTH_ENABLED') && Boolean(vkAppId),
       appId: vkAppId,
       redirectUri: `${base}/auth/vk/callback`,
     },
     apple: {
-      enabled: Boolean(appleClientId),
+      // Postponed: set APPLE_OAUTH_ENABLED=true (+ APPLE_CLIENT_ID) to show the button again
+      enabled: oauthFlagEnabled('APPLE_OAUTH_ENABLED') && Boolean(appleClientId),
       clientId: appleClientId,
       redirectUri: `${base}/auth/apple/callback`,
     },
@@ -251,7 +258,9 @@ router.post('/vk',
   validate,
   async (req, res) => {
     const appId = envCredential('VK_APP_ID');
-    if (!appId) return res.status(503).json({ error: 'VK ID не настроен (VK_APP_ID)' });
+    if (!oauthFlagEnabled('VK_OAUTH_ENABLED') || !appId) {
+      return res.status(503).json({ error: 'Вход через VK ID временно отключён' });
+    }
 
     const { code, code_verifier, redirect_uri, state } = req.body;
     const device_id = req.body.device_id || 'web';
@@ -352,8 +361,8 @@ router.post('/apple',
   ],
   validate,
   async (req, res) => {
-    if (!envCredential('APPLE_CLIENT_ID')) {
-      return res.status(503).json({ error: 'Apple ID не настроен (APPLE_CLIENT_ID)' });
+    if (!oauthFlagEnabled('APPLE_OAUTH_ENABLED') || !envCredential('APPLE_CLIENT_ID')) {
+      return res.status(503).json({ error: 'Вход через Apple ID временно отключён' });
     }
 
     let claims;

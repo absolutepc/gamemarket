@@ -59,7 +59,6 @@ export default function SocialLoginButtons({ className = '', dividerLabel = 'Ð¸Ð
     return (
       <div className={`space-y-3 mb-4 ${className}`}>
         <div className="h-11 rounded-xl bg-dark-800 animate-pulse" />
-        <div className="h-11 rounded-xl bg-dark-800 animate-pulse" />
       </div>
     );
   }
