@@ -1242,6 +1242,21 @@ const TROVO_LABELS = {
   advertising: 'Реклама',
 };
 
+/** Element */
+const ELEMENT_TYPES = [
+  'account',
+  'guides',
+  'services',
+  'other',
+];
+
+const ELEMENT_LABELS = {
+  account: 'Аккаунты',
+  guides: 'Руководства',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2347,6 +2362,13 @@ function isTrovo(name, search = '') {
   return n === 'trovo' || n.startsWith('trovo ') || s.includes('trovo');
 }
 
+function isElement(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  // Exact match only — avoid Envato Elements
+  return n === 'element' || s === 'element';
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2812,6 +2834,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isTrovo(item?.name || name, item?.search)) {
     return TROVO_TYPES;
   }
+  if (isElement(item?.name || name, item?.search)) {
+    return ELEMENT_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2919,6 +2944,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isGeforceNow(itemName, itemSearch) && GEFORCE_NOW_LABELS)
     || (isHosting(itemName, itemSearch) && HOSTING_LABELS)
     || (isTrovo(itemName, itemSearch) && TROVO_LABELS)
+    || (isElement(itemName, itemSearch) && ELEMENT_LABELS)
     || null;
 
   return allowed
