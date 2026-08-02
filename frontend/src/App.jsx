@@ -42,7 +42,9 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="apps" element={<AppsPage />} />
+        <Route path="apps/:slug/:offerType" element={<GameLandingPage section="apps" />} />
         <Route path="apps/:slug" element={<GameLandingPage section="apps" />} />
+        <Route path="games/:slug/:offerType" element={<GameLandingPage section="games" />} />
         <Route path="games/:slug" element={<GameLandingPage section="games" />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="listings/:id" element={<ListingPage />} />

@@ -1,4 +1,5 @@
 import { ASSORTMENT } from '../data/assortment';
+import { offerPathForType } from './offerTypes';
 
 function baseSlugFromItem(item) {
   const m = String(item.icon || '').match(/\/assortment\/(.+)\.[a-z0-9]+$/i);
@@ -56,16 +57,22 @@ export function getAssortmentSlug(item) {
   return base;
 }
 
-/** Path like /games/cs2 or /apps/chatgpt */
-export function getAssortmentPath(item) {
+/**
+ * Path like /games/cs2, /apps/chatgpt, or /games/cs2/accounts
+ * @param {object} item
+ * @param {string} [listingType] listing_type value (account, currency, …)
+ */
+export function getAssortmentPath(item, listingType) {
   const slug = getAssortmentSlug(item);
   if (!slug) return '/catalog';
-  return `/${getLandingSection(item)}/${slug}`;
+  const base = `/${getLandingSection(item)}/${slug}`;
+  const offer = offerPathForType(listingType);
+  return offer ? `${base}/${offer}` : base;
 }
 
 /** @deprecated use getAssortmentPath */
-export function getGamePath(item) {
-  return getAssortmentPath(item);
+export function getGamePath(item, listingType) {
+  return getAssortmentPath(item, listingType);
 }
 
 export function getAssortmentBySlug(slug) {
@@ -77,13 +84,13 @@ export function getAssortmentBySlug(slug) {
  * Resolve slug within a URL section. If the item belongs to the other section,
  * returns { item, redirectPath } so the page can redirect.
  */
-export function resolveAssortmentLanding(slug, section) {
+export function resolveAssortmentLanding(slug, section, listingType) {
   const item = getAssortmentBySlug(slug);
   if (!item) return { item: null, redirectPath: null };
-  if (sectionMatchesKind(section, item.kind)) {
-    return { item, redirectPath: null };
+  if (!sectionMatchesKind(section, item.kind)) {
+    return { item: null, redirectPath: getAssortmentPath(item, listingType) };
   }
-  return { item: null, redirectPath: getAssortmentPath(item) };
+  return { item, redirectPath: null };
 }
 
 export function getAllGameLandingSlugs() {
