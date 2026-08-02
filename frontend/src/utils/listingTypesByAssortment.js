@@ -543,6 +543,23 @@ const ESIM_LABELS = {
   other: 'Другое',
 };
 
+/** ExitLag */
+const EXITLAG_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'rental',
+  'other',
+];
+
+const EXITLAG_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  rental: 'Аренда',
+  other: 'Другое',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
