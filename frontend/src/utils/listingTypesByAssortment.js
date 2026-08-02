@@ -1020,6 +1020,19 @@ const BANDICAM_LABELS = {
   subscription: 'Подписка',
 };
 
+/** Bigo Live */
+const BIGO_LIVE_TYPES = [
+  'diamonds',
+  'services',
+  'other',
+];
+
+const BIGO_LIVE_LABELS = {
+  diamonds: 'Алмазы',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
