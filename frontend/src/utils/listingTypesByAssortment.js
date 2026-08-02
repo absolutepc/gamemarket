@@ -223,6 +223,12 @@ function isApple(name, search = '') {
   return n === 'apple' || n.startsWith('apple ') || s.includes('apple') || n === 'app store';
 }
 
+function isSoundcloud(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'soundcloud' || n.startsWith('soundcloud ') || s.includes('soundcloud');
+}
+
 function isAiService(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -245,6 +251,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
 
   if (isApple(item?.name || name, item?.search)) {
     return APPLE_TYPES;
+  }
+  if (isSoundcloud(item?.name || name, item?.search)) {
+    return SOUNDCLOUD_TYPES;
   }
   if (GAME_PLATFORM_NAMES.has(name) || [...GAME_PLATFORM_NAMES].some((n) => name.includes(n))) {
     return GAME_PLATFORM_TYPES;
@@ -269,15 +278,18 @@ export function allowedListingTypesForAssortment(gameOrItem) {
 export function listingTypeOptionsForAssortment(gameOrItem) {
   const allowed = allowedListingTypesForAssortment(gameOrItem);
   const byValue = Object.fromEntries(LISTING_TYPE_OPTIONS.map((o) => [o.value, o]));
-  const apple = isApple(
-    typeof gameOrItem === 'string' ? gameOrItem : gameOrItem?.name,
-    typeof gameOrItem === 'object' ? gameOrItem?.search : ''
-  );
+  const itemName = typeof gameOrItem === 'string' ? gameOrItem : gameOrItem?.name;
+  const itemSearch = typeof gameOrItem === 'object' ? gameOrItem?.search : '';
+  const apple = isApple(itemName, itemSearch);
+  const soundcloud = isSoundcloud(itemName, itemSearch);
 
   return allowed
     .filter((value) => Boolean(byValue[value]))
     .map((value) => ({
       value,
-      label: (apple && APPLE_LABELS[value]) || byValue[value].label,
+      label:
+        (apple && APPLE_LABELS[value])
+        || (soundcloud && SOUNDCLOUD_LABELS[value])
+        || byValue[value].label,
     }));
 }
