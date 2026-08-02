@@ -3,7 +3,7 @@ import { resolveAssortmentItem } from './assortmentIcons';
 
 /**
  * Allowed listing types by assortment kind.
- * Apps (Cursor, Claude, Spotify…) must not offer game-only sections like skins/currency.
+ * Apps must not offer game-only sections like skins/currency.
  */
 const TYPES_BY_KIND = {
   app: [
@@ -107,11 +107,51 @@ const SOCIAL_APP_NAMES = new Set([
   'youtube',
 ]);
 
+/** AI tools / нейросети — только 4 основных типа */
+const AI_SERVICE_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const AI_SERVICE_NAMES = new Set([
+  'cursor',
+  'claude',
+  'чатгпт',
+  'chatgpt',
+  'grok',
+  'gemini (nano banana)',
+  'gemini',
+  'kimi',
+  'perplexity',
+  'нейросети',
+  'runway',
+  'deepseek',
+  'midjourney',
+  'character ai',
+  'gamma',
+  'copilot',
+  'leonardo ai',
+  'suno',
+  'openai',
+]);
+
+const AI_NAME_RE = /\b(ai|gpt|claude|cursor|gemini|grok|kimi|llm|нейро)\b|чатгпт|midjourney|perplexity|deepseek|runway|copilot|leonardo|character\.?\s*ai/i;
+
 function normalizeName(name) {
   return String(name || '')
     .toLowerCase()
     .replace(/ё/g, 'е')
     .trim();
+}
+
+function isAiService(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  if (AI_SERVICE_NAMES.has(n)) return true;
+  if ([...AI_SERVICE_NAMES].some((x) => n === x || n.startsWith(`${x} `))) return true;
+  return AI_NAME_RE.test(n) || AI_NAME_RE.test(s);
 }
 
 /**
@@ -127,6 +167,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
 
   if (GAME_PLATFORM_NAMES.has(name) || [...GAME_PLATFORM_NAMES].some((n) => name.includes(n))) {
     return GAME_PLATFORM_TYPES;
+  }
+  if (isAiService(item?.name || name, item?.search)) {
+    return AI_SERVICE_TYPES;
   }
   if (SOCIAL_APP_NAMES.has(name)) {
     return SOCIAL_APP_TYPES;
