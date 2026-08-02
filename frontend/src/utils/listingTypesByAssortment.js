@@ -1148,6 +1148,21 @@ const AUDIO_EDITORS_LABELS = {
   other: 'Другое',
 };
 
+/** Quizlet */
+const QUIZLET_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const QUIZLET_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2211,6 +2226,12 @@ function isAudioEditors(name, search = '') {
   );
 }
 
+function isQuizlet(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'quizlet' || n.startsWith('quizlet ') || s.includes('quizlet');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2658,6 +2679,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isAudioEditors(item?.name || name, item?.search)) {
     return AUDIO_EDITORS_TYPES;
   }
+  if (isQuizlet(item?.name || name, item?.search)) {
+    return QUIZLET_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2759,6 +2783,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isKick(itemName, itemSearch) && KICK_LABELS)
     || (isUdio(itemName, itemSearch) && UDIO_LABELS)
     || (isAudioEditors(itemName, itemSearch) && AUDIO_EDITORS_LABELS)
+    || (isQuizlet(itemName, itemSearch) && QUIZLET_LABELS)
     || null;
 
   return allowed
