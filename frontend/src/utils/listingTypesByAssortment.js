@@ -169,6 +169,25 @@ const SOUNDCLOUD_LABELS = {
   account: 'Аккаунты',
 };
 
+/** Spotify */
+const SPOTIFY_TYPES = [
+  'subscription',
+  'mods',
+  'account',
+  'region_change',
+  'other',
+  'services',
+];
+
+const SPOTIFY_LABELS = {
+  subscription: 'Подписка',
+  mods: 'Моды',
+  account: 'Аккаунты',
+  region_change: 'Смена региона',
+  other: 'Другое',
+  services: 'Услуги',
+};
+
 /** Steam */
 const STEAM_TYPES = [
   'topup',
@@ -343,6 +362,12 @@ function isSoundcloud(name, search = '') {
   return n === 'soundcloud' || n.startsWith('soundcloud ') || s.includes('soundcloud');
 }
 
+function isSpotify(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'spotify' || n.startsWith('spotify ') || s.includes('spotify');
+}
+
 function isSteam(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -408,6 +433,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isApple(item?.name || name, item?.search)) {
     return APPLE_TYPES;
+  }
+  if (isSpotify(item?.name || name, item?.search)) {
+    return SPOTIFY_TYPES;
   }
   if (isSoundcloud(item?.name || name, item?.search)) {
     return SOUNDCLOUD_TYPES;
