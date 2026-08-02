@@ -1,10 +1,37 @@
 const router = require('express').Router();
+const crypto = require('crypto');
 const { body } = require('express-validator');
 const xss = require('xss');
 const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
 const { calcPlatformFee } = require('../services/fees');
+
+function listingViewerKey(req) {
+  if (req.user?.id) return `user:${req.user.id}`;
+  const raw = `${req.ip || ''}|${req.get('user-agent') || ''}`;
+  const hash = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 40);
+  return `anon:${hash}`;
+}
+
+/** Count at most one view per viewer (user or anonymous fingerprint). Owners never inflate their own counter. */
+async function recordListingView(listingId, sellerId, req) {
+  if (req.user?.id && String(req.user.id) === String(sellerId)) return false;
+  const viewerKey = listingViewerKey(req);
+  const { rows } = await pool.query(
+    `INSERT INTO listing_views (listing_id, viewer_key, user_id)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (listing_id, viewer_key) DO NOTHING
+     RETURNING listing_id`,
+    [listingId, viewerKey, req.user?.id || null]
+  );
+  if (!rows[0]) return false;
+  await pool.query(
+    'UPDATE listings SET views_count = views_count + 1 WHERE id=$1',
+    [listingId]
+  );
+  return true;
+}
 
 const LISTING_TYPES = [
   'subscription',
@@ -197,8 +224,7 @@ router.get('/', apiLimiter, async (req, res) => {
   });
 });
 
-router.get('/:id', apiLimiter, async (req, res) => {
-  await pool.query('UPDATE listings SET views_count = views_count + 1 WHERE id=$1', [req.params.id]);
+router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
   const { rows } = await pool.query(
     `SELECT l.*, u.username AS seller_username, u.avatar_url AS seller_avatar,
             u.rating AS seller_rating, u.sales_count AS seller_sales,
@@ -212,6 +238,10 @@ router.get('/:id', apiLimiter, async (req, res) => {
   );
   if (!rows[0]) return res.status(404).json({ error: 'Listing not found' });
   const listing = rows[0];
+
+  const counted = await recordListingView(listing.id, listing.seller_id, req);
+  if (counted) listing.views_count = Number(listing.views_count || 0) + 1;
+
   const fee = calcPlatformFee(listing.price, {
     categorySlug: listing.category_slug,
     listingType: listing.listing_type,

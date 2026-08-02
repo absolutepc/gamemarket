@@ -214,6 +214,16 @@ CREATE TABLE IF NOT EXISTS assortment_hidden (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_assortment_hidden_created ON assortment_hidden(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS listing_views (
+  listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  viewer_key VARCHAR(80) NOT NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (listing_id, viewer_key)
+);
+CREATE INDEX IF NOT EXISTS idx_listing_views_user ON listing_views(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_listing_views_created ON listing_views(created_at DESC);
 `;
 
 /** Usernames promoted to admin on each migrate (comma-separated). Default: Mercy */
