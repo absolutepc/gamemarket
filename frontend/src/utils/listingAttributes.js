@@ -263,6 +263,110 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Карточки', 'Смайлики', 'Фоны', 'Купоны', 'Набор наград', 'Другое'],
     },
   ],
+  stars: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['50', '100', '250', '500', '1000', 'Другое'],
+    },
+  ],
+  premium: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '6 месяцев', '1 год'],
+    },
+  ],
+  nft_gifts: [
+    {
+      key: 'gift_type',
+      label: 'Тип подарка',
+      required: false,
+      options: ['Обычный', 'Редкий', 'Лимитированный', 'Другое'],
+    },
+  ],
+  channels: [
+    {
+      key: 'subscribers',
+      label: 'Подписчики',
+      required: false,
+      options: ['До 1к', '1–5к', '5–20к', '20–100к', '100к+'],
+    },
+  ],
+  usernames: [
+    {
+      key: 'length',
+      label: 'Длина',
+      required: false,
+      options: ['4', '5', '6', '7+', 'Кастом'],
+    },
+  ],
+  advertising: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Пост', 'Сторис', 'Интеграция', 'Пакет', 'Другое'],
+    },
+  ],
+  bots: [
+    {
+      key: 'bot_type',
+      label: 'Тип бота',
+      required: false,
+      options: ['Готовый', 'Кастом', 'Админ-бот', 'Другое'],
+    },
+  ],
+  groups: [
+    {
+      key: 'members',
+      label: 'Участники',
+      required: false,
+      options: ['До 1к', '1–5к', '5–20к', '20к+'],
+    },
+  ],
+  stickers: [
+    {
+      key: 'pack_size',
+      label: 'Набор',
+      required: false,
+      options: ['1–10', '11–30', '30+', 'Кастом'],
+    },
+  ],
+  clickers: [
+    {
+      key: 'game',
+      label: 'Игра / кликер',
+      required: false,
+      options: ['Hamster', 'Notcoin', 'Другое'],
+    },
+  ],
+  coins: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
+  promotion: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Лайки', 'Подписчики', 'Просмотры', 'Комплекс', 'Другое'],
+    },
+  ],
+  montage: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Reels / Shorts', 'Клип', 'Рекламный ролик', 'Другое'],
+    },
+  ],
 };
 
 export function getAttributeSchema(listingType) {

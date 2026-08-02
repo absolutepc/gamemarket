@@ -22,6 +22,19 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   other: 'other',
   giftcard: 'gift-cards',
   steam_rewards: 'other',
+  stars: 'topups',
+  premium: 'subscriptions',
+  nft_gifts: 'other',
+  channels: 'social',
+  usernames: 'social',
+  advertising: 'social',
+  bots: 'other',
+  groups: 'social',
+  stickers: 'other',
+  clickers: 'other',
+  coins: 'topups',
+  promotion: 'social',
+  montage: 'social',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

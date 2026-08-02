@@ -22,6 +22,19 @@ export const OFFER_PATH_BY_TYPE = {
   training: 'training',
   giftcard: 'gift-cards',
   steam_rewards: 'steam-rewards',
+  stars: 'stars',
+  premium: 'premium',
+  nft_gifts: 'nft-gifts',
+  channels: 'channels',
+  usernames: 'usernames',
+  advertising: 'advertising',
+  bots: 'bots',
+  groups: 'groups',
+  stickers: 'stickers',
+  clickers: 'clickers',
+  coins: 'coins',
+  promotion: 'promotion',
+  montage: 'montage',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -62,6 +75,19 @@ export function offerTypeLabel(type) {
     training: 'обучение',
     giftcard: 'подарочные карты',
     steam_rewards: 'награды Steam',
+    stars: 'звёзды',
+    premium: 'премиум',
+    nft_gifts: 'подарки NFT',
+    channels: 'каналы',
+    usernames: 'юзернеймы',
+    advertising: 'рекламу',
+    bots: 'ботов',
+    groups: 'группы',
+    stickers: 'стикеры',
+    clickers: 'кликеры',
+    coins: 'монеты',
+    promotion: 'продвижение',
+    montage: 'монтаж',
   };
   return map[type] || 'товары';
 }

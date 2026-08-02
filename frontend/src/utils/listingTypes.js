@@ -22,6 +22,21 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'training', label: 'Обучение' },
   { value: 'giftcard', label: 'Подарочные карты' },
   { value: 'steam_rewards', label: 'Награды Steam' },
+  // Telegram / social
+  { value: 'stars', label: 'Звезды' },
+  { value: 'premium', label: 'Премиум' },
+  { value: 'nft_gifts', label: 'Подарки (NFT)' },
+  { value: 'channels', label: 'Каналы' },
+  { value: 'usernames', label: 'Юзернеймы' },
+  { value: 'advertising', label: 'Реклама' },
+  { value: 'bots', label: 'Боты' },
+  { value: 'groups', label: 'Группы' },
+  { value: 'stickers', label: 'Стикеры' },
+  { value: 'clickers', label: 'Кликеры' },
+  // TikTok
+  { value: 'coins', label: 'Монеты' },
+  { value: 'promotion', label: 'Продвижение' },
+  { value: 'montage', label: 'Монтаж' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);

@@ -97,8 +97,6 @@ const SOCIAL_APP_TYPES = [
 ];
 
 const SOCIAL_APP_NAMES = new Set([
-  'telegram',
-  'tiktok',
   'discord',
   'вконтакте',
   'likee',
@@ -199,6 +197,72 @@ const STEAM_LABELS = {
   rental: 'Аренда',
 };
 
+/** Telegram */
+const TELEGRAM_TYPES = [
+  'stars',
+  'premium',
+  'nft_gifts',
+  'services',
+  'channels',
+  'usernames',
+  'other',
+  'advertising',
+  'rental',
+  'bots',
+  'mods',
+  'groups',
+  'boosting',
+  'stickers',
+  'design',
+  'clickers',
+];
+
+const TELEGRAM_LABELS = {
+  stars: 'Звезды',
+  premium: 'Премиум',
+  nft_gifts: 'Подарки (NFT)',
+  services: 'Услуги',
+  channels: 'Каналы',
+  usernames: 'Юзернеймы',
+  other: 'Другое',
+  advertising: 'Реклама',
+  rental: 'Аренда',
+  bots: 'Боты',
+  mods: 'Моды',
+  groups: 'Группы',
+  boosting: 'Бусты',
+  stickers: 'Стикеры',
+  design: 'Дизайн',
+  clickers: 'Кликеры',
+};
+
+/** TikTok */
+const TIKTOK_TYPES = [
+  'coins',
+  'account',
+  'services',
+  'promotion',
+  'mods',
+  'montage',
+  'other',
+  'advertising',
+  'design',
+  'subscription',
+];
+
+const TIKTOK_LABELS = {
+  coins: 'Монеты',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  promotion: 'Продвижение',
+  mods: 'Моды',
+  montage: 'Монтаж',
+  other: 'Другое',
+  advertising: 'Реклама',
+  design: 'Дизайн',
+  subscription: 'Подписки',
+};
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
@@ -261,6 +325,18 @@ function isSteam(name, search = '') {
   return n === 'steam' || n.startsWith('steam ') || s.includes('steam');
 }
 
+function isTelegram(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'telegram' || n.startsWith('telegram ') || s.includes('telegram');
+}
+
+function isTiktok(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'tiktok' || n.startsWith('tiktok ') || s.includes('tiktok');
+}
+
 function isAiService(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -281,6 +357,12 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   const name = normalizeName(item?.name || gameOrItem);
   const kind = item?.kind || 'app';
 
+  if (isTelegram(item?.name || name, item?.search)) {
+    return TELEGRAM_TYPES;
+  }
+  if (isTiktok(item?.name || name, item?.search)) {
+    return TIKTOK_TYPES;
+  }
   if (isSteam(item?.name || name, item?.search)) {
     return STEAM_TYPES;
   }
@@ -315,18 +397,18 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
   const byValue = Object.fromEntries(LISTING_TYPE_OPTIONS.map((o) => [o.value, o]));
   const itemName = typeof gameOrItem === 'string' ? gameOrItem : gameOrItem?.name;
   const itemSearch = typeof gameOrItem === 'object' ? gameOrItem?.search : '';
-  const apple = isApple(itemName, itemSearch);
-  const soundcloud = isSoundcloud(itemName, itemSearch);
-  const steam = isSteam(itemName, itemSearch);
+  const labelMap =
+    (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
+    || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
+    || (isSteam(itemName, itemSearch) && STEAM_LABELS)
+    || (isApple(itemName, itemSearch) && APPLE_LABELS)
+    || (isSoundcloud(itemName, itemSearch) && SOUNDCLOUD_LABELS)
+    || null;
 
   return allowed
     .filter((value) => Boolean(byValue[value]))
     .map((value) => ({
       value,
-      label:
-        (steam && STEAM_LABELS[value])
-        || (apple && APPLE_LABELS[value])
-        || (soundcloud && SOUNDCLOUD_LABELS[value])
-        || byValue[value].label,
+      label: (labelMap && labelMap[value]) || byValue[value].label,
     }));
 }

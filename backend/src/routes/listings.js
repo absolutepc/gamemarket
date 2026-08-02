@@ -63,6 +63,19 @@ const LISTING_TYPES = [
   'training',
   'giftcard',
   'steam_rewards',
+  'stars',
+  'premium',
+  'nft_gifts',
+  'channels',
+  'usernames',
+  'advertising',
+  'bots',
+  'groups',
+  'stickers',
+  'clickers',
+  'coins',
+  'promotion',
+  'montage',
 ];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [
