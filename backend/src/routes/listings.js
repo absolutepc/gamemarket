@@ -100,6 +100,7 @@ const LISTING_TYPES = [
   'mochi',
   'servers',
   'gold',
+  'sounds',
   'ps_plus',
   'ea_play',
   'youtube_music',

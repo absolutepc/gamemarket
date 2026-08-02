@@ -1129,6 +1129,25 @@ const UDIO_LABELS = {
   other: 'Другое',
 };
 
+/** Аудиоредакторы */
+const AUDIO_EDITORS_TYPES = [
+  'sounds',
+  'account',
+  'subscription',
+  'donate',
+  'services',
+  'other',
+];
+
+const AUDIO_EDITORS_LABELS = {
+  sounds: 'Звуки',
+  account: 'Аккаунты',
+  subscription: 'Подписка',
+  donate: 'Донат',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2182,6 +2201,16 @@ function isUdio(name, search = '') {
   return n === 'udio' || n.startsWith('udio ') || s === 'udio' || s.startsWith('udio ');
 }
 
+function isAudioEditors(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'аудиоредакторы'
+    || n.startsWith('аудиоредакторы ')
+    || s.includes('аудиоредакторы')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2626,6 +2655,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isUdio(item?.name || name, item?.search)) {
     return UDIO_TYPES;
   }
+  if (isAudioEditors(item?.name || name, item?.search)) {
+    return AUDIO_EDITORS_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2726,6 +2758,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isPrimeVideo(itemName, itemSearch) && PRIME_VIDEO_LABELS)
     || (isKick(itemName, itemSearch) && KICK_LABELS)
     || (isUdio(itemName, itemSearch) && UDIO_LABELS)
+    || (isAudioEditors(itemName, itemSearch) && AUDIO_EDITORS_LABELS)
     || null;
 
   return allowed

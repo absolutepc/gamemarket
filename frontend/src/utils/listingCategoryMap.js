@@ -65,6 +65,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   mochi: 'topups',
   servers: 'social',
   gold: 'subscriptions',
+  sounds: 'items',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

@@ -74,6 +74,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'servers', label: 'Сервера' },
   // Clip Studio Paint
   { value: 'gold', label: 'GOLD' },
+  // Аудиоредакторы
+  { value: 'sounds', label: 'Звуки' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

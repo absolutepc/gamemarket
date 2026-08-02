@@ -561,6 +561,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['1 месяц', '3 месяца', '6 месяцев', '1 год'],
     },
   ],
+  sounds: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Сэмплы', 'Пресеты', 'Пак', 'Один файл', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

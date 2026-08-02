@@ -65,6 +65,7 @@ export const OFFER_PATH_BY_TYPE = {
   mochi: 'mochi',
   servers: 'servers',
   gold: 'gold',
+  sounds: 'sounds',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -148,6 +149,7 @@ export function offerTypeLabel(type) {
     mochi: 'Mochi',
     servers: 'сервера',
     gold: 'GOLD',
+    sounds: 'звуки',
   };
   return map[type] || 'товары';
 }
