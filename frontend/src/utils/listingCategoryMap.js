@@ -54,6 +54,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   diamonds: 'topups',
   superlikes: 'topups',
   beans: 'topups',
+  promocodes: 'gift-cards',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

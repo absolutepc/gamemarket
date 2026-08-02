@@ -263,6 +263,23 @@ const ELEVENLABS_LABELS = {
   other: 'Другое',
 };
 
+/** GearUP */
+const GEARUP_TYPES = [
+  'subscription',
+  'promocodes',
+  'account',
+  'services',
+  'other',
+];
+
+const GEARUP_LABELS = {
+  subscription: 'Подписка',
+  promocodes: 'Промокоды',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -854,6 +871,19 @@ function isElevenlabs(name, search = '') {
   );
 }
 
+function isGearup(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'gearup'
+    || n === 'gear up'
+    || n.startsWith('gearup ')
+    || n.startsWith('gear up ')
+    || s.includes('gearup')
+    || s.includes('gear up')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1136,6 +1166,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isElevenlabs(item?.name || name, item?.search)) {
     return ELEVENLABS_TYPES;
   }
+  if (isGearup(item?.name || name, item?.search)) {
+    return GEARUP_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1182,6 +1215,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isLikee(itemName, itemSearch) && LIKEE_LABELS)
     || (isFlStudio(itemName, itemSearch) && FL_STUDIO_LABELS)
     || (isElevenlabs(itemName, itemSearch) && ELEVENLABS_LABELS)
+    || (isGearup(itemName, itemSearch) && GEARUP_LABELS)
     || null;
 
   return allowed

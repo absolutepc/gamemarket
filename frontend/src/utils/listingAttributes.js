@@ -473,6 +473,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['100', '500', '1000', '5000', '10000', 'Другое'],
     },
   ],
+  promocodes: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: false,
+      options: ['7 дней', '14 дней', '1 месяц', '3 месяца', '6 месяцев', '1 год', 'Бессрочно'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

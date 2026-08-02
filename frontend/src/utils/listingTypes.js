@@ -55,6 +55,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'diamonds', label: 'Алмазы' },
   { value: 'superlikes', label: 'Суперлайки' },
   { value: 'beans', label: 'Бобы' },
+  // GearUP
+  { value: 'promocodes', label: 'Промокоды' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },
