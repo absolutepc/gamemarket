@@ -23,6 +23,7 @@ export default function TransactionPage() {
   const [dispute, setDispute] = useState({ reason: 'not_received', description: '' });
   const [review, setReview] = useState({ criteria: [], comment: '' });
   const msgEndRef = useRef(null);
+  const chatScrollRef = useRef(null);
   const socketRef = useRef(null);
 
   const reviewRating = ratingFromCriteria(review.criteria);
@@ -31,6 +32,10 @@ export default function TransactionPage() {
     queryKey: ['transaction', id],
     queryFn: () => api.get(`/transactions/${id}`).then((r) => r.data),
   });
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [id]);
 
   useEffect(() => {
     if (tx?.messages) setMessages(tx.messages);
@@ -51,7 +56,9 @@ export default function TransactionPage() {
   }, [id, accessToken]);
 
   useEffect(() => {
-    msgEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = chatScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   const sendMessage = (e) => {
@@ -398,7 +405,7 @@ export default function TransactionPage() {
       {/* Chat */}
       <div className="card flex flex-col" style={{ height: '420px' }}>
         <div className="p-4 border-b border-dark-800 font-medium text-sm">Чат сделки</div>
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+        <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
           {messages.map((m) => {
             const isMe = m.sender_id === user?.id;
             if (m.is_system) {
