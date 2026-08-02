@@ -645,6 +645,12 @@ function isWindows(name, search = '') {
   return n === 'windows' || n.startsWith('windows ') || s.includes('windows');
 }
 
+function isCapcut(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'capcut' || n.startsWith('capcut ') || s.includes('capcut');
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -694,6 +700,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isWindows(item?.name || name, item?.search)) {
     return WINDOWS_TYPES;
+  }
+  if (isCapcut(item?.name || name, item?.search)) {
+    return CAPCUT_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -753,6 +762,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isFaceit(itemName, itemSearch) && FACEIT_LABELS)
     || (isRockstar(itemName, itemSearch) && ROCKSTAR_LABELS)
     || (isWindows(itemName, itemSearch) && WINDOWS_LABELS)
+    || (isCapcut(itemName, itemSearch) && CAPCUT_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
