@@ -911,6 +911,23 @@ const DZEN_LABELS = {
   other: 'Другое',
 };
 
+/** Ableton */
+const ABLETON_TYPES = [
+  'license',
+  'plugins',
+  'montage',
+  'services',
+  'other',
+];
+
+const ABLETON_LABELS = {
+  license: 'Лицензия',
+  plugins: 'Плагины',
+  montage: 'Монтаж',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
