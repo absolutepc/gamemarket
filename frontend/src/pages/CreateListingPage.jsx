@@ -28,6 +28,7 @@ import { resolveAssortmentItem, isExactAssortmentName } from '../utils/assortmen
 import { useHiddenAssortmentKeys, useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 import { ASSORTMENT_TABS } from '../data/assortment';
 import { categoryIdForListingType } from '../utils/listingCategoryMap';
+import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 
 const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
 const MAX_IMAGES = 5;
@@ -517,7 +518,7 @@ export default function CreateListingPage() {
       />
 
       <div className="sticky top-0 lg:top-20 z-40 bg-dark-950/95 backdrop-blur">
-        <div className="max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="PAGE_WIDTH_CLASS">
           <div className="h-12 flex items-center gap-2">
             <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
               <ChevronLeft size={20} />
@@ -997,7 +998,7 @@ export default function CreateListingPage() {
 
       {/* Footer CTA */}
       <div className="fixed inset-x-0 bottom-0 z-40 bg-dark-950/95 backdrop-blur border-t border-dark-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 py-3">
+        <div className="PAGE_WIDTH_CLASS py-3">
           {stepId === 'product' ? (
             <button
               type="button"
