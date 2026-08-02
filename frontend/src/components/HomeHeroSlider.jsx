@@ -9,16 +9,6 @@ const AUTO_MS = 7000;
 
 const SLIDES = [
   {
-    id: 'brand',
-    eyebrow: 'Lootz',
-    title: 'Маркетплейс игровых товаров и услуг',
-    subtitle:
-      'Lootz — безопасная торговля аккаунтами, валютой, предметами и бустами. Эскроу держит оплату до подтверждения сделки.',
-    cta: { to: '/about', label: 'О Lootz' },
-    secondary: { to: '/catalog', label: 'Смотреть лоты' },
-    tone: 'escrow',
-  },
-  {
     id: 'contest',
     eyebrow: 'Ежемесячный конкурс',
     title: 'MacBook Air 15″ 256 ГБ',
