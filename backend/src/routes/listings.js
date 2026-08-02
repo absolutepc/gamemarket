@@ -61,6 +61,7 @@ const LISTING_TYPES = [
   'mods',
   'design',
   'training',
+  'license',
   'giftcard',
   'steam_rewards',
   'stars',

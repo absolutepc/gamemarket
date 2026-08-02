@@ -20,6 +20,7 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'mods', label: 'Моды' },
   { value: 'design', label: 'Дизайн' },
   { value: 'training', label: 'Обучение' },
+  { value: 'license', label: 'Лицензия' },
   { value: 'giftcard', label: 'Подарочные карты' },
   { value: 'steam_rewards', label: 'Награды Steam' },
   // Telegram / social

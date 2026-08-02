@@ -225,6 +225,20 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Логотип', 'Аватар', 'Баннер', 'UI/UX', 'Другое'],
     },
   ],
+  license: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '6 месяцев', '1 год', 'Бессрочно'],
+    },
+    {
+      key: 'seats',
+      label: 'Тип лицензии',
+      required: false,
+      options: ['Individual', 'Team', 'Enterprise', 'Education'],
+    },
+  ],
   training: [
     {
       key: 'format',

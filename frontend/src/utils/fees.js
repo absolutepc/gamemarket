@@ -19,6 +19,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'keys',
   'skins',
   'games',
+  'license',
   'ps_plus',
   'ea_play',
   'premium',

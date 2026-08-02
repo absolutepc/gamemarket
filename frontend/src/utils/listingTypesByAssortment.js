@@ -370,6 +370,25 @@ const BATTLENET_LABELS = {
   other: 'Другое',
 };
 
+/** Adobe */
+const ADOBE_TYPES = [
+  'other',
+  'subscription',
+  'license',
+  'account',
+  'services',
+  'design',
+];
+
+const ADOBE_LABELS = {
+  other: 'Другое',
+  subscription: 'Подписка',
+  license: 'Лицензия',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  design: 'Дизайн',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -522,6 +541,12 @@ function isBattlenet(name, search = '') {
   );
 }
 
+function isAdobe(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'adobe' || n.startsWith('adobe ') || s.includes('adobe');
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -559,6 +584,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isBattlenet(item?.name || name, item?.search)) {
     return BATTLENET_TYPES;
+  }
+  if (isAdobe(item?.name || name, item?.search)) {
+    return ADOBE_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -611,6 +639,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     ||     (isXbox(itemName, itemSearch) && XBOX_LABELS)
     || (isGooglePlay(itemName, itemSearch) && GOOGLE_PLAY_LABELS)
     || (isBattlenet(itemName, itemSearch) && BATTLENET_LABELS)
+    || (isAdobe(itemName, itemSearch) && ADOBE_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)

@@ -19,6 +19,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   mods: 'other',
   design: 'other',
   training: 'other',
+  license: 'gift-cards',
   other: 'other',
   giftcard: 'gift-cards',
   steam_rewards: 'other',
