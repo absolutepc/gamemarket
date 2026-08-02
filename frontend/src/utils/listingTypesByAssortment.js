@@ -1193,6 +1193,21 @@ const YAPPY_LABELS = {
   other: 'Другое',
 };
 
+/** GeForce NOW */
+const GEFORCE_NOW_TYPES = [
+  'subscription',
+  'services',
+  'account',
+  'other',
+];
+
+const GEFORCE_NOW_LABELS = {
+  subscription: 'Подписки',
+  services: 'Услуги',
+  account: 'Аккаунты',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2274,6 +2289,17 @@ function isYappy(name, search = '') {
   return n === 'yappy' || n.startsWith('yappy ') || s.includes('yappy');
 }
 
+function isGeforceNow(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'geforce now'
+    || n === 'geforce now!'
+    || n.startsWith('geforce now ')
+    || s.includes('geforce now')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2730,6 +2756,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isYappy(item?.name || name, item?.search)) {
     return YAPPY_TYPES;
   }
+  if (isGeforceNow(item?.name || name, item?.search)) {
+    return GEFORCE_NOW_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2834,6 +2863,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isQuizlet(itemName, itemSearch) && QUIZLET_LABELS)
     || (isMimo(itemName, itemSearch) && MIMO_LABELS)
     || (isYappy(itemName, itemSearch) && YAPPY_LABELS)
+    || (isGeforceNow(itemName, itemSearch) && GEFORCE_NOW_LABELS)
     || null;
 
   return allowed
