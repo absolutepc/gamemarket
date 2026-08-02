@@ -1156,6 +1156,12 @@ function isHeygen(name, search = '') {
   );
 }
 
+function isDuolingo(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'duolingo' || n.startsWith('duolingo ') || s.includes('duolingo');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1471,6 +1477,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isHeygen(item?.name || name, item?.search)) {
     return HEYGEN_TYPES;
   }
+  if (isDuolingo(item?.name || name, item?.search)) {
+    return DUOLINGO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1528,6 +1537,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isDesignCatalog(itemName, itemSearch) && DESIGN_CATALOG_LABELS)
     || (isVoicemod(itemName, itemSearch) && VOICEMOD_LABELS)
     || (isHeygen(itemName, itemSearch) && HEYGEN_LABELS)
+    || (isDuolingo(itemName, itemSearch) && DUOLINGO_LABELS)
     || null;
 
   return allowed
