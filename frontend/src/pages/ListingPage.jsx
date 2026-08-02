@@ -33,27 +33,40 @@ function BuyActions({
   id,
   navigate,
   deleteMutation,
+  reactivateMutation,
   setCheckoutOpen,
 }) {
   if (isOwner) {
     return (
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => navigate(`/listings/${id}/edit`)}
-          className="btn-secondary flex-1 flex items-center justify-center gap-2 h-12"
-        >
-          <Pencil size={16} /> Редактировать
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (window.confirm('Удалить лот?')) deleteMutation.mutate();
-          }}
-          className="btn-secondary h-12 px-4 flex items-center justify-center text-red-400"
-        >
-          <Trash2 size={16} />
-        </button>
+      <div className="flex flex-col gap-2">
+        {listing.status === 'inactive' && (
+          <button
+            type="button"
+            onClick={() => reactivateMutation?.mutate()}
+            disabled={reactivateMutation?.isPending}
+            className="btn-primary w-full h-12 flex items-center justify-center gap-2"
+          >
+            Активировать на 30 дней
+          </button>
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(`/listings/${id}/edit`)}
+            className="btn-secondary flex-1 flex items-center justify-center gap-2 h-12"
+          >
+            <Pencil size={16} /> Редактировать
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm('Удалить лот?')) deleteMutation.mutate();
+            }}
+            className="btn-secondary h-12 px-4 flex items-center justify-center text-red-400"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
     );
   }
@@ -155,6 +168,16 @@ export default function ListingPage() {
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
   });
 
+  const reactivateMutation = useMutation({
+    mutationFn: () => api.post(`/listings/${id}/reactivate`),
+    onSuccess: (res) => {
+      toast.success(res.data?.message || 'Лот активирован на 30 дней');
+      qc.invalidateQueries({ queryKey: ['listing', id] });
+      qc.invalidateQueries({ queryKey: ['my-listings'] });
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Не удалось активировать'),
+  });
+
   const startChat = async () => {
     if (!user) return navigate('/login');
     try {
@@ -227,6 +250,7 @@ export default function ListingPage() {
     id,
     navigate,
     deleteMutation,
+    reactivateMutation,
     setCheckoutOpen,
   };
 
@@ -359,6 +383,17 @@ export default function ListingPage() {
       </div>
 
       <BuyActions {...buyProps} />
+
+      {isOwner && listing.status === 'inactive' && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
+          Лот снят с витрины после 30 дней. Активируйте снова, чтобы он появился в каталоге.
+        </div>
+      )}
+      {isOwner && listing.status === 'active' && typeof listing.showcase_days_left === 'number' && (
+        <div className="text-sm text-dark-400">
+          На витрине ещё {listing.showcase_days_left} дн. из {listing.showcase_days || 30}
+        </div>
+      )}
 
       {isOwner && listing.platform_fee_percent != null && (
         <div className="text-sm text-dark-400">

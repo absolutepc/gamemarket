@@ -19,10 +19,18 @@ function filledStarsCount(rating) {
   return Math.min(5, Math.round(value));
 }
 
-export default function ListingCard({ listing, showOwnerActions = false, onEdit, onDelete }) {
+export default function ListingCard({
+  listing,
+  showOwnerActions = false,
+  onEdit,
+  onDelete,
+  onReactivate,
+}) {
   const image = listing.images?.[0] || PLACEHOLDER;
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
   const isAuto = listing.delivery_method === 'auto';
+  const isInactive = listing.status === 'inactive';
+  const daysLeft = listing.showcase_days_left;
   const matched = resolveAssortmentItem(listing.game || listing.title);
   const gameLabel = matched?.name || listing.game || listing.category_name || 'Товар';
   const gameIcon = matched?.icon || resolveAssortmentIcon(listing.game || listing.title);
@@ -31,9 +39,11 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
     listing.category_name;
 
   return (
-    <div className="rounded-2xl bg-dark-900 border border-dark-800 flex flex-col overflow-hidden w-full min-w-0
-                    hover:border-dark-600 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.35)]
-                    transition-all duration-200 group animate-fade-in relative">
+    <div className={`rounded-2xl bg-dark-900 border flex flex-col overflow-hidden w-full min-w-0
+                    hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.35)]
+                    transition-all duration-200 group animate-fade-in relative ${
+                      isInactive ? 'border-amber-500/40 opacity-90' : 'border-dark-800 hover:border-dark-600'
+                    }`}>
       <Link to={`/listings/${listing.id}`} className="flex flex-col flex-1 min-w-0">
         {/* Playerok-style card header: game icon + name/category */}
         <div className="flex items-center gap-2 px-2.5 sm:px-3 pt-2.5 sm:pt-3 pb-2 min-w-0">
@@ -63,15 +73,22 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
           <img
             src={image}
             alt={listing.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+              isInactive ? 'grayscale-[40%]' : ''
+            }`}
             onError={(e) => { e.target.src = PLACEHOLDER; }}
             loading="lazy"
           />
           <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {listing.is_featured && (
+            {isInactive && (
+              <span className="badge bg-amber-500/95 text-dark-950 text-[10px] font-semibold">
+                Снят с витрины
+              </span>
+            )}
+            {!isInactive && listing.is_featured && (
               <span className="badge bg-[#2B71F3]/95 text-white text-[10px] font-semibold">ТОП</span>
             )}
-            {isAuto && (
+            {!isInactive && isAuto && (
               <span className="badge bg-violet-500/95 text-white text-[10px] font-semibold flex items-center gap-0.5">
                 <Zap size={10} /> Автовыдача
               </span>
@@ -99,6 +116,12 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
           <h3 className="font-semibold text-xs sm:text-sm leading-snug line-clamp-2 text-white">
             {listing.title}
           </h3>
+
+          {showOwnerActions && !isInactive && typeof daysLeft === 'number' && (
+            <p className="text-[10px] text-dark-400">
+              На витрине ещё {daysLeft} дн.
+            </p>
+          )}
 
           {(listing.seller_rating > 0 || listing.seller_reviews > 0) && (
             <div className="flex items-center gap-1.5 pt-1.5 border-t border-dark-800 mt-auto text-[11px] min-w-0">
@@ -129,25 +152,38 @@ export default function ListingCard({ listing, showOwnerActions = false, onEdit,
       </Link>
 
       {showOwnerActions && (
-        <div className="px-2.5 sm:px-3 pb-2.5 sm:pb-3 grid grid-cols-2 gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); onEdit?.(listing); }}
-            className="min-w-0 inline-flex items-center justify-center rounded-xl border border-dark-700
-                       bg-dark-800 hover:bg-dark-700 text-white text-[11px] sm:text-xs font-medium
-                       px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
-          >
-            Изменить
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); onDelete?.(listing); }}
-            className="min-w-0 inline-flex items-center justify-center rounded-xl border border-dark-700
-                       bg-dark-800 hover:bg-dark-700 hover:border-red-500/40 text-red-400
-                       text-[11px] sm:text-xs font-medium px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
-          >
-            Удалить
-          </button>
+        <div className="px-2.5 sm:px-3 pb-2.5 sm:pb-3 flex flex-col gap-1.5 sm:gap-2">
+          {isInactive && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); onReactivate?.(listing); }}
+              className="w-full inline-flex items-center justify-center rounded-xl border border-brand-500/40
+                         bg-brand-500/20 hover:bg-brand-500/30 text-brand-300 text-[11px] sm:text-xs font-medium
+                         px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
+            >
+              Активировать на 30 дней
+            </button>
+          )}
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); onEdit?.(listing); }}
+              className="min-w-0 inline-flex items-center justify-center rounded-xl border border-dark-700
+                         bg-dark-800 hover:bg-dark-700 text-white text-[11px] sm:text-xs font-medium
+                         px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
+            >
+              Изменить
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); onDelete?.(listing); }}
+              className="min-w-0 inline-flex items-center justify-center rounded-xl border border-dark-700
+                         bg-dark-800 hover:bg-dark-700 hover:border-red-500/40 text-red-400
+                         text-[11px] sm:text-xs font-medium px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
+            >
+              Удалить
+            </button>
+          </div>
         </div>
       )}
     </div>

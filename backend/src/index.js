@@ -163,6 +163,7 @@ const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
 const { migrate } = require('./migrate');
 const { startAutoReleaseJob } = require('./services/escrow');
+const { startListingExpiryJob } = require('./services/listingExpiry');
 
 async function start() {
   try {
@@ -174,6 +175,7 @@ async function start() {
   }
 
   startAutoReleaseJob(60_000);
+  startListingExpiryJob(300_000);
 
   server.listen(PORT, HOST, () => {
     logger.info(`Server running on http://${HOST}:${PORT}`);

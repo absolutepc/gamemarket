@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS listings (
   is_featured BOOLEAN DEFAULT FALSE,
   delivery_method VARCHAR(50) DEFAULT 'manual',
   delivery_instructions TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -202,6 +203,12 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '{}';
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS buyer_data JSONB DEFAULT '{}';
 ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT;
 UPDATE listings SET status='active' WHERE status='sold';
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
+UPDATE listings SET published_at = COALESCE(published_at, created_at) WHERE published_at IS NULL;
+ALTER TABLE listings ALTER COLUMN published_at SET DEFAULT NOW();
+CREATE INDEX IF NOT EXISTS idx_listings_expire
+  ON listings ((COALESCE(published_at, created_at)))
+  WHERE status = 'active';
 ALTER TABLE reviews ADD COLUMN IF NOT EXISTS criteria JSONB DEFAULT '[]';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_transaction_unique ON reviews(transaction_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_one_per_buyer_deal ON reviews(transaction_id, reviewer_id);

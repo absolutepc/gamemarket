@@ -10,7 +10,7 @@ export default function RulesPage() {
         path="/rules"
       />
       <h1 className="text-3xl font-bold mb-2">Правила площадки</h1>
-      <p className="text-dark-400 mb-8">Обновлено: 29 июля 2026</p>
+      <p className="text-dark-400 mb-8">Обновлено: 2 августа 2026</p>
 
       <div className="card p-6 space-y-6 text-dark-200 leading-relaxed">
         <section>
@@ -35,6 +35,7 @@ export default function RulesPage() {
             <li>Указывать достоверное описание лота</li>
             <li>Передавать товар в разумный срок после оплаты</li>
             <li>Не размещать запрещённые или мошеннические предложения</li>
+            <li>Лот остаётся на витрине 30 дней; после этого его нужно снова активировать в профиле</li>
           </ul>
         </section>
 

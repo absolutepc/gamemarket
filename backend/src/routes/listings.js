@@ -6,6 +6,13 @@ const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
 const { calcPlatformFee } = require('../services/fees');
+const { LISTING_SHOWCASE_DAYS } = require('../services/listingExpiry');
+
+function showcaseDaysLeft(publishedAt) {
+  if (!publishedAt) return LISTING_SHOWCASE_DAYS;
+  const end = new Date(publishedAt).getTime() + LISTING_SHOWCASE_DAYS * 86400000;
+  return Math.max(0, Math.ceil((end - Date.now()) / 86400000));
+}
 
 function listingViewerKey(req) {
   if (req.user?.id) return `user:${req.user.id}`;
@@ -195,7 +202,7 @@ router.get('/', apiLimiter, async (req, res) => {
     pool.query(
       `SELECT l.id, l.title, l.price, l.original_price, l.discount_percent, l.currency,
               l.game, l.listing_type, l.images, l.views_count, l.is_featured,
-              l.delivery_method, l.created_at,
+              l.delivery_method, l.created_at, l.published_at, l.status,
               u.username AS seller_username, u.avatar_url AS seller_avatar,
               u.rating AS seller_rating, u.sales_count AS seller_sales,
               u.reviews_count AS seller_reviews,
@@ -248,6 +255,10 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
   });
   res.json({
     ...listing,
+    showcase_days: LISTING_SHOWCASE_DAYS,
+    showcase_days_left: listing.status === 'active'
+      ? showcaseDaysLeft(listing.published_at || listing.created_at)
+      : 0,
     platform_fee_percent: fee.feePercent,
     platform_fee: fee.fee,
     seller_receives: fee.sellerReceives,
@@ -292,8 +303,9 @@ router.post('/',
     const { rows } = await pool.query(
       `INSERT INTO listings
          (seller_id, category_id, title, description, price, original_price, discount_percent,
-          game, listing_type, delivery_method, delivery_instructions, tags, buyer_fields, images, attributes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+          game, listing_type, delivery_method, delivery_instructions, tags, buyer_fields, images, attributes,
+          status, published_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'active',NOW())
        RETURNING *`,
       [req.user.id, category_id || null, title, safeDesc, price,
        discount.original_price, discount.discount_percent,
@@ -328,7 +340,7 @@ router.put('/:id',
       return res.status(403).json({ error: 'Forbidden' });
     }
     const {
-      title, description, price, original_price, status, game,
+      title, description, price, original_price, game,
       delivery_instructions, listing_type, delivery_method, category_id, buyer_fields,
       images, attributes, tags,
     } = req.body;
@@ -353,6 +365,7 @@ router.put('/:id',
       ? (Array.isArray(tags) ? tags.map((t) => String(t).trim().slice(0, 50)).filter(Boolean).slice(0, 20) : [])
       : undefined;
 
+    // status changes only via /reactivate or soft-delete — not free-form PUT
     const { rows } = await pool.query(
       `UPDATE listings SET
          title=COALESCE($1,title),
@@ -360,22 +373,21 @@ router.put('/:id',
          price=COALESCE($3,price),
          original_price=$4,
          discount_percent=$5,
-         status=COALESCE($6,status),
-         game=COALESCE($7,game),
-         delivery_instructions=COALESCE($8,delivery_instructions),
-         listing_type=COALESCE($9,listing_type),
-         delivery_method=COALESCE($10,delivery_method),
-         category_id=COALESCE($11,category_id),
-         buyer_fields=COALESCE($12,buyer_fields),
-         images=COALESCE($13,images),
-         attributes=COALESCE($14,attributes),
-         tags=COALESCE($15,tags),
+         game=COALESCE($6,game),
+         delivery_instructions=COALESCE($7,delivery_instructions),
+         listing_type=COALESCE($8,listing_type),
+         delivery_method=COALESCE($9,delivery_method),
+         category_id=COALESCE($10,category_id),
+         buyer_fields=COALESCE($11,buyer_fields),
+         images=COALESCE($12,images),
+         attributes=COALESCE($13,attributes),
+         tags=COALESCE($14,tags),
          updated_at=NOW()
-       WHERE id=$16 RETURNING *`,
+       WHERE id=$15 RETURNING *`,
       [
         title || null, safeDesc, price || null,
         discount.original_price, discount.discount_percent,
-        status || null, game || null, delivery_instructions || null,
+        game || null, delivery_instructions || null,
         listing_type || null, delivery_method || null,
         category_id || null,
         fields ? JSON.stringify(fields) : null,
@@ -388,6 +400,51 @@ router.put('/:id',
     res.json(rows[0]);
   }
 );
+
+router.post('/:id/reactivate', authenticate(), strictLimiter, async (req, res) => {
+  const { rows: existing } = await pool.query(
+    'SELECT id, seller_id, status, title FROM listings WHERE id=$1',
+    [req.params.id]
+  );
+  const listing = existing[0];
+  if (!listing) return res.status(404).json({ error: 'Лот не найден' });
+  if (String(listing.seller_id) !== String(req.user.id) && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  if (listing.status === 'deleted') {
+    return res.status(400).json({ error: 'Удалённый лот нельзя активировать' });
+  }
+  if (listing.status === 'active') {
+    const { rows } = await pool.query(
+      `UPDATE listings
+       SET published_at = NOW(), updated_at = NOW()
+       WHERE id=$1
+       RETURNING *`,
+      [listing.id]
+    );
+    return res.json({
+      ...rows[0],
+      showcase_days: LISTING_SHOWCASE_DAYS,
+      message: `Витрина продлена на ${LISTING_SHOWCASE_DAYS} дней`,
+    });
+  }
+  if (listing.status !== 'inactive') {
+    return res.status(400).json({ error: 'Этот лот нельзя активировать' });
+  }
+
+  const { rows } = await pool.query(
+    `UPDATE listings
+     SET status = 'active', published_at = NOW(), updated_at = NOW()
+     WHERE id=$1
+     RETURNING *`,
+    [listing.id]
+  );
+  res.json({
+    ...rows[0],
+    showcase_days: LISTING_SHOWCASE_DAYS,
+    message: `Лот снова на витрине на ${LISTING_SHOWCASE_DAYS} дней`,
+  });
+});
 
 router.delete('/:id', authenticate(), async (req, res) => {
   const { rows } = await pool.query('SELECT seller_id FROM listings WHERE id=$1', [req.params.id]);

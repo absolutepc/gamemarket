@@ -4,6 +4,7 @@ const pool = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
 const { normalizeCriteria, ratingFromCriteria } = require('../utils/reviewCriteria');
+const { LISTING_SHOWCASE_DAYS } = require('../services/listingExpiry');
 
 router.get('/me/wallet-history', authenticate(), async (req, res) => {
   const { rows } = await pool.query(
@@ -20,10 +21,23 @@ router.get('/me/listings', authenticate(), async (req, res) => {
      FROM listings l
      LEFT JOIN categories c ON c.id = l.category_id
      WHERE l.seller_id=$1 AND l.status != 'deleted'
-     ORDER BY l.created_at DESC`,
+     ORDER BY
+       CASE l.status WHEN 'inactive' THEN 0 WHEN 'active' THEN 1 ELSE 2 END,
+       l.updated_at DESC`,
     [req.user.id]
   );
-  res.json(rows);
+  res.json(rows.map((l) => {
+    const published = l.published_at || l.created_at;
+    const end = published ? new Date(published).getTime() + LISTING_SHOWCASE_DAYS * 86400000 : Date.now();
+    const daysLeft = l.status === 'active'
+      ? Math.max(0, Math.ceil((end - Date.now()) / 86400000))
+      : 0;
+    return {
+      ...l,
+      showcase_days: LISTING_SHOWCASE_DAYS,
+      showcase_days_left: daysLeft,
+    };
+  }));
 });
 
 const RESERVED_USERNAMES = new Set([

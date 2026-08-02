@@ -61,14 +61,39 @@ export default function ProfilePage() {
     enabled: Boolean(username),
   });
 
+  const { data: myListings, isLoading: myListingsLoading } = useQuery({
+    queryKey: ['my-listings'],
+    queryFn: () => api.get('/users/me/listings').then((r) => r.data),
+    enabled: isOwn,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/listings/${id}`),
     onSuccess: () => {
       toast.success('Лот удалён');
       qc.invalidateQueries(['profile', username]);
+      qc.invalidateQueries(['my-listings']);
     },
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка удаления'),
   });
+
+  const reactivateMutation = useMutation({
+    mutationFn: (id) => api.post(`/listings/${id}/reactivate`),
+    onSuccess: (res) => {
+      toast.success(res.data?.message || 'Лот активирован на 30 дней');
+      qc.invalidateQueries(['profile', username]);
+      qc.invalidateQueries(['my-listings']);
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Не удалось активировать'),
+  });
+
+  const ownListings = isOwn && !myListingsLoading ? (myListings || []) : null;
+  const activeListings = ownListings
+    ? ownListings.filter((l) => l.status === 'active')
+    : (profile?.listings || []);
+  const inactiveListings = ownListings
+    ? ownListings.filter((l) => l.status === 'inactive')
+    : [];
 
   const startChat = async () => {
     if (!currentUser) return navigate('/login');
@@ -211,10 +236,15 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="font-bold text-lg mb-4">Активные лоты ({profile.listings?.length || 0})</h2>
-        {profile.listings?.length > 0 ? (
+        <h2 className="font-bold text-lg mb-4">Активные лоты ({activeListings.length})</h2>
+        {isOwn && (
+          <p className="text-xs text-dark-400 mb-3">
+            Лоты висят на витрине 30 дней, затем их нужно снова активировать.
+          </p>
+        )}
+        {activeListings.length > 0 ? (
           <div className={LISTING_GRID_CLASS}>
-            {profile.listings.map((l) => (
+            {activeListings.map((l) => (
               <ListingCard
                 key={l.id}
                 listing={{
@@ -228,6 +258,7 @@ export default function ProfilePage() {
                 onDelete={(listing) => {
                   if (window.confirm('Удалить лот?')) deleteMutation.mutate(listing.id);
                 }}
+                onReactivate={(listing) => reactivateMutation.mutate(listing.id)}
               />
             ))}
           </div>
@@ -242,6 +273,36 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {isOwn && inactiveListings.length > 0 && (
+        <div className="mb-8">
+          <h2 className="font-bold text-lg mb-4">
+            Сняты с витрины ({inactiveListings.length})
+          </h2>
+          <p className="text-xs text-dark-400 mb-3">
+            Срок 30 дней истёк — нажмите «Активировать», чтобы снова показать лот в каталоге.
+          </p>
+          <div className={LISTING_GRID_CLASS}>
+            {inactiveListings.map((l) => (
+              <ListingCard
+                key={l.id}
+                listing={{
+                  ...l,
+                  seller_username: profile.username,
+                  seller_rating: profile.rating,
+                  seller_reviews: profile.reviews_count,
+                }}
+                showOwnerActions
+                onEdit={(listing) => navigate(`/listings/${listing.id}/edit`)}
+                onDelete={(listing) => {
+                  if (window.confirm('Удалить лот?')) deleteMutation.mutate(listing.id);
+                }}
+                onReactivate={(listing) => reactivateMutation.mutate(listing.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 className="font-bold text-lg mb-4">Отзывы ({profile.reviews_count || 0})</h2>
