@@ -5,6 +5,7 @@ import Seo from '../components/Seo';
 import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { ASSORTMENT_TABS } from '../data/assortment';
 import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
+import { getGamePath } from '../utils/gameSlug';
 
 const FALLBACK_ICON = '/assortment/other-apps.png';
 
@@ -128,7 +129,7 @@ export default function AppsPage() {
         {filtered.map((item) => (
           <Link
             key={`${item.kind}-${item.name}-${item.search}`}
-            to={`/catalog?search=${encodeURIComponent(item.search)}`}
+            to={getGamePath(item)}
             className="group flex flex-col items-center gap-1.5 min-w-0"
           >
             <div

@@ -10,6 +10,7 @@ import {
 import api from '../utils/api';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
+import { getGamePath } from '../utils/gameSlug';
 import HomeHeroSlider from '../components/HomeHeroSlider';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
@@ -211,8 +212,8 @@ export default function HomePage() {
   return (
     <div>
       <Seo
-        title="Торговая площадка цифровых товаров"
-        description="Lootz — маркетплейс цифровых товаров и услуг с безопасными сделками через эскроу."
+        title="Маркетплейс игровых товаров и услуг"
+        description="Lootz — маркетплейс игровых товаров и услуг: аккаунты, валюта, скины, бусты и ключи. Безопасные сделки через эскроу."
         path="/"
       />
 
@@ -257,7 +258,7 @@ export default function HomePage() {
             {previewItems.map((item) => (
               <Link
                 key={item.catalog || item.search + item.name}
-                to={`/catalog?search=${encodeURIComponent(item.search)}`}
+                to={getGamePath(item)}
                 className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
                 style={{ width: tileWidth }}
               >

@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const pool = require('../config/database');
+const gameLandings = require('../data/gameLandings.json');
 
 function escapeXml(value) {
   return String(value)
@@ -23,21 +24,30 @@ router.get('/sitemap.xml', async (req, res) => {
     );
 
     const staticPages = [
-      '',
-      '/catalog',
-      '/rules',
-      '/faq',
-      '/support',
-      '/terms-of-sale',
-      '/privacy',
-      '/user-agreement',
+      { path: '', changefreq: 'daily', priority: '1.0' },
+      { path: '/catalog', changefreq: 'hourly', priority: '0.9' },
+      { path: '/apps', changefreq: 'daily', priority: '0.85' },
+      { path: '/rules', changefreq: 'monthly', priority: '0.6' },
+      { path: '/faq', changefreq: 'monthly', priority: '0.6' },
+      { path: '/support', changefreq: 'monthly', priority: '0.6' },
+      { path: '/terms-of-sale', changefreq: 'monthly', priority: '0.5' },
+      { path: '/privacy', changefreq: 'monthly', priority: '0.5' },
+      { path: '/user-agreement', changefreq: 'monthly', priority: '0.5' },
     ];
+
+    const now = new Date().toISOString();
     const urls = [
-      ...staticPages.map((path, i) => ({
-        loc: `${siteUrl}${path || '/'}`,
-        lastmod: new Date().toISOString(),
-        changefreq: path === '/catalog' ? 'hourly' : path === '' ? 'daily' : 'monthly',
-        priority: path === '' ? '1.0' : path === '/catalog' ? '0.9' : '0.6',
+      ...staticPages.map((p) => ({
+        loc: `${siteUrl}${p.path || '/'}`,
+        lastmod: now,
+        changefreq: p.changefreq,
+        priority: p.priority,
+      })),
+      ...gameLandings.map((g) => ({
+        loc: `${siteUrl}/games/${g.slug}`,
+        lastmod: now,
+        changefreq: 'daily',
+        priority: '0.8',
       })),
       ...rows.map((row) => ({
         loc: `${siteUrl}/listings/${row.id}`,

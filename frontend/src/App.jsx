@@ -24,6 +24,7 @@ import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import AdminDisputesPage from './pages/AdminDisputesPage';
 import AdminAssortmentPage from './pages/AdminAssortmentPage';
 import AppsPage from './pages/AppsPage';
+import GameLandingPage from './pages/GameLandingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import useAuthStore from './store/authStore';
@@ -41,6 +42,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="apps" element={<AppsPage />} />
+        <Route path="games/:slug" element={<GameLandingPage />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="listings/:id" element={<ListingPage />} />
         <Route path="users" element={<UsersIndexRedirect />} />
