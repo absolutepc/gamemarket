@@ -2218,6 +2218,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isTeamspeak(item?.name || name, item?.search)) {
     return TEAMSPEAK_TYPES;
   }
+  if (isSoundpad(item?.name || name, item?.search)) {
+    return SOUNDPAD_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2302,6 +2305,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isPixverse(itemName, itemSearch) && PIXVERSE_LABELS)
     || (isWallpaperEngine(itemName, itemSearch) && WALLPAPER_ENGINE_LABELS)
     || (isTeamspeak(itemName, itemSearch) && TEAMSPEAK_LABELS)
+    || (isSoundpad(itemName, itemSearch) && SOUNDPAD_LABELS)
     || null;
 
   return allowed
