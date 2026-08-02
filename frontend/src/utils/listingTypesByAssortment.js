@@ -1349,6 +1349,23 @@ const QOBUZ_LABELS = {
   other: 'Другое',
 };
 
+/** Manus */
+const MANUS_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const MANUS_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2502,6 +2519,17 @@ function isQobuz(name, search = '') {
   return n === 'qobuz' || n.startsWith('qobuz ') || s.includes('qobuz');
 }
 
+function isManus(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'manus'
+    || n === 'manus ai'
+    || n.startsWith('manus ')
+    || s.includes('manus')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2988,6 +3016,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isQobuz(item?.name || name, item?.search)) {
     return QOBUZ_TYPES;
   }
+  if (isManus(item?.name || name, item?.search)) {
+    return MANUS_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -3102,6 +3133,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isEnvatoElements(itemName, itemSearch) && ENVATO_ELEMENTS_LABELS)
     || (isPico(itemName, itemSearch) && PICO_LABELS)
     || (isQobuz(itemName, itemSearch) && QOBUZ_LABELS)
+    || (isManus(itemName, itemSearch) && MANUS_LABELS)
     || null;
 
   return allowed
