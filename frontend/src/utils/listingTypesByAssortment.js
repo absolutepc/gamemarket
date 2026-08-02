@@ -435,6 +435,21 @@ const VOICEMOD_LABELS = {
   rental: 'Аренда',
 };
 
+/** HeyGen */
+const HEYGEN_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const HEYGEN_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1110,6 +1125,18 @@ function isVoicemod(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'voicemod' || n.startsWith('voicemod ') || s.includes('voicemod');
+}
+
+function isHeygen(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'heygen'
+    || n === 'hey gen'
+    || n.startsWith('heygen ')
+    || s.includes('heygen')
+    || s.includes('hey gen')
+  );
 }
 
 function isApple(name, search = '') {
