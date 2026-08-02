@@ -2486,6 +2486,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isBigoLive(item?.name || name, item?.search)) {
     return BIGO_LIVE_TYPES;
   }
+  if (isKrea(item?.name || name, item?.search)) {
+    return KREA_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2580,6 +2583,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isRunway(itemName, itemSearch) && RUNWAY_LABELS)
     || (isBandicam(itemName, itemSearch) && BANDICAM_LABELS)
     || (isBigoLive(itemName, itemSearch) && BIGO_LIVE_LABELS)
+    || (isKrea(itemName, itemSearch) && KREA_LABELS)
     || null;
 
   return allowed
