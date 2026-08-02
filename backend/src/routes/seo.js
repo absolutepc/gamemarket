@@ -131,8 +131,6 @@ router.get('/sitemap-static.xml', (req, res) => {
     { path: '', changefreq: 'daily', priority: '1.0' },
     { path: '/catalog', changefreq: 'hourly', priority: '0.9' },
     { path: '/apps', changefreq: 'daily', priority: '0.85' },
-    { path: '/apps?tab=mobile', changefreq: 'daily', priority: '0.7' },
-    { path: '/apps?tab=apps', changefreq: 'daily', priority: '0.7' },
     { path: '/rules', changefreq: 'monthly', priority: '0.6' },
     { path: '/faq', changefreq: 'monthly', priority: '0.6' },
     { path: '/support', changefreq: 'monthly', priority: '0.6' },
