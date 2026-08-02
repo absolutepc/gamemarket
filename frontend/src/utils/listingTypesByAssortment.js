@@ -1095,6 +1095,23 @@ const PRIME_VIDEO_LABELS = {
   other: 'Другое',
 };
 
+/** Kick */
+const KICK_TYPES = [
+  'services',
+  'account',
+  'subscription',
+  'other',
+  'advertising',
+];
+
+const KICK_LABELS = {
+  services: 'Услуги',
+  account: 'Аккаунты',
+  subscription: 'Подписка',
+  other: 'Другое',
+  advertising: 'Реклама',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2134,6 +2151,13 @@ function isPrimeVideo(name, search = '') {
   );
 }
 
+function isKick(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  // Exact match only — avoid Door Kickers and similar
+  return n === 'kick' || s === 'kick';
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2572,6 +2596,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isPrimeVideo(item?.name || name, item?.search)) {
     return PRIME_VIDEO_TYPES;
   }
+  if (isKick(item?.name || name, item?.search)) {
+    return KICK_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2670,6 +2697,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isCrosshairX(itemName, itemSearch) && CROSSHAIR_X_LABELS)
     || (isBusuu(itemName, itemSearch) && BUSUU_LABELS)
     || (isPrimeVideo(itemName, itemSearch) && PRIME_VIDEO_LABELS)
+    || (isKick(itemName, itemSearch) && KICK_LABELS)
     || null;
 
   return allowed
