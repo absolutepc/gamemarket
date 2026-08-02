@@ -778,6 +778,12 @@ function isEsim(name, search = '') {
   return n === 'esim' || n === 'e-sim' || n.startsWith('esim ') || s.includes('esim');
 }
 
+function isExitlag(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'exitlag' || n.startsWith('exitlag ') || s.includes('exitlag');
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -839,6 +845,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isEsim(item?.name || name, item?.search)) {
     return ESIM_TYPES;
+  }
+  if (isExitlag(item?.name || name, item?.search)) {
+    return EXITLAG_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -902,6 +911,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isVkontakte(itemName, itemSearch) && VKONTAKTE_LABELS)
     || (isTwitch(itemName, itemSearch) && TWITCH_LABELS)
     || (isEsim(itemName, itemSearch) && ESIM_LABELS)
+    || (isExitlag(itemName, itemSearch) && EXITLAG_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
