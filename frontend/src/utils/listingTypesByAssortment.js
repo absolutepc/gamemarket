@@ -1080,6 +1080,21 @@ const BUSUU_LABELS = {
   other: 'Другое',
 };
 
+/** Prime Video */
+const PRIME_VIDEO_TYPES = [
+  'account',
+  'subscription',
+  'services',
+  'other',
+];
+
+const PRIME_VIDEO_LABELS = {
+  account: 'Аккаунты',
+  subscription: 'Подписка',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
