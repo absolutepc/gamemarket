@@ -44,6 +44,9 @@ const REDUCED_LISTING_TYPES = new Set([
   'zems',
   'mochi',
   'gold',
+  'elixir',
+  'trovo_ace',
+  'mana',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

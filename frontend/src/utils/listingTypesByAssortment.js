@@ -1221,6 +1221,27 @@ const HOSTING_LABELS = {
   other: 'Другое',
 };
 
+/** Trovo */
+const TROVO_TYPES = [
+  'account',
+  'elixir',
+  'trovo_ace',
+  'services',
+  'other',
+  'mana',
+  'advertising',
+];
+
+const TROVO_LABELS = {
+  account: 'Аккаунты',
+  elixir: 'Элексир',
+  trovo_ace: 'Trovo Ace',
+  services: 'Услуги',
+  other: 'Другое',
+  mana: 'Мана',
+  advertising: 'Реклама',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2320,6 +2341,12 @@ function isHosting(name, search = '') {
     || n === 'hosting' || n.startsWith('hosting ') || s.includes('hosting');
 }
 
+function isTrovo(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'trovo' || n.startsWith('trovo ') || s.includes('trovo');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2782,6 +2809,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isHosting(item?.name || name, item?.search)) {
     return HOSTING_TYPES;
   }
+  if (isTrovo(item?.name || name, item?.search)) {
+    return TROVO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2888,6 +2918,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isYappy(itemName, itemSearch) && YAPPY_LABELS)
     || (isGeforceNow(itemName, itemSearch) && GEFORCE_NOW_LABELS)
     || (isHosting(itemName, itemSearch) && HOSTING_LABELS)
+    || (isTrovo(itemName, itemSearch) && TROVO_LABELS)
     || null;
 
   return allowed

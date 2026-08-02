@@ -76,6 +76,10 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'gold', label: 'GOLD' },
   // Аудиоредакторы
   { value: 'sounds', label: 'Звуки' },
+  // Trovo
+  { value: 'elixir', label: 'Элексир' },
+  { value: 'trovo_ace', label: 'Trovo Ace' },
+  { value: 'mana', label: 'Мана' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

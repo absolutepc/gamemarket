@@ -569,6 +569,30 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Сэмплы', 'Пресеты', 'Пак', 'Один файл', 'Другое'],
     },
   ],
+  elixir: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
+  trovo_ace: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '6 месяцев', '1 год'],
+    },
+  ],
+  mana: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

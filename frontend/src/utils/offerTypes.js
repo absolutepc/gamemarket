@@ -66,6 +66,9 @@ export const OFFER_PATH_BY_TYPE = {
   servers: 'servers',
   gold: 'gold',
   sounds: 'sounds',
+  elixir: 'elixir',
+  trovo_ace: 'trovo-ace',
+  mana: 'mana',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -150,6 +153,9 @@ export function offerTypeLabel(type) {
     servers: 'сервера',
     gold: 'GOLD',
     sounds: 'звуки',
+    elixir: 'элексир',
+    trovo_ace: 'Trovo Ace',
+    mana: 'ману',
   };
   return map[type] || 'товары';
 }

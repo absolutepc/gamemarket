@@ -66,6 +66,9 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   servers: 'social',
   gold: 'subscriptions',
   sounds: 'items',
+  elixir: 'topups',
+  trovo_ace: 'subscriptions',
+  mana: 'topups',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
