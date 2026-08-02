@@ -1737,6 +1737,16 @@ function isTripo(name, search = '') {
   );
 }
 
+function isPixverse(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'pixverse'
+    || n.startsWith('pixverse ')
+    || s.includes('pixverse')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2124,6 +2134,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isTripo(item?.name || name, item?.search)) {
     return TRIPO_TYPES;
   }
+  if (isPixverse(item?.name || name, item?.search)) {
+    return PIXVERSE_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2205,6 +2218,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isN8n(itemName, itemSearch) && N8N_LABELS)
     || (isCoursera(itemName, itemSearch) && COURSERA_LABELS)
     || (isTripo(itemName, itemSearch) && TRIPO_LABELS)
+    || (isPixverse(itemName, itemSearch) && PIXVERSE_LABELS)
     || null;
 
   return allowed
