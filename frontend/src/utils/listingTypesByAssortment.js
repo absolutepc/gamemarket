@@ -2075,6 +2075,18 @@ function isKrea(name, search = '') {
   return n === 'krea' || n.startsWith('krea ') || s.includes('krea');
 }
 
+function isCrosshairX(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'crosshair x'
+    || n === 'crosshairx'
+    || n.startsWith('crosshair x ')
+    || s.includes('crosshair x')
+    || s.includes('crosshairx')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2504,6 +2516,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isKrea(item?.name || name, item?.search)) {
     return KREA_TYPES;
   }
+  if (isCrosshairX(item?.name || name, item?.search)) {
+    return CROSSHAIR_X_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2599,6 +2614,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isBandicam(itemName, itemSearch) && BANDICAM_LABELS)
     || (isBigoLive(itemName, itemSearch) && BIGO_LIVE_LABELS)
     || (isKrea(itemName, itemSearch) && KREA_LABELS)
+    || (isCrosshairX(itemName, itemSearch) && CROSSHAIR_X_LABELS)
     || null;
 
   return allowed
