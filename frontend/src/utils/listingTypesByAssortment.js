@@ -1065,6 +1065,21 @@ const CROSSHAIR_X_LABELS = {
   services: 'Услуги',
 };
 
+/** Busuu */
+const BUSUU_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const BUSUU_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
