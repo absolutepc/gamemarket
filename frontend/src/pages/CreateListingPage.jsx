@@ -679,7 +679,7 @@ export default function CreateListingPage() {
         {/* STEP: type */}
         {stepId === 'type' && (
           <div>
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
               {typeOptions.map((opt) => {
                 const active = form.listing_type === opt.value;
                 const reduced = isReducedFeeListingType(opt.value);
@@ -688,21 +688,17 @@ export default function CreateListingPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => pickType(opt.value)}
-                    className={`group flex items-center gap-3 w-full px-3 py-3 text-left rounded-xl border-b border-dark-800/80 last:border-b-0 transition-colors ${
-                      active
-                        ? 'bg-[#2B71F3]/15 text-white'
-                        : 'hover:bg-[#2B71F3]/20 hover:text-[#8EB6FF]'
+                    className={`sell-type-row group flex items-center gap-3 w-full px-4 py-3.5 text-left rounded-xl transition-colors duration-150 ${
+                      active ? 'is-active' : ''
                     }`}
                   >
-                    <span className="min-w-0 flex-1 text-xl sm:text-2xl font-semibold text-white group-hover:text-[#8EB6FF]">
+                    <span className="sell-type-label min-w-0 flex-1 text-xl sm:text-2xl font-semibold">
                       {opt.label}
                     </span>
                     {reduced && <FeeBadge />}
                     <span
-                      className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors ${
-                        active
-                          ? 'border-[#2B71F3] bg-[#2B71F3]'
-                          : 'border-dark-500 group-hover:border-[#2B71F3]'
+                      className={`sell-type-radio w-5 h-5 rounded-full border-2 shrink-0 transition-colors ${
+                        active ? 'is-active' : ''
                       }`}
                     />
                   </button>
