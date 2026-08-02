@@ -2407,6 +2407,12 @@ function isSlack(name, search = '') {
   return n === 'slack' || n.startsWith('slack ') || s.includes('slack');
 }
 
+function isHailuo(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'hailuo' || n.startsWith('hailuo ') || s.includes('hailuo');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2878,6 +2884,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isSlack(item?.name || name, item?.search)) {
     return SLACK_TYPES;
   }
+  if (isHailuo(item?.name || name, item?.search)) {
+    return HAILUO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2987,6 +2996,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isTrovo(itemName, itemSearch) && TROVO_LABELS)
     || (isElement(itemName, itemSearch) && ELEMENT_LABELS)
     || (isSlack(itemName, itemSearch) && SLACK_LABELS)
+    || (isHailuo(itemName, itemSearch) && HAILUO_LABELS)
     || null;
 
   return allowed
