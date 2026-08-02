@@ -652,6 +652,27 @@ const CANVA_LABELS = {
   other: 'Другое',
 };
 
+/** Ubisoft */
+const UBISOFT_TYPES = [
+  'clean_account',
+  'game_account',
+  'games',
+  'services',
+  'other',
+  'ubisoft_plus',
+  'rental',
+];
+
+const UBISOFT_LABELS = {
+  clean_account: 'Чистые аккаунты',
+  game_account: 'Аккаунты с играми',
+  games: 'Игры',
+  services: 'Услуги',
+  other: 'Другое',
+  ubisoft_plus: 'Ubisoft+',
+  rental: 'Аренда',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1449,6 +1470,12 @@ function isCanva(name, search = '') {
   return n === 'canva' || n.startsWith('canva ') || s.includes('canva');
 }
 
+function isUbisoft(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'ubisoft' || n.startsWith('ubisoft ') || s.includes('ubisoft');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1803,6 +1830,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isCanva(item?.name || name, item?.search)) {
     return CANVA_TYPES;
   }
+  if (isUbisoft(item?.name || name, item?.search)) {
+    return UBISOFT_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1873,6 +1903,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isHiggsfield(itemName, itemSearch) && HIGGSFIELD_LABELS)
     || (isOpenrouter(itemName, itemSearch) && OPENROUTER_LABELS)
     || (isCanva(itemName, itemSearch) && CANVA_LABELS)
+    || (isUbisoft(itemName, itemSearch) && UBISOFT_LABELS)
     || null;
 
   return allowed
