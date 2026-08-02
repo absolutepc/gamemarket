@@ -561,6 +561,21 @@ const SNAPCHAT_LABELS = {
   advertising: 'Реклама',
 };
 
+/** Figma */
+const FIGMA_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const FIGMA_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
