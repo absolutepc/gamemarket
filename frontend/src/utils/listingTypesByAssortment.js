@@ -988,6 +988,23 @@ const TANGO_LIVE_LABELS = {
   other: 'Другое',
 };
 
+/** Runway */
+const RUNWAY_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const RUNWAY_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1464,7 +1481,6 @@ const AI_SERVICE_NAMES = new Set([
   'gemini',
   'kimi',
   'perplexity',
-  'runway',
   'deepseek',
   'midjourney',
   'character ai',
