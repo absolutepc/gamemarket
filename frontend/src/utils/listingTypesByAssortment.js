@@ -1289,6 +1289,21 @@ const HAILUO_LABELS = {
   other: 'Другое',
 };
 
+/** Tidal */
+const TIDAL_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const TIDAL_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2413,6 +2428,12 @@ function isHailuo(name, search = '') {
   return n === 'hailuo' || n.startsWith('hailuo ') || s.includes('hailuo');
 }
 
+function isTidal(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'tidal' || n.startsWith('tidal ') || s.includes('tidal');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2887,6 +2908,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isHailuo(item?.name || name, item?.search)) {
     return HAILUO_TYPES;
   }
+  if (isTidal(item?.name || name, item?.search)) {
+    return TIDAL_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2997,6 +3021,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isElement(itemName, itemSearch) && ELEMENT_LABELS)
     || (isSlack(itemName, itemSearch) && SLACK_LABELS)
     || (isHailuo(itemName, itemSearch) && HAILUO_LABELS)
+    || (isTidal(itemName, itemSearch) && TIDAL_LABELS)
     || null;
 
   return allowed
