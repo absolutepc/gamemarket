@@ -25,6 +25,7 @@ import AdminDisputesPage from './pages/AdminDisputesPage';
 import AdminAssortmentPage from './pages/AdminAssortmentPage';
 import AppsPage from './pages/AppsPage';
 import GameLandingPage from './pages/GameLandingPage';
+import AboutPage from './pages/AboutPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import useAuthStore from './store/authStore';
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="auth/google/callback" element={<GoogleCallbackPage />} />
         <Route path="rules" element={<RulesPage />} />
         <Route path="faq" element={<FaqPage />} />
+        <Route path="about" element={<AboutPage />} />
         <Route path="support" element={<SupportPage />} />
         <Route path="terms-of-sale" element={<TermsOfSalePage />} />
         <Route path="privacy" element={<PrivacyPage />} />

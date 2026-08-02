@@ -52,6 +52,7 @@ const SOCIALS = [
 const PAYMENTS = ['Visa', 'Mastercard', 'Мир', 'СБП', 'Сбер', 'Тинькофф', 'ВТБ', 'Альфа'];
 
 const INFO_LINKS = [
+  { to: '/about', label: 'О Lootz' },
   { to: '/privacy', label: 'Политика конфиденциальности' },
   { to: '/user-agreement', label: 'Пользовательское соглашение' },
   { to: '/terms-of-sale', label: 'Условия продажи' },
@@ -65,6 +66,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
           {/* Left: socials (swapped with payments vs Playerok) — gran-pc style */}
           <div>
+            <Link to="/about" className="inline-block mb-3 no-underline">
+              <span className="font-bold text-xl tracking-tight text-[#5B8CFF]">Lootz</span>
+            </Link>
+            <p className="text-sm text-dark-400 leading-relaxed mb-5 max-w-xs">
+              Lootz — маркетплейс игровых товаров и услуг. Безопасные сделки с эскроу
+              между покупателями и продавцами.
+            </p>
             <h3 className="text-base font-semibold text-white mb-4">Социальные сети</h3>
             <div className="flex flex-wrap gap-3 mb-5">
               {SOCIALS.map((s) => (

@@ -456,6 +456,22 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <section className={`${PAGE_WIDTH_CLASS} pb-16`}>
+        <div className="rounded-2xl border border-dark-800 bg-gradient-to-br from-[#2B71F3]/10 via-dark-900/40 to-transparent px-6 py-8 sm:px-8 sm:py-10">
+          <p className="text-[#5B8CFF] font-bold text-sm tracking-wide mb-2">Lootz</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 max-w-xl">
+            Ищите в Google «Lootz» — так быстрее найти нашу площадку
+          </h2>
+          <p className="text-dark-300 text-sm sm:text-[15px] leading-relaxed max-w-2xl mb-5">
+            Lootz — отдельный бренд маркетплейса игровых товаров и услуг с эскроу.
+            Запомните имя: меньше путаницы с другими биржами, проще вернуться к сделкам и поддержке.
+          </p>
+          <Link to="/about" className="inline-flex items-center gap-1.5 text-[#2B71F3] hover:text-blue-400 text-sm font-medium">
+            Подробнее о Lootz <ArrowRight size={14} />
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

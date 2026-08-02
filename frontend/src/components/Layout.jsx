@@ -5,6 +5,7 @@ import useAuthStore from '../store/authStore';
 import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import ThemeToggle from './ThemeToggle';
+import BrandJsonLd from './BrandJsonLd';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
 
 /** Product detail: /listings/:id (not create/edit) */
@@ -32,6 +33,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <BrandJsonLd />
       <header
         className={`sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl border-b border-dark-800 ${
           hideHeaderMobile ? 'hidden lg:block' : ''
@@ -41,7 +43,11 @@ export default function Layout() {
           {/* Top row: brand + theme; actions on the right */}
           <div className="flex items-center justify-between gap-3 lg:contents">
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-              <Link to="/" className="flex items-center gap-2.5 no-underline">
+              <Link
+                to="/"
+                className="flex items-center gap-2.5 no-underline"
+                aria-label="Lootz — маркетплейс игровых товаров и услуг"
+              >
                 <span className="font-bold text-2xl lg:text-[1.75rem] leading-none tracking-tight text-[#5B8CFF]">
                   Lootz
                 </span>
@@ -51,6 +57,7 @@ export default function Layout() {
 
             <div className="flex items-center gap-2 lg:order-last shrink-0">
               <nav className="hidden lg:flex items-center gap-1">
+                <Link to="/about" className="btn-ghost text-sm">О Lootz</Link>
                 <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
                 {user?.role === 'admin' && (
                   <>
