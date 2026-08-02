@@ -59,6 +59,9 @@ export const OFFER_PATH_BY_TYPE = {
   guides: 'guides',
   zems: 'zems',
   packs: 'packs',
+  product_design: 'product-design',
+  images: 'images',
+  design_packs: 'design-packs',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -136,6 +139,9 @@ export function offerTypeLabel(type) {
     guides: 'руководства',
     zems: 'земы',
     packs: 'наборы',
+    product_design: 'оформление товара',
+    images: 'изображения',
+    design_packs: 'паки для дизайна',
   };
   return map[type] || 'товары';
 }

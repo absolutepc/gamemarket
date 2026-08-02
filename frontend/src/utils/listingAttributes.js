@@ -513,6 +513,30 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Одежда', 'Аксессуары', 'Микс', 'Другое'],
     },
   ],
+  product_design: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Карточка товара', 'Обложка', 'Баннер', 'Инфографика', 'Другое'],
+    },
+  ],
+  images: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['PNG', 'JPG', 'PSD', 'AI', 'Другое'],
+    },
+  ],
+  design_packs: [
+    {
+      key: 'pack_type',
+      label: 'Тип пака',
+      required: false,
+      options: ['Шрифты', 'Текстуры', 'Иконки', 'Шаблоны', 'Микс', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

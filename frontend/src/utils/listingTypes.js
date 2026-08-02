@@ -64,6 +64,10 @@ export const LISTING_TYPE_OPTIONS = [
   // ZEPETO
   { value: 'zems', label: 'Земы' },
   { value: 'packs', label: 'Наборы' },
+  // Дизайн
+  { value: 'product_design', label: 'Оформление товара' },
+  { value: 'images', label: 'Изображения' },
+  { value: 'design_packs', label: 'Паки для дизайна' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

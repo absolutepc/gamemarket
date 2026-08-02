@@ -399,6 +399,25 @@ const REPLIT_LABELS = {
   other: 'Другое',
 };
 
+/** Дизайн */
+const DESIGN_CATALOG_TYPES = [
+  'product_design',
+  'images',
+  'montage',
+  'design_packs',
+  'software',
+  'other',
+];
+
+const DESIGN_CATALOG_LABELS = {
+  product_design: 'Оформление товара',
+  images: 'Изображения',
+  montage: 'Видеомонтаж',
+  design_packs: 'Паки для дизайна',
+  software: 'Программы',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1064,6 +1083,12 @@ function isReplit(name, search = '') {
   return n === 'replit' || n.startsWith('replit ') || s.includes('replit');
 }
 
+function isDesignCatalog(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'дизайн' || n.startsWith('дизайн ') || s === 'дизайн';
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1370,6 +1395,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isReplit(item?.name || name, item?.search)) {
     return REPLIT_TYPES;
   }
+  if (isDesignCatalog(item?.name || name, item?.search)) {
+    return DESIGN_CATALOG_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1424,6 +1452,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isZoom(itemName, itemSearch) && ZOOM_LABELS)
     || (isZepeto(itemName, itemSearch) && ZEPETO_LABELS)
     || (isReplit(itemName, itemSearch) && REPLIT_LABELS)
+    || (isDesignCatalog(itemName, itemSearch) && DESIGN_CATALOG_LABELS)
     || null;
 
   return allowed

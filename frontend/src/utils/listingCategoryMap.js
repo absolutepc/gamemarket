@@ -59,6 +59,9 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   guides: 'other',
   zems: 'topups',
   packs: 'items',
+  product_design: 'other',
+  images: 'other',
+  design_packs: 'items',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
