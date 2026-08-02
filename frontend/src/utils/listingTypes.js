@@ -21,6 +21,7 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'design', label: 'Дизайн' },
   { value: 'training', label: 'Обучение' },
   { value: 'giftcard', label: 'Подарочные карты' },
+  { value: 'steam_rewards', label: 'Награды Steam' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);

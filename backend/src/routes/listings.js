@@ -62,6 +62,7 @@ const LISTING_TYPES = [
   'design',
   'training',
   'giftcard',
+  'steam_rewards',
 ];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [

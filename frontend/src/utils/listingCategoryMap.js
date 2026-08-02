@@ -21,6 +21,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   training: 'other',
   other: 'other',
   giftcard: 'gift-cards',
+  steam_rewards: 'other',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

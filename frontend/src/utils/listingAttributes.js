@@ -255,6 +255,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['RU', 'EU', 'US', 'Global'],
     },
   ],
+  steam_rewards: [
+    {
+      key: 'reward_type',
+      label: 'Тип награды',
+      required: true,
+      options: ['Карточки', 'Смайлики', 'Фоны', 'Купоны', 'Набор наград', 'Другое'],
+    },
+  ],
 };
 
 export function getAttributeSchema(listingType) {

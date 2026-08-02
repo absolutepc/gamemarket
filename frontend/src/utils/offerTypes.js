@@ -21,6 +21,7 @@ export const OFFER_PATH_BY_TYPE = {
   design: 'design',
   training: 'training',
   giftcard: 'gift-cards',
+  steam_rewards: 'steam-rewards',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -60,6 +61,7 @@ export function offerTypeLabel(type) {
     design: 'дизайн',
     training: 'обучение',
     giftcard: 'подарочные карты',
+    steam_rewards: 'награды Steam',
   };
   return map[type] || 'товары';
 }

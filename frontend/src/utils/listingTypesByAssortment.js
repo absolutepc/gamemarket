@@ -70,7 +70,6 @@ const GAME_PLATFORM_TYPES = [
 ];
 
 const GAME_PLATFORM_NAMES = new Set([
-  'steam',
   'epic games',
   'playstation',
   'xbox',
@@ -173,6 +172,33 @@ const SOUNDCLOUD_LABELS = {
   account: 'Аккаунты',
 };
 
+/** Steam */
+const STEAM_TYPES = [
+  'topup',
+  'games',
+  'region_change',
+  'game_account',
+  'clean_account',
+  'item',
+  'services',
+  'other',
+  'steam_rewards',
+  'rental',
+];
+
+const STEAM_LABELS = {
+  topup: 'Пополнение баланса',
+  games: 'Игры',
+  region_change: 'Смена региона',
+  game_account: 'Аккаунты с играми',
+  clean_account: 'Чистые аккаунты',
+  item: 'Предметы',
+  services: 'Услуги',
+  other: 'Другое',
+  steam_rewards: 'Награды Steam',
+  rental: 'Аренда',
+};
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
@@ -229,6 +255,12 @@ function isSoundcloud(name, search = '') {
   return n === 'soundcloud' || n.startsWith('soundcloud ') || s.includes('soundcloud');
 }
 
+function isSteam(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'steam' || n.startsWith('steam ') || s.includes('steam');
+}
+
 function isAiService(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -249,6 +281,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   const name = normalizeName(item?.name || gameOrItem);
   const kind = item?.kind || 'app';
 
+  if (isSteam(item?.name || name, item?.search)) {
+    return STEAM_TYPES;
+  }
   if (isApple(item?.name || name, item?.search)) {
     return APPLE_TYPES;
   }
@@ -282,13 +317,15 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
   const itemSearch = typeof gameOrItem === 'object' ? gameOrItem?.search : '';
   const apple = isApple(itemName, itemSearch);
   const soundcloud = isSoundcloud(itemName, itemSearch);
+  const steam = isSteam(itemName, itemSearch);
 
   return allowed
     .filter((value) => Boolean(byValue[value]))
     .map((value) => ({
       value,
       label:
-        (apple && APPLE_LABELS[value])
+        (steam && STEAM_LABELS[value])
+        || (apple && APPLE_LABELS[value])
         || (soundcloud && SOUNDCLOUD_LABELS[value])
         || byValue[value].label,
     }));
