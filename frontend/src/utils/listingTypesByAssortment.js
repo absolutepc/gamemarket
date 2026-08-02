@@ -1367,6 +1367,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isZepeto(item?.name || name, item?.search)) {
     return ZEPETO_TYPES;
   }
+  if (isReplit(item?.name || name, item?.search)) {
+    return REPLIT_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1420,6 +1423,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isChai(itemName, itemSearch) && CHAI_LABELS)
     || (isZoom(itemName, itemSearch) && ZOOM_LABELS)
     || (isZepeto(itemName, itemSearch) && ZEPETO_LABELS)
+    || (isReplit(itemName, itemSearch) && REPLIT_LABELS)
     || null;
 
   return allowed
