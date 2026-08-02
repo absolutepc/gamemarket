@@ -1280,6 +1280,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isNetflix(item?.name || name, item?.search)) {
     return NETFLIX_TYPES;
   }
+  if (isChai(item?.name || name, item?.search)) {
+    return CHAI_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1330,6 +1333,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isPolybuzz(itemName, itemSearch) && POLYBUZZ_LABELS)
     || (isAutodesk(itemName, itemSearch) && AUTODESK_LABELS)
     || (isNetflix(itemName, itemSearch) && NETFLIX_LABELS)
+    || (isChai(itemName, itemSearch) && CHAI_LABELS)
     || null;
 
   return allowed
