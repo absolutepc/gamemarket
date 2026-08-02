@@ -1180,6 +1180,19 @@ const MIMO_LABELS = {
   other: 'Другое',
 };
 
+/** Yappy */
+const YAPPY_TYPES = [
+  'account',
+  'services',
+  'other',
+];
+
+const YAPPY_LABELS = {
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2255,6 +2268,12 @@ function isMimo(name, search = '') {
   return n === 'mimo' || n.startsWith('mimo ') || s === 'mimo' || s.startsWith('mimo ');
 }
 
+function isYappy(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'yappy' || n.startsWith('yappy ') || s.includes('yappy');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2708,6 +2727,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isMimo(item?.name || name, item?.search)) {
     return MIMO_TYPES;
   }
+  if (isYappy(item?.name || name, item?.search)) {
+    return YAPPY_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2811,6 +2833,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isAudioEditors(itemName, itemSearch) && AUDIO_EDITORS_LABELS)
     || (isQuizlet(itemName, itemSearch) && QUIZLET_LABELS)
     || (isMimo(itemName, itemSearch) && MIMO_LABELS)
+    || (isYappy(itemName, itemSearch) && YAPPY_LABELS)
     || null;
 
   return allowed
