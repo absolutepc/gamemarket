@@ -898,6 +898,19 @@ const SOUNDPAD_LABELS = {
   services: 'Услуги',
 };
 
+/** Дзен */
+const DZEN_TYPES = [
+  'services',
+  'channels',
+  'other',
+];
+
+const DZEN_LABELS = {
+  services: 'Услуги',
+  channels: 'Каналы',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
