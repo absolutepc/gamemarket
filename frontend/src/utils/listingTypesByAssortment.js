@@ -512,6 +512,21 @@ const GEOGUESSR_LABELS = {
   other: 'Другое',
 };
 
+/** Meshy */
+const MESHY_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const MESHY_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1231,6 +1246,12 @@ function isGeoguessr(name, search = '') {
     || n.startsWith('geoguessr ')
     || s.includes('geoguessr')
   );
+}
+
+function isMeshy(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'meshy' || n.startsWith('meshy ') || s.includes('meshy');
 }
 
 function isApple(name, search = '') {
