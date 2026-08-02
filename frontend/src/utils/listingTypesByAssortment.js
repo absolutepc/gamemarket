@@ -1198,6 +1198,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isGearup(item?.name || name, item?.search)) {
     return GEARUP_TYPES;
   }
+  if (isPolybuzz(item?.name || name, item?.search)) {
+    return POLYBUZZ_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1245,6 +1248,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isFlStudio(itemName, itemSearch) && FL_STUDIO_LABELS)
     || (isElevenlabs(itemName, itemSearch) && ELEVENLABS_LABELS)
     || (isGearup(itemName, itemSearch) && GEARUP_LABELS)
+    || (isPolybuzz(itemName, itemSearch) && POLYBUZZ_LABELS)
     || null;
 
   return allowed
