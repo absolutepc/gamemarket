@@ -471,6 +471,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
     || (isSteam(itemName, itemSearch) && STEAM_LABELS)
     || (isApple(itemName, itemSearch) && APPLE_LABELS)
+    || (isSpotify(itemName, itemSearch) && SPOTIFY_LABELS)
     || (isSoundcloud(itemName, itemSearch) && SOUNDCLOUD_LABELS)
     || null;
 
