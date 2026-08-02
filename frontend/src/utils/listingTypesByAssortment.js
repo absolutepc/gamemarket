@@ -1633,6 +1633,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isEmochi(item?.name || name, item?.search)) {
     return EMOCHI_TYPES;
   }
+  if (isSnapchat(item?.name || name, item?.search)) {
+    return SNAPCHAT_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1696,6 +1699,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isGeoguessr(itemName, itemSearch) && GEOGUESSR_LABELS)
     || (isMeshy(itemName, itemSearch) && MESHY_LABELS)
     || (isEmochi(itemName, itemSearch) && EMOCHI_LABELS)
+    || (isSnapchat(itemName, itemSearch) && SNAPCHAT_LABELS)
     || null;
 
   return allowed
