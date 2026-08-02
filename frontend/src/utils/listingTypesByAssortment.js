@@ -1446,6 +1446,23 @@ const GOG_LABELS = {
   other: 'Другое',
 };
 
+/** NoPing */
+const NOPING_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'rental',
+  'other',
+];
+
+const NOPING_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  rental: 'Аренда',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2646,6 +2663,12 @@ function isGog(name, search = '') {
   return n === 'gog' || n.startsWith('gog ') || s === 'gog' || s.startsWith('gog ');
 }
 
+function isNoping(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'noping' || n.startsWith('noping ') || s.includes('noping');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -3149,6 +3172,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isGog(item?.name || name, item?.search)) {
     return GOG_TYPES;
+  }
+  if (isNoping(item?.name || name, item?.search)) {
+    return NOPING_TYPES;
   }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
