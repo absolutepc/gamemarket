@@ -1112,6 +1112,23 @@ const KICK_LABELS = {
   advertising: 'Реклама',
 };
 
+/** Udio */
+const UDIO_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const UDIO_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2158,6 +2175,12 @@ function isKick(name, search = '') {
   return n === 'kick' || s === 'kick';
 }
 
+function isUdio(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'udio' || n.startsWith('udio ') || s.includes('udio');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2599,6 +2622,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isKick(item?.name || name, item?.search)) {
     return KICK_TYPES;
   }
+  if (isUdio(item?.name || name, item?.search)) {
+    return UDIO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2698,6 +2724,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isBusuu(itemName, itemSearch) && BUSUU_LABELS)
     || (isPrimeVideo(itemName, itemSearch) && PRIME_VIDEO_LABELS)
     || (isKick(itemName, itemSearch) && KICK_LABELS)
+    || (isUdio(itemName, itemSearch) && UDIO_LABELS)
     || null;
 
   return allowed
