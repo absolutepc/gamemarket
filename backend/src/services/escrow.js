@@ -3,7 +3,10 @@ const logger = require('../utils/logger');
 const { PLATFORM_FEE_PERCENT } = require('./fees');
 
 const SELLER_OFFLINE_CANCEL_HOURS = 24;
-const BUYER_CONFIRM_DAYS = 7;
+/** Auto-confirm / escrow release after seller marks delivered */
+const BUYER_CONFIRM_HOURS = 48;
+/** @deprecated use BUYER_CONFIRM_HOURS */
+const BUYER_CONFIRM_DAYS = BUYER_CONFIRM_HOURS / 24;
 
 async function releaseEscrow(client, tx, { systemMessage, notifySeller = true } = {}) {
   await client.query(
@@ -106,12 +109,16 @@ async function processAutoReleases() {
     );
     for (const tx of rows) {
       await releaseEscrow(client, tx, {
-        systemMessage: 'Истёк срок подтверждения (7 дней). Сделка завершена автоматически, средства переведены продавцу.',
+        systemMessage: `Истёк срок подтверждения (${BUYER_CONFIRM_HOURS} ч). Сделка завершена автоматически, средства переведены продавцу.`,
       });
       await client.query(
         `INSERT INTO notifications (user_id, type, title, body, data)
-         VALUES ($1,'auto_release','Автозавершение сделки','Вы не подтвердили получение за 7 дней. Средства переведены продавцу.',$2)`,
-        [tx.buyer_id, JSON.stringify({ transaction_id: tx.id })]
+         VALUES ($1,'auto_release','Автозавершение сделки',$2,$3)`,
+        [
+          tx.buyer_id,
+          `Вы не подтвердили получение за ${BUYER_CONFIRM_HOURS} ч. Средства переведены продавцу.`,
+          JSON.stringify({ transaction_id: tx.id }),
+        ]
       );
     }
     await client.query('COMMIT');
@@ -137,6 +144,7 @@ function startAutoReleaseJob(intervalMs = 60_000) {
 module.exports = {
   PLATFORM_FEE_PERCENT,
   SELLER_OFFLINE_CANCEL_HOURS,
+  BUYER_CONFIRM_HOURS,
   BUYER_CONFIRM_DAYS,
   releaseEscrow,
   refundEscrow,

@@ -4,7 +4,7 @@ const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { strictLimiter, validate } = require('../middleware/security');
 const {
-  BUYER_CONFIRM_DAYS,
+  BUYER_CONFIRM_HOURS,
   SELLER_OFFLINE_CANCEL_HOURS,
   releaseEscrow,
   refundEscrow,
@@ -205,12 +205,12 @@ router.get('/:id', authenticate(), async (req, res) => {
     can_seller_cancel: tx.status === 'awaiting_delivery' && String(tx.seller_id) === String(req.user.id),
     cancel_info: cancelInfo,
     confirm_deadline_at: tx.auto_release_at || null,
-    buyer_confirm_days: BUYER_CONFIRM_DAYS,
+    buyer_confirm_hours: BUYER_CONFIRM_HOURS,
     seller_offline_cancel_hours: SELLER_OFFLINE_CANCEL_HOURS,
   });
 });
 
-// Seller marks delivered → buyer has 7 days to confirm
+// Seller marks delivered → buyer has 48h to confirm (auto-release otherwise)
 router.post('/:id/deliver', authenticate(), async (req, res) => {
   const client = await pool.connect();
   try {
@@ -229,7 +229,7 @@ router.post('/:id/deliver', authenticate(), async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const autoRelease = new Date(Date.now() + BUYER_CONFIRM_DAYS * 86400000);
+    const autoRelease = new Date(Date.now() + BUYER_CONFIRM_HOURS * 3600 * 1000);
     const { delivery_data } = req.body;
     await client.query(
       `UPDATE transactions SET status='awaiting_confirmation', seller_delivered_at=NOW(),
@@ -242,7 +242,7 @@ router.post('/:id/deliver', authenticate(), async (req, res) => {
       [
         req.params.id,
         req.user.id,
-        `Продавец передал товар. Покупатель должен подтвердить получение в течение ${BUYER_CONFIRM_DAYS} дней, иначе средства уйдут продавцу автоматически.`,
+        `Продавец передал товар. Покупатель должен подтвердить получение в течение ${BUYER_CONFIRM_HOURS} ч с момента передачи, иначе средства уйдут продавцу автоматически.`,
       ]
     );
     await client.query(
@@ -250,7 +250,7 @@ router.post('/:id/deliver', authenticate(), async (req, res) => {
        VALUES ($1,'delivery','Товар отправлен',$2,$3)`,
       [
         tx.buyer_id,
-        `Подтвердите получение в течение ${BUYER_CONFIRM_DAYS} дней`,
+        `Подтвердите получение в течение ${BUYER_CONFIRM_HOURS} ч`,
         JSON.stringify({ transaction_id: req.params.id }),
       ]
     );

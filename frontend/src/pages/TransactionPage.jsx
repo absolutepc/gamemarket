@@ -173,7 +173,7 @@ export default function TransactionPage() {
             {tx.status === 'awaiting_confirmation' && tx.confirm_deadline_at && (
               <p>
                 Срок подтверждения: до <strong className="text-white">{formatDate(tx.confirm_deadline_at)}</strong>
-                {' '}(7 дней). Иначе средства уйдут продавцу автоматически.
+                {' '}({tx.buyer_confirm_hours || 48} ч с момента передачи продавцом). Иначе средства уйдут продавцу автоматически.
               </p>
             )}
             {tx.status === 'awaiting_delivery' && isBuyer && (
