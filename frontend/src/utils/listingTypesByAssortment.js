@@ -1033,6 +1033,23 @@ const BIGO_LIVE_LABELS = {
   other: 'Другое',
 };
 
+/** Krea */
+const KREA_TYPES = [
+  'subscription',
+  'account',
+  'topup',
+  'services',
+  'other',
+];
+
+const KREA_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  topup: 'Пополнение баланса',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2035,6 +2052,12 @@ function isBigoLive(name, search = '') {
     || n.startsWith('bigo live ')
     || s.includes('bigo live')
   );
+}
+
+function isKrea(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'krea' || n.startsWith('krea ') || s.includes('krea');
 }
 
 function isApple(name, search = '') {
