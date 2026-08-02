@@ -1102,6 +1102,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isLikee(item?.name || name, item?.search)) {
     return LIKEE_TYPES;
   }
+  if (isFlStudio(item?.name || name, item?.search)) {
+    return FL_STUDIO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1146,6 +1149,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isOculusQuest(itemName, itemSearch) && OCULUS_QUEST_LABELS)
     || (isMicrosoftStore(itemName, itemSearch) && MICROSOFT_STORE_LABELS)
     || (isLikee(itemName, itemSearch) && LIKEE_LABELS)
+    || (isFlStudio(itemName, itemSearch) && FL_STUDIO_LABELS)
     || null;
 
   return allowed
