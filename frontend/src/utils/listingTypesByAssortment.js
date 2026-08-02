@@ -72,7 +72,6 @@ const GAME_PLATFORM_TYPES = [
 const GAME_PLATFORM_NAMES = new Set([
   'epic games',
   'nintendo',
-  'rockstar games',
   'ea play',
   'origin',
   'ubisoft',
@@ -407,6 +406,27 @@ const FACEIT_LABELS = {
   other: 'Другое',
 };
 
+/** Rockstar Games */
+const ROCKSTAR_TYPES = [
+  'clean_account',
+  'keys',
+  'game_account',
+  'services',
+  'other',
+  'rental',
+  'boosting',
+];
+
+const ROCKSTAR_LABELS = {
+  clean_account: 'Чистые аккаунты',
+  keys: 'Ключи',
+  game_account: 'Аккаунты с играми',
+  services: 'Услуги',
+  other: 'Другое',
+  rental: 'Аренда',
+  boosting: 'Буст',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -571,6 +591,17 @@ function isFaceit(name, search = '') {
   return n === 'faceit' || n.startsWith('faceit ') || s.includes('faceit');
 }
 
+function isRockstar(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'rockstar games'
+    || n === 'rockstar'
+    || n.startsWith('rockstar ')
+    || s.includes('rockstar')
+  );
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -614,6 +645,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isFaceit(item?.name || name, item?.search)) {
     return FACEIT_TYPES;
+  }
+  if (isRockstar(item?.name || name, item?.search)) {
+    return ROCKSTAR_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -668,6 +702,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isBattlenet(itemName, itemSearch) && BATTLENET_LABELS)
     || (isAdobe(itemName, itemSearch) && ADOBE_LABELS)
     || (isFaceit(itemName, itemSearch) && FACEIT_LABELS)
+    || (isRockstar(itemName, itemSearch) && ROCKSTAR_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
