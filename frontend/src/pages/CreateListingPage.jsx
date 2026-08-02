@@ -121,7 +121,6 @@ export default function CreateListingPage() {
   const [compressing, setCompressing] = useState(false);
   const [assortmentTab, setAssortmentTab] = useState('games');
   const [assortmentQ, setAssortmentQ] = useState('');
-  const [feeFilterOn, setFeeFilterOn] = useState(false);
   const [accessType, setAccessType] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [productLogin, setProductLogin] = useState('');
@@ -219,11 +218,10 @@ export default function CreateListingPage() {
     );
   }, [assortmentQ, tabItems, visibleAssortment]);
 
-  const typeOptions = useMemo(() => {
-    const forGame = listingTypeOptionsForAssortment(form.game || selectedGame);
-    if (!feeFilterOn) return forGame;
-    return forGame.filter((o) => isReducedFeeListingType(o.value));
-  }, [feeFilterOn, form.game, selectedGame]);
+  const typeOptions = useMemo(
+    () => listingTypeOptionsForAssortment(form.game || selectedGame),
+    [form.game, selectedGame]
+  );
 
   const patchForm = (key, value) => {
     setForm((prev) => {
@@ -518,20 +516,20 @@ export default function CreateListingPage() {
       <div className="flex-1 max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 pb-28">
         {/* Context chip after game picked */}
         {step > 0 && selectedGame && (
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-3">
             <img
               src={selectedGame.icon || FALLBACK_ICON}
               alt=""
-              className="w-10 h-10 rounded-xl object-cover ring-1 ring-white/10"
+              className="w-9 h-9 rounded-xl object-cover ring-1 ring-white/10"
               onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
             />
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-white truncate">{selectedGame.name}</p>
-              {typeLabel && (
+              {stepId !== 'type' && typeLabel && (
                 <p className="text-xs text-dark-400 truncate">{typeLabel}</p>
               )}
             </div>
-            {form.listing_type && (
+            {stepId !== 'type' && form.listing_type && (
               <FeeBadge percent={feePercent} />
             )}
           </div>
@@ -581,7 +579,6 @@ export default function CreateListingPage() {
                   type="button"
                   onClick={() => {
                     patchForm('listing_type', t.value);
-                    if (isReducedFeeListingType(t.value)) setFeeFilterOn(true);
                   }}
                   className="relative shrink-0 rounded-full px-3.5 py-2 text-sm bg-dark-900 border border-dark-800 text-dark-200"
                 >
@@ -627,83 +624,31 @@ export default function CreateListingPage() {
         {/* STEP: type */}
         {stepId === 'type' && (
           <div>
-            <div className="relative mb-3">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
-              <input
-                className="input pl-10 h-11 rounded-full"
-                placeholder="Поиск раздела..."
-                value={assortmentQ}
-                onChange={(e) => setAssortmentQ(e.target.value)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-3 mb-4 px-1">
-              <div className="flex items-center gap-2 text-sm text-emerald-400 font-medium">
-                <Tag size={16} />
-                Платёж {formatFeePercent(FEE_REDUCED)}
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={feeFilterOn}
-                onClick={() => setFeeFilterOn((v) => !v)}
-                className={`relative w-12 h-7 rounded-full transition-colors ${
-                  feeFilterOn ? 'bg-[#2B71F3]' : 'bg-dark-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-transform ${
-                    feeFilterOn ? 'translate-x-5' : ''
-                  }`}
-                />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {typeOptions
-                .filter((o) => {
-                  const q = assortmentQ.trim().toLowerCase();
-                  if (!q) return true;
-                  return o.label.toLowerCase().includes(q);
-                })
-                .map((opt) => {
-                  const active = form.listing_type === opt.value;
-                  const reduced = isReducedFeeListingType(opt.value);
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => pickType(opt.value)}
-                      className={`flex items-center gap-3 w-full rounded-2xl px-3 py-3 text-left border transition-colors ${
-                        active
-                          ? 'border-[#2B71F3] bg-[#2B71F3]/10'
-                          : 'border-dark-800 bg-dark-900 hover:border-dark-600'
+            <div className="flex flex-col">
+              {typeOptions.map((opt) => {
+                const active = form.listing_type === opt.value;
+                const reduced = isReducedFeeListingType(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => pickType(opt.value)}
+                    className={`flex items-center gap-3 w-full px-1 py-3 text-left border-b border-dark-800/80 last:border-b-0 transition-colors ${
+                      active ? 'bg-[#2B71F3]/5' : 'hover:bg-dark-900/60'
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1 text-[15px] font-medium text-white">
+                      {opt.label}
+                    </span>
+                    {reduced && <FeeBadge />}
+                    <span
+                      className={`w-5 h-5 rounded-full border-2 shrink-0 ${
+                        active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-500'
                       }`}
-                    >
-                      <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-dark-800 shrink-0">
-                        <img
-                          src={selectedGame?.icon || FALLBACK_ICON}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                        {reduced && (
-                          <span className="absolute top-0 left-0">
-                            <FeeBadge className="rounded-none rounded-br-md" />
-                          </span>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-white">{selectedGame?.name || form.game}</p>
-                        <p className="text-sm text-dark-400">{opt.label}</p>
-                      </div>
-                      <span
-                        className={`w-5 h-5 rounded-full border-2 shrink-0 ${
-                          active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-600'
-                        }`}
-                      />
-                    </button>
-                  );
-                })}
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
