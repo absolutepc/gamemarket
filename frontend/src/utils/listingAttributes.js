@@ -411,6 +411,22 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Обычный', 'Редкий', 'Лимитированный', 'Другое'],
     },
   ],
+  twitch_drops: [
+    {
+      key: 'game',
+      label: 'Игра',
+      required: false,
+      options: ['Другое'],
+    },
+  ],
+  bits: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

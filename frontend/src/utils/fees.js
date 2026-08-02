@@ -31,6 +31,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'voices',
   'vk_music',
   'vk_play',
+  'bits',
 ]);
 
 export function isReducedFeeListingType(listingType) {

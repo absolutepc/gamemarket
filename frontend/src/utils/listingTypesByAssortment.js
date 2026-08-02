@@ -94,7 +94,6 @@ const SOCIAL_APP_TYPES = [
 const SOCIAL_APP_NAMES = new Set([
   'discord',
   'likee',
-  'twitch',
 ]);
 
 /** AI tools / нейросети — только 4 основных типа */
@@ -506,6 +505,29 @@ const VKONTAKTE_LABELS = {
   bots: 'Боты',
 };
 
+/** Twitch */
+const TWITCH_TYPES = [
+  'design',
+  'subscription',
+  'services',
+  'advertising',
+  'account',
+  'other',
+  'twitch_drops',
+  'bits',
+];
+
+const TWITCH_LABELS = {
+  design: 'Дизайн',
+  subscription: 'Подписки',
+  services: 'Услуги',
+  advertising: 'Реклама',
+  account: 'Аккаунты',
+  other: 'Другое',
+  twitch_drops: 'Twitch Drops',
+  bits: 'Bits',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -712,6 +734,12 @@ function isVkontakte(name, search = '') {
   );
 }
 
+function isTwitch(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'twitch' || n.startsWith('twitch ') || s.includes('twitch');
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -767,6 +795,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isVkontakte(item?.name || name, item?.search)) {
     return VKONTAKTE_TYPES;
+  }
+  if (isTwitch(item?.name || name, item?.search)) {
+    return TWITCH_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -828,6 +859,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isWindows(itemName, itemSearch) && WINDOWS_LABELS)
     || (isCapcut(itemName, itemSearch) && CAPCUT_LABELS)
     || (isVkontakte(itemName, itemSearch) && VKONTAKTE_LABELS)
+    || (isTwitch(itemName, itemSearch) && TWITCH_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)

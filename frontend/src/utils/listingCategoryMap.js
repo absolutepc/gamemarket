@@ -47,6 +47,8 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   vk_music: 'subscriptions',
   vk_play: 'other',
   gifts: 'other',
+  twitch_drops: 'other',
+  bits: 'topups',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

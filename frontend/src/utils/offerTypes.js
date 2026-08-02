@@ -47,6 +47,8 @@ export const OFFER_PATH_BY_TYPE = {
   vk_music: 'vk-music',
   vk_play: 'vk-play',
   gifts: 'gifts',
+  twitch_drops: 'twitch-drops',
+  bits: 'bits',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -112,6 +114,8 @@ export function offerTypeLabel(type) {
     vk_music: 'VK Music',
     vk_play: 'VK Play',
     gifts: 'подарки',
+    twitch_drops: 'Twitch Drops',
+    bits: 'Bits',
   };
   return map[type] || 'товары';
 }

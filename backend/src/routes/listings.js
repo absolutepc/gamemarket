@@ -82,6 +82,8 @@ const LISTING_TYPES = [
   'vk_music',
   'vk_play',
   'gifts',
+  'twitch_drops',
+  'bits',
   'ps_plus',
   'ea_play',
   'youtube_music',

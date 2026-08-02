@@ -44,6 +44,9 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'vk_music', label: 'VK Music' },
   { value: 'vk_play', label: 'VK Play' },
   { value: 'gifts', label: 'Подарки' },
+  // Twitch
+  { value: 'twitch_drops', label: 'Twitch Drops' },
+  { value: 'bits', label: 'Bits' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },
