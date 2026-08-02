@@ -2073,6 +2073,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isN8n(item?.name || name, item?.search)) {
     return N8N_TYPES;
   }
+  if (isCoursera(item?.name || name, item?.search)) {
+    return COURSERA_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2152,6 +2155,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isPhotoroom(itemName, itemSearch) && PHOTOROOM_LABELS)
     || (isPicsart(itemName, itemSearch) && PICSART_LABELS)
     || (isN8n(itemName, itemSearch) && N8N_LABELS)
+    || (isCoursera(itemName, itemSearch) && COURSERA_LABELS)
     || null;
 
   return allowed
