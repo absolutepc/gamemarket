@@ -28,10 +28,10 @@ export default function TermsOfSalePage() {
           </p>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>
-              <strong className="text-white">7.5%</strong> — подписки, донат, пополнения, ключи, подарочные карты, AI и сервисы
+              <strong className="text-white">7.5%</strong> — донат, подписки, пополнение баланса, ключи, скины, игры
             </li>
             <li>
-              <strong className="text-white">17.5%</strong> — аккаунты, предметы, игровая валюта, бусты, услуги и прочее
+              <strong className="text-white">17.5%</strong> — аккаунты, предметы, игровая валюта, бусты, подарочные карты, AI, услуги и прочее
             </li>
           </ul>
           <p className="mt-3">

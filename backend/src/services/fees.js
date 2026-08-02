@@ -1,16 +1,17 @@
 /**
  * Lootz fees: Playerok-like tiers, ~2.5% lower.
  * Playerok ~10% / ~20%  →  Lootz 7.5% / 17.5%
+ *
+ * 7.5%: донат, подписки, пополнение баланса, ключи, скины, игры
+ * 17.5%: всё остальное
  */
 
-const FEE_REDUCED = 0.075; // подписки, пополнения, карты, ИИ
-const FEE_STANDARD = 0.175; // аккаунты, предметы, валюта, бусты и пр.
+const FEE_REDUCED = 0.075;
+const FEE_STANDARD = 0.175;
 
 const REDUCED_CATEGORY_SLUGS = new Set([
   'subscriptions',
   'topups',
-  'gift-cards',
-  'ai-services',
 ]);
 
 const REDUCED_LISTING_TYPES = new Set([
@@ -18,21 +19,17 @@ const REDUCED_LISTING_TYPES = new Set([
   'donate',
   'topup',
   'keys',
-  'giftcard', // legacy
+  'skins',
+  'games',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {
-  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) {
-    return FEE_REDUCED;
-  }
   if (listingType && REDUCED_LISTING_TYPES.has(listingType)) {
     return FEE_REDUCED;
   }
-  // If category explicitly exists and is not reduced → standard
-  if (categorySlug) {
-    return FEE_STANDARD;
+  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) {
+    return FEE_REDUCED;
   }
-  // No category: fall back to listing type (already checked reduced), else standard
   return FEE_STANDARD;
 }
 
