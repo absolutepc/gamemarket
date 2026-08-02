@@ -190,6 +190,27 @@ const OCULUS_QUEST_LABELS = {
   other: 'Другое',
 };
 
+/** Microsoft Store */
+const MICROSOFT_STORE_TYPES = [
+  'license',
+  'account',
+  'other',
+  'services',
+  'games',
+  'ubisoft_plus',
+  'game_pass',
+];
+
+const MICROSOFT_STORE_LABELS = {
+  license: 'Лицензии',
+  account: 'Аккаунты',
+  other: 'Другое',
+  services: 'Услуги',
+  games: 'Игры',
+  ubisoft_plus: 'Ubisoft+',
+  game_pass: 'Game Pass',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -737,6 +758,16 @@ function isOculusQuest(name, search = '') {
     || n.startsWith('meta quest ')
     || s.includes('oculus')
     || s.includes('meta quest')
+  );
+}
+
+function isMicrosoftStore(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'microsoft store'
+    || n.startsWith('microsoft store ')
+    || s.includes('microsoft store')
   );
 }
 
