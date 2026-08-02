@@ -26,10 +26,14 @@ ALLOWED_ORIGINS=https://lootz.ru,https://www.lootz.ru
 ### Frontend
 ```
 BACKEND_URL=<внутренний/публичный URL backend-сервиса в Railway>
+# Яндекс.Вебмастер — код из meta content=...
+YANDEX_VERIFICATION=
 ```
 `BACKEND_URL` обычно уже настроен — не меняйте без необходимости.
 
 После смены переменных сделайте **Redeploy** backend и frontend.
+
+Подробнее про Вебмастер: [YANDEX_WEBMASTER.md](./YANDEX_WEBMASTER.md)
 
 ## 4. OAuth (Google / VK / Apple)
 
