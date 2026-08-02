@@ -450,6 +450,23 @@ const HEYGEN_LABELS = {
   other: 'Другое',
 };
 
+/** Duolingo */
+const DUOLINGO_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+  'promocodes',
+];
+
+const DUOLINGO_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+  promocodes: 'Промокод',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
