@@ -248,6 +248,21 @@ const FL_STUDIO_LABELS = {
   donate: 'Донат',
 };
 
+/** ElevenLabs */
+const ELEVENLABS_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const ELEVENLABS_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
