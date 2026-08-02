@@ -39,6 +39,11 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'coins', label: 'Монеты' },
   { value: 'promotion', label: 'Продвижение' },
   { value: 'montage', label: 'Монтаж' },
+  // ВКонтакте
+  { value: 'voices', label: 'Голоса' },
+  { value: 'vk_music', label: 'VK Music' },
+  { value: 'vk_play', label: 'VK Play' },
+  { value: 'gifts', label: 'Подарки' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

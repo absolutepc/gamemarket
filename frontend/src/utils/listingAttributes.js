@@ -379,6 +379,38 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['100', '500', '1000', '5000', '10000', 'Другое'],
     },
   ],
+  voices: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '250', '500', '1000', '5000', 'Другое'],
+    },
+  ],
+  vk_music: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '6 месяцев', '1 год'],
+    },
+  ],
+  vk_play: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Игра', 'Аккаунт', 'Валюта', 'Другое'],
+    },
+  ],
+  gifts: [
+    {
+      key: 'gift_type',
+      label: 'Тип подарка',
+      required: false,
+      options: ['Обычный', 'Редкий', 'Лимитированный', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

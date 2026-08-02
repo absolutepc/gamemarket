@@ -43,6 +43,10 @@ export const OFFER_PATH_BY_TYPE = {
   youtube_tv: 'youtube-tv',
   game_pass: 'game-pass',
   ubisoft_plus: 'ubisoft-plus',
+  voices: 'voices',
+  vk_music: 'vk-music',
+  vk_play: 'vk-play',
+  gifts: 'gifts',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -104,6 +108,10 @@ export function offerTypeLabel(type) {
     youtube_tv: 'YouTube TV',
     game_pass: 'Game Pass',
     ubisoft_plus: 'Ubisoft+',
+    voices: 'голоса',
+    vk_music: 'VK Music',
+    vk_play: 'VK Play',
+    gifts: 'подарки',
   };
   return map[type] || 'товары';
 }

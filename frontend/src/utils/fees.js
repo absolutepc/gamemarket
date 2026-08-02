@@ -28,6 +28,9 @@ export const REDUCED_LISTING_TYPES = new Set([
   'youtube_tv',
   'game_pass',
   'ubisoft_plus',
+  'voices',
+  'vk_music',
+  'vk_play',
 ]);
 
 export function isReducedFeeListingType(listingType) {

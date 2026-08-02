@@ -93,7 +93,6 @@ const SOCIAL_APP_TYPES = [
 
 const SOCIAL_APP_NAMES = new Set([
   'discord',
-  'вконтакте',
   'likee',
   'twitch',
 ]);
@@ -478,6 +477,35 @@ const CAPCUT_LABELS = {
   rental: 'Аренда',
 };
 
+/** ВКонтакте */
+const VKONTAKTE_TYPES = [
+  'voices',
+  'vk_music',
+  'services',
+  'vk_play',
+  'advertising',
+  'other',
+  'gifts',
+  'mods',
+  'groups',
+  'games',
+  'bots',
+];
+
+const VKONTAKTE_LABELS = {
+  voices: 'Голоса',
+  vk_music: 'VK Music',
+  services: 'Услуги',
+  vk_play: 'VK Play',
+  advertising: 'Реклама',
+  other: 'Другое',
+  gifts: 'Подарки',
+  mods: 'Моды',
+  groups: 'Группы',
+  games: 'Игры',
+  bots: 'Боты',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -670,6 +698,20 @@ function isCapcut(name, search = '') {
   return n === 'capcut' || n.startsWith('capcut ') || s.includes('capcut');
 }
 
+function isVkontakte(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'вконтакте'
+    || n === 'vk'
+    || n === 'vkontakte'
+    || n.startsWith('вконтакте ')
+    || n.startsWith('vk ')
+    || s.includes('вконтакте')
+    || s.includes('vkontakte')
+  );
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -722,6 +764,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isCapcut(item?.name || name, item?.search)) {
     return CAPCUT_TYPES;
+  }
+  if (isVkontakte(item?.name || name, item?.search)) {
+    return VKONTAKTE_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -782,6 +827,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isRockstar(itemName, itemSearch) && ROCKSTAR_LABELS)
     || (isWindows(itemName, itemSearch) && WINDOWS_LABELS)
     || (isCapcut(itemName, itemSearch) && CAPCUT_LABELS)
+    || (isVkontakte(itemName, itemSearch) && VKONTAKTE_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)

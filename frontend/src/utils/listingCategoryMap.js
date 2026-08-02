@@ -43,6 +43,10 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   youtube_tv: 'subscriptions',
   game_pass: 'subscriptions',
   ubisoft_plus: 'subscriptions',
+  voices: 'topups',
+  vk_music: 'subscriptions',
+  vk_play: 'other',
+  gifts: 'other',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
