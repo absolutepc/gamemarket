@@ -58,7 +58,7 @@ export default function AppsPage() {
     <div className={`${PAGE_WIDTH_CLASS} py-6 sm:py-8 pb-28`}>
       <Seo
         title="Игры и сервисы"
-        description="Все игры, мобильные игры и приложения Lootz — выберите направление и перейдите к лотам."
+        description="Игры, мобильные игры и приложения на Lootz — маркетплейсе игровых товаров и услуг с безопасным эскроу."
         path="/apps"
       />
 

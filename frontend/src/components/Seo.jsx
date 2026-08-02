@@ -1,8 +1,12 @@
 import { useEffect } from 'react';
 
 const SITE_NAME = 'Lootz';
-const DEFAULT_DESCRIPTION =
-  'Lootz — безопасная торговая площадка для игровых товаров: аккаунты, валюта, предметы и бусты с эскроу-защитой.';
+
+/** Default homepage-style title — matches top SERP phrasing for the niche */
+export const DEFAULT_TITLE = `${SITE_NAME} — маркетплейс игровых товаров и услуг`;
+
+export const DEFAULT_DESCRIPTION =
+  'Покупайте и продавайте аккаунты, игровую валюту, предметы и бусты. Безопасные сделки между игроками с гарантией эскроу.';
 
 export default function Seo({
   title,
@@ -10,8 +14,12 @@ export default function Seo({
   path = '/',
   noindex = false,
   type = 'website',
+  /** When true, `title` is used as the full document title (no "— Lootz" suffix). */
+  absoluteTitle = false,
 }) {
-  const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Торговая площадка игровых товаров`;
+  const fullTitle = title
+    ? (absoluteTitle ? title : `${title} — ${SITE_NAME}`)
+    : DEFAULT_TITLE;
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const url = `${origin}${path}`;
 

@@ -56,7 +56,7 @@ export default function CatalogPage() {
             ? `Поиск: ${filters.search}`
             : activeTypeLabel || 'Каталог'
         }
-        description="Каталог цифровых товаров Lootz: игры, подписки ИИ, Telegram, TikTok, Steam, App Store и другое."
+        description="Каталог Lootz — маркетплейс игровых товаров и услуг: аккаунты, валюта, бусты, ключи и предметы с эскроу."
         path="/catalog"
       />
       <div className="flex flex-col lg:flex-row gap-6">
