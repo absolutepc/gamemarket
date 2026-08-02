@@ -638,6 +638,21 @@ const OPENROUTER_LABELS = {
   services: 'Услуги',
 };
 
+/** Canva */
+const CANVA_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const CANVA_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
