@@ -43,6 +43,9 @@ export const LISTING_TYPE_OPTIONS = [
   // YouTube
   { value: 'youtube_music', label: 'YouTube Music' },
   { value: 'youtube_tv', label: 'YouTube TV' },
+  // Xbox
+  { value: 'game_pass', label: 'Game Pass' },
+  { value: 'ubisoft_plus', label: 'Ubisoft+' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);

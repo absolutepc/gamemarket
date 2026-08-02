@@ -39,6 +39,8 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   ea_play: 'subscriptions',
   youtube_music: 'subscriptions',
   youtube_tv: 'subscriptions',
+  game_pass: 'subscriptions',
+  ubisoft_plus: 'subscriptions',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

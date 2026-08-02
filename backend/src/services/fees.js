@@ -26,6 +26,8 @@ const REDUCED_LISTING_TYPES = new Set([
   'premium',
   'youtube_music',
   'youtube_tv',
+  'game_pass',
+  'ubisoft_plus',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

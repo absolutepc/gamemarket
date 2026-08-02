@@ -71,7 +71,6 @@ const GAME_PLATFORM_TYPES = [
 
 const GAME_PLATFORM_NAMES = new Set([
   'epic games',
-  'xbox',
   'nintendo',
   'battle.net',
   'rockstar games',
@@ -305,6 +304,31 @@ const PLAYSTATION_LABELS = {
   other: 'Другое',
 };
 
+/** Xbox */
+const XBOX_TYPES = [
+  'game_pass',
+  'topup',
+  'games',
+  'account',
+  'clean_account',
+  'services',
+  'region_change',
+  'other',
+  'ubisoft_plus',
+];
+
+const XBOX_LABELS = {
+  game_pass: 'Game Pass',
+  topup: 'Пополнение баланса',
+  games: 'Игры',
+  account: 'Аккаунты',
+  clean_account: 'Чистые аккаунты',
+  services: 'Услуги',
+  region_change: 'Смена региона',
+  other: 'Другое',
+  ubisoft_plus: 'Ubisoft+',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -425,6 +449,12 @@ function isPlaystation(name, search = '') {
   );
 }
 
+function isXbox(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'xbox' || n.startsWith('xbox ') || s.includes('xbox');
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -453,6 +483,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
 
   if (isPlaystation(item?.name || name, item?.search)) {
     return PLAYSTATION_TYPES;
+  }
+  if (isXbox(item?.name || name, item?.search)) {
+    return XBOX_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -502,6 +535,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
   const itemSearch = typeof gameOrItem === 'object' ? gameOrItem?.search : '';
   const labelMap =
     (isPlaystation(itemName, itemSearch) && PLAYSTATION_LABELS)
+    || (isXbox(itemName, itemSearch) && XBOX_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)

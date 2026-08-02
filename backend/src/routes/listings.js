@@ -80,6 +80,8 @@ const LISTING_TYPES = [
   'ea_play',
   'youtube_music',
   'youtube_tv',
+  'game_pass',
+  'ubisoft_plus',
 ];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [

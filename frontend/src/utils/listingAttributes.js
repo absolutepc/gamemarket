@@ -395,6 +395,34 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['EA Play', 'EA Play Pro'],
     },
   ],
+  game_pass: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '12 месяцев'],
+    },
+    {
+      key: 'tier',
+      label: 'Уровень',
+      required: false,
+      options: ['Core', 'Standard', 'Ultimate', 'PC'],
+    },
+  ],
+  ubisoft_plus: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '12 месяцев'],
+    },
+    {
+      key: 'tier',
+      label: 'Уровень',
+      required: false,
+      options: ['Classic', 'Premium'],
+    },
+  ],
   youtube_music: [
     {
       key: 'duration',

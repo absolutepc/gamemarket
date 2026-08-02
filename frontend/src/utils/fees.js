@@ -24,6 +24,8 @@ export const REDUCED_LISTING_TYPES = new Set([
   'premium',
   'youtube_music',
   'youtube_tv',
+  'game_pass',
+  'ubisoft_plus',
 ]);
 
 export function isReducedFeeListingType(listingType) {

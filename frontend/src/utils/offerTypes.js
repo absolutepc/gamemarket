@@ -39,6 +39,8 @@ export const OFFER_PATH_BY_TYPE = {
   ea_play: 'ea-play',
   youtube_music: 'youtube-music',
   youtube_tv: 'youtube-tv',
+  game_pass: 'game-pass',
+  ubisoft_plus: 'ubisoft-plus',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -96,6 +98,8 @@ export function offerTypeLabel(type) {
     ea_play: 'EA Play',
     youtube_music: 'YouTube Music',
     youtube_tv: 'YouTube TV',
+    game_pass: 'Game Pass',
+    ubisoft_plus: 'Ubisoft+',
   };
   return map[type] || 'товары';
 }
