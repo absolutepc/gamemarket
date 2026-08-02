@@ -10,7 +10,13 @@ const useAuthStore = create(
       isLoading: false,
 
       setAuth: (user, accessToken) => set({ user, accessToken }),
-      setUser: (user) => set({ user }),
+      /** Accept a user object, or unwrap accidental `{ user }` API envelopes */
+      setUser: (user) => {
+        const next = user && user.user && user.id == null && user.username == null
+          ? user.user
+          : user;
+        set({ user: next ?? null });
+      },
       setToken: (accessToken) => set({ accessToken }),
 
       /** Refresh profile from API so localStorage never stays without id/username */
@@ -24,7 +30,7 @@ const useAuthStore = create(
             return data.user;
           }
         } catch {
-          /* keep existing session; 401 handled by api interceptor */
+          /* keep existing session; hard logout only if refresh fails in api interceptor */
         }
         return get().user;
       },

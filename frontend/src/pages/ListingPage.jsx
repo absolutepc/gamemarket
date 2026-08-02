@@ -92,7 +92,7 @@ export default function ListingPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  const setUser = useAuthStore((s) => s.setUser);
+  const hydrateUser = useAuthStore((s) => s.hydrateUser);
   const [imgIdx, setImgIdx] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [guaranteeOpen, setGuaranteeOpen] = useState(false);
@@ -133,11 +133,11 @@ export default function ListingPage() {
     onSuccess: async (res) => {
       toast.success('Оплата прошла, сделка создана!');
       setCheckoutOpen(false);
+      // Refresh balance/profile; must use data.user (not the whole { user } envelope)
       try {
-        const { data: me } = await api.get('/auth/me');
-        setUser(me);
+        await hydrateUser();
       } catch {
-        /* balance refresh best-effort */
+        /* balance refresh best-effort — never clear session here */
       }
       qc.invalidateQueries({ queryKey: ['listing', id] });
       navigate(`/transactions/${res.data.id}`);
