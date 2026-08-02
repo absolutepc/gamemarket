@@ -72,7 +72,6 @@ const GAME_PLATFORM_TYPES = [
 const GAME_PLATFORM_NAMES = new Set([
   'nintendo',
   'origin',
-  'gog',
   'riot',
   'valorant',
 ]);
@@ -1428,6 +1427,25 @@ const HUGGING_FACE_LABELS = {
   other: 'Другое',
 };
 
+/** GOG */
+const GOG_TYPES = [
+  'keys',
+  'topup',
+  'game_account',
+  'services',
+  'rental',
+  'other',
+];
+
+const GOG_LABELS = {
+  keys: 'Ключи',
+  topup: 'Пополнение баланса',
+  game_account: 'Аккаунты с играми',
+  services: 'Услуги',
+  rental: 'Аренда',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2622,6 +2640,12 @@ function isHuggingFace(name, search = '') {
   );
 }
 
+function isGog(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'gog' || n.startsWith('gog ') || s === 'gog' || s.startsWith('gog ');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -3123,6 +3147,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isHuggingFace(item?.name || name, item?.search)) {
     return HUGGING_FACE_TYPES;
   }
+  if (isGog(item?.name || name, item?.search)) {
+    return GOG_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -3242,6 +3269,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isImazing(itemName, itemSearch) && IMAZING_LABELS)
     || (isRecraft(itemName, itemSearch) && RECRAFT_LABELS)
     || (isHuggingFace(itemName, itemSearch) && HUGGING_FACE_LABELS)
+    || (isGog(itemName, itemSearch) && GOG_LABELS)
     || null;
 
   return allowed
