@@ -1257,6 +1257,21 @@ const ELEMENT_LABELS = {
   other: 'Другое',
 };
 
+/** Slack */
+const SLACK_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const SLACK_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
