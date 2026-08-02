@@ -2007,6 +2007,12 @@ function isRunway(name, search = '') {
   return n === 'runway' || n.startsWith('runway ') || s.includes('runway');
 }
 
+function isBandicam(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'bandicam' || n.startsWith('bandicam ') || s.includes('bandicam');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2427,6 +2433,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isRunway(item?.name || name, item?.search)) {
     return RUNWAY_TYPES;
   }
+  if (isBandicam(item?.name || name, item?.search)) {
+    return BANDICAM_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2519,6 +2528,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isCrunchyroll(itemName, itemSearch) && CRUNCHYROLL_LABELS)
     || (isTangoLive(itemName, itemSearch) && TANGO_LIVE_LABELS)
     || (isRunway(itemName, itemSearch) && RUNWAY_LABELS)
+    || (isBandicam(itemName, itemSearch) && BANDICAM_LABELS)
     || null;
 
   return allowed
