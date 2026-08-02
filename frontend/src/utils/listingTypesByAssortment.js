@@ -608,6 +608,23 @@ const JETBRAINS_LABELS = {
   other: 'Другое',
 };
 
+/** Higgsfield */
+const HIGGSFIELD_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const HIGGSFIELD_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1374,6 +1391,16 @@ function isJetbrains(name, search = '') {
     || n.startsWith('jetbrains ')
     || s.includes('jetbrains')
     || s.includes('jet brains')
+  );
+}
+
+function isHiggsfield(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'higgsfield'
+    || n.startsWith('higgsfield ')
+    || s.includes('higgsfield')
   );
 }
 
