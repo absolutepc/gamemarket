@@ -231,6 +231,23 @@ const LIKEE_LABELS = {
   beans: 'Бобы',
 };
 
+/** FL Studio */
+const FL_STUDIO_TYPES = [
+  'other',
+  'subscription',
+  'services',
+  'account',
+  'donate',
+];
+
+const FL_STUDIO_LABELS = {
+  other: 'Другое',
+  subscription: 'Подписка',
+  services: 'Услуги',
+  account: 'Аккаунты',
+  donate: 'Донат',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -795,6 +812,18 @@ function isLikee(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'likee' || n.startsWith('likee ') || s.includes('likee');
+}
+
+function isFlStudio(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'fl studio'
+    || n === 'flstudio'
+    || n.startsWith('fl studio ')
+    || s.includes('fl studio')
+    || s.includes('flstudio')
+  );
 }
 
 function isApple(name, search = '') {
