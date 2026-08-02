@@ -717,6 +717,27 @@ const LOVABLE_LABELS = {
   other: 'Другое',
 };
 
+/** Epic Games */
+const EPIC_GAMES_TYPES = [
+  'game_account',
+  'region_change',
+  'clean_account',
+  'topup',
+  'games',
+  'services',
+  'other',
+];
+
+const EPIC_GAMES_LABELS = {
+  game_account: 'Аккаунты с играми',
+  region_change: 'Смена региона',
+  clean_account: 'Чистые аккаунты',
+  topup: 'Пополнение баланса',
+  games: 'Игры',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1544,6 +1565,18 @@ function isLovable(name, search = '') {
   return n === 'lovable' || n.startsWith('lovable ') || s.includes('lovable');
 }
 
+function isEpicGames(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'epic games'
+    || n === 'epicgames'
+    || n.startsWith('epic games ')
+    || s.includes('epic games')
+    || s.includes('epicgames')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1910,6 +1943,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isLovable(item?.name || name, item?.search)) {
     return LOVABLE_TYPES;
   }
+  if (isEpicGames(item?.name || name, item?.search)) {
+    return EPIC_GAMES_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1984,6 +2020,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isWindsurf(itemName, itemSearch) && WINDSURF_LABELS)
     || (isLagofast(itemName, itemSearch) && LAGOFAST_LABELS)
     || (isLovable(itemName, itemSearch) && LOVABLE_LABELS)
+    || (isEpicGames(itemName, itemSearch) && EPIC_GAMES_LABELS)
     || null;
 
   return allowed
