@@ -625,6 +625,19 @@ const HIGGSFIELD_LABELS = {
   other: 'Другое',
 };
 
+/** OpenRouter */
+const OPENROUTER_TYPES = [
+  'topup',
+  'other',
+  'services',
+];
+
+const OPENROUTER_LABELS = {
+  topup: 'Пополнение баланса',
+  other: 'Другое',
+  services: 'Услуги',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
