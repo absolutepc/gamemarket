@@ -12,7 +12,7 @@ const REDUCED_CATEGORY_SLUGS = new Set([
   'topups',
 ]);
 
-const REDUCED_LISTING_TYPES = new Set([
+export const REDUCED_LISTING_TYPES = new Set([
   'subscription',
   'donate',
   'topup',
@@ -20,6 +20,10 @@ const REDUCED_LISTING_TYPES = new Set([
   'skins',
   'games',
 ]);
+
+export function isReducedFeeListingType(listingType) {
+  return REDUCED_LISTING_TYPES.has(listingType);
+}
 
 export function resolveFeePercent({ categorySlug, listingType } = {}) {
   if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return FEE_REDUCED;

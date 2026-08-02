@@ -13,14 +13,20 @@ function isListingDetailPath(pathname) {
   return /^\/listings\/[^/]+$/.test(pathname);
 }
 
+function isListingWizardPath(pathname) {
+  return pathname === '/listings/create' || /\/listings\/[^/]+\/edit$/.test(pathname);
+}
+
 export default function Layout() {
   const { user, accessToken, hydrateUser } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [search, setSearch] = useState('');
   const listingDetail = isListingDetailPath(pathname);
+  const listingWizard = isListingWizardPath(pathname);
   // Mobile product page uses its own sticky bar; desktop keeps global nav (Playerok-style)
   const hideHeaderMobile = listingDetail;
+  const hideChrome = listingWizard;
 
   useEffect(() => {
     if (accessToken) hydrateUser();
@@ -34,6 +40,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       <BrandJsonLd />
+      {!hideChrome && (
       <header
         className={`sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl border-b border-dark-800 ${
           hideHeaderMobile ? 'hidden lg:block' : ''
@@ -119,16 +126,26 @@ export default function Layout() {
           </form>
         </div>
       </header>
+      )}
 
-      <main className={listingDetail ? 'flex-1 pb-8 lg:pb-0' : 'flex-1 pb-28 lg:pb-0'}>
+      <main className={
+        hideChrome
+          ? 'flex-1'
+          : listingDetail
+            ? 'flex-1 pb-8 lg:pb-0'
+            : 'flex-1 pb-28 lg:pb-0'
+      }>
         <Outlet />
       </main>
 
-      <div className={`pb-24 lg:pb-0 ${listingDetail ? '[&>footer]:mt-6' : ''}`}>
-        <Footer />
-      </div>
-
-      <MobileBottomNav />
+      {!hideChrome && (
+        <>
+          <div className={`pb-24 lg:pb-0 ${listingDetail ? '[&>footer]:mt-6' : ''}`}>
+            <Footer />
+          </div>
+          <MobileBottomNav />
+        </>
+      )}
     </div>
   );
 }

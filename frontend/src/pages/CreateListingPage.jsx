@@ -2,13 +2,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Plus, Trash2, ChevronLeft, ChevronRight, ImagePlus, X,
+  ChevronLeft, X, Search, Gamepad2, Smartphone, Layers,
+  Tag, Eye, EyeOff, Package, Shield, Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import Seo from '../components/Seo';
-import AssortmentPicker from '../components/AssortmentPicker';
-import { resolveFeePercent, formatFeePercent, calcSellerReceives } from '../utils/fees';
+import {
+  resolveFeePercent,
+  formatFeePercent,
+  calcSellerReceives,
+  isReducedFeeListingType,
+  FEE_REDUCED,
+} from '../utils/fees';
 import { formatPrice } from '../utils/format';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 import {
@@ -18,16 +24,59 @@ import {
 } from '../utils/listingAttributes';
 import { compressImageFile } from '../utils/imageCompress';
 import { resolveAssortmentItem, isExactAssortmentName } from '../utils/assortmentIcons';
-import { useHiddenAssortmentKeys } from '../hooks/useAssortmentCatalog';
+import { useHiddenAssortmentKeys, useVisibleAssortment } from '../hooks/useAssortmentCatalog';
+import { ASSORTMENT_TABS } from '../data/assortment';
+import { categoryIdForListingType } from '../utils/listingCategoryMap';
 
 const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
+const MAX_IMAGES = 5;
+const FALLBACK_ICON = '/assortment/other-apps.png';
+
 const STEPS = [
-  { id: 'basics', title: 'Основное' },
+  { id: 'game', title: 'Игры и приложения' },
+  { id: 'type', title: 'Выберите раздел товаров' },
+  { id: 'delivery', title: 'Способ передачи' },
   { id: 'attributes', title: 'Характеристики' },
   { id: 'images', title: 'Фото' },
-  { id: 'details', title: 'Публикация' },
+  { id: 'about', title: 'О товаре' },
+  { id: 'price', title: 'Цена' },
+  { id: 'product', title: 'Данные товара' },
 ];
-const MAX_IMAGES = 5;
+
+const TAB_ICONS = { games: Gamepad2, mobile: Smartphone, apps: Layers };
+
+const POPULAR_TYPES = [
+  { value: 'donate', label: 'Донат' },
+  { value: 'subscription', label: 'Подписки' },
+  { value: 'topup', label: 'Пополнение' },
+  { value: 'item', label: 'Предметы' },
+  { value: 'account', label: 'Аккаунты' },
+];
+
+const ACCESS_OPTIONS = [
+  {
+    value: 'full',
+    title: 'Полный доступ',
+    description: 'Личный аккаунт с доступом ко всем привязкам',
+  },
+  {
+    value: 'shared',
+    title: 'Общий доступ',
+    description: 'Общий аккаунт для активации подписки или входа',
+  },
+];
+
+function FeeBadge({ percent = FEE_REDUCED, className = '' }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md bg-emerald-500/95 text-dark-950
+                  text-[10px] font-bold px-1.5 py-0.5 ${className}`}
+    >
+      <Tag size={10} strokeWidth={2.5} />
+      {formatFeePercent(percent)}
+    </span>
+  );
+}
 
 function ChipGroup({ label, options, value, onChange }) {
   return (
@@ -56,6 +105,10 @@ function ChipGroup({ label, options, value, onChange }) {
   );
 }
 
+function needsAccessType(listingType) {
+  return ['account', 'game_account', 'subscription', 'rental'].includes(listingType);
+}
+
 export default function CreateListingPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -65,10 +118,20 @@ export default function CreateListingPage() {
   const [attributes, setAttributes] = useState({});
   const [images, setImages] = useState([]);
   const [compressing, setCompressing] = useState(false);
+  const [assortmentTab, setAssortmentTab] = useState('games');
+  const [assortmentQ, setAssortmentQ] = useState('');
+  const [feeFilterOn, setFeeFilterOn] = useState(false);
+  const [accessType, setAccessType] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [productLogin, setProductLogin] = useState('');
+  const [productPassword, setProductPassword] = useState('');
+  const [productComment, setProductComment] = useState('');
+  const [triedNext, setTriedNext] = useState(false);
   const { hiddenKeys } = useHiddenAssortmentKeys();
+  const { byTab, items: visibleAssortment } = useVisibleAssortment();
   const [form, setForm] = useState({
     title: '',
-    listing_type: 'subscription',
+    listing_type: '',
     category_id: '',
     game: '',
     price: '',
@@ -93,7 +156,7 @@ export default function CreateListingPage() {
     if (!existing) return;
     setForm({
       title: existing.title || '',
-      listing_type: existing.listing_type || 'subscription',
+      listing_type: existing.listing_type || '',
       category_id: existing.category_id || '',
       game: existing.game || '',
       price: existing.price != null ? String(existing.price) : '',
@@ -102,12 +165,22 @@ export default function CreateListingPage() {
       delivery_method: existing.delivery_method || 'manual',
       delivery_instructions: existing.delivery_instructions || '',
     });
-    setAttributes(existing.attributes && typeof existing.attributes === 'object' ? existing.attributes : {});
+    const attrs = existing.attributes && typeof existing.attributes === 'object' ? existing.attributes : {};
+    setAttributes(attrs);
+    if (attrs.access_type === 'Полный доступ') setAccessType('full');
+    if (attrs.access_type === 'Общий доступ') setAccessType('shared');
     setImages(Array.isArray(existing.images) ? existing.images : []);
     const fields = Array.isArray(existing.buyer_fields) && existing.buyer_fields.length
       ? existing.buyer_fields
       : [DEFAULT_FIELD];
     setBuyerFields(fields);
+    const instr = existing.delivery_instructions || '';
+    const loginMatch = instr.match(/Логин:\s*(.+)/);
+    const passMatch = instr.match(/Пароль:\s*(.+)/);
+    const commentMatch = instr.match(/Комментарий:\s*([\s\S]+)/);
+    if (loginMatch) setProductLogin(loginMatch[1].trim());
+    if (passMatch) setProductPassword(passMatch[1].trim());
+    if (commentMatch) setProductComment(commentMatch[1].trim());
   }, [existing]);
 
   const selectedCategory = useMemo(
@@ -116,7 +189,7 @@ export default function CreateListingPage() {
   );
 
   const attributeSchema = useMemo(
-    () => getAttributeSchema(form.listing_type),
+    () => (form.listing_type ? getAttributeSchema(form.listing_type) : []),
     [form.listing_type]
   );
 
@@ -125,16 +198,39 @@ export default function CreateListingPage() {
     listingType: form.listing_type,
   });
   const feePreview = calcSellerReceives(form.price, feePercent);
-  const discountPreview = form.original_price && form.price
-    && parseFloat(form.original_price) > parseFloat(form.price)
-    ? Math.round(((parseFloat(form.original_price) - parseFloat(form.price)) / parseFloat(form.original_price)) * 100)
-    : 0;
+
+  const selectedGame = useMemo(() => resolveAssortmentItem(form.game), [form.game]);
+
+  const tabItems = useMemo(() => byTab(assortmentTab), [byTab, assortmentTab]);
+  const tabCounts = useMemo(
+    () => Object.fromEntries(ASSORTMENT_TABS.map((t) => [t.id, byTab(t.id).length])),
+    [byTab]
+  );
+
+  const filteredAssortment = useMemo(() => {
+    const query = assortmentQ.trim().toLowerCase();
+    const source = query ? visibleAssortment : tabItems;
+    if (!query) return source;
+    return source.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query)
+        || item.search.toLowerCase().includes(query)
+    );
+  }, [assortmentQ, tabItems, visibleAssortment]);
+
+  const typeOptions = useMemo(() => {
+    const base = LISTING_TYPE_OPTIONS.filter((o) => o.value !== 'giftcard' || isEdit);
+    if (!feeFilterOn) return base;
+    return base.filter((o) => isReducedFeeListingType(o.value));
+  }, [feeFilterOn, isEdit]);
 
   const patchForm = (key, value) => {
     setForm((prev) => {
       const next = { ...prev, [key]: value };
       if (key === 'listing_type' && value !== prev.listing_type) {
         setAttributes({});
+        setAccessType('');
+        next.category_id = categoryIdForListingType(value, categories) || prev.category_id;
       }
       return next;
     });
@@ -152,20 +248,69 @@ export default function CreateListingPage() {
     },
   });
 
+  const buildDeliveryInstructions = () => {
+    const parts = [];
+    if (productLogin.trim()) parts.push(`Логин: ${productLogin.trim()}`);
+    if (productPassword.trim()) parts.push(`Пароль: ${productPassword.trim()}`);
+    if (productComment.trim()) parts.push(`Комментарий: ${productComment.trim()}`);
+    if (form.delivery_instructions?.trim() && !parts.length) {
+      return form.delivery_instructions.trim();
+    }
+    return parts.join('\n') || undefined;
+  };
+
   const validateStep = (index) => {
-    if (index === 0) {
-      if (!form.title.trim() || form.title.trim().length < 5) {
-        toast.error('Заголовок — минимум 5 символов');
-        return false;
-      }
-      if (!form.listing_type) {
-        toast.error('Выберите тип лота');
-        return false;
-      }
+    const idStep = STEPS[index]?.id;
+    if (idStep === 'game') {
       if (!form.game.trim() || !isExactAssortmentName(form.game, hiddenKeys)) {
-        toast.error('Выберите игру, приложение или сервис из списка');
+        toast.error('Выберите игру, приложение или сервис');
         return false;
       }
+      return true;
+    }
+    if (idStep === 'type') {
+      if (!form.listing_type) {
+        toast.error('Выберите раздел товаров');
+        return false;
+      }
+      return true;
+    }
+    if (idStep === 'delivery') {
+      if (!form.delivery_method) {
+        toast.error('Выберите способ передачи');
+        return false;
+      }
+      if (needsAccessType(form.listing_type) && !accessType) {
+        toast.error('Выберите тип доступа');
+        return false;
+      }
+      return true;
+    }
+    if (idStep === 'attributes') {
+      const check = validateAttributes(form.listing_type, {
+        ...attributes,
+        ...(accessType
+          ? { access_type: accessType === 'full' ? 'Полный доступ' : 'Общий доступ' }
+          : {}),
+      });
+      if (!check.ok) {
+        toast.error(check.error);
+        return false;
+      }
+      return true;
+    }
+    if (idStep === 'about') {
+      if (!form.title.trim() || form.title.trim().length < 5) {
+        toast.error('Название — минимум 5 символов');
+        return false;
+      }
+      if (!form.description.trim() || form.description.trim().length < 20) {
+        toast.error('Описание — минимум 20 символов');
+        return false;
+      }
+      return true;
+    }
+    if (idStep === 'price') {
       const price = parseFloat(form.price);
       if (!price || price < 1) {
         toast.error('Укажите цену');
@@ -173,23 +318,17 @@ export default function CreateListingPage() {
       }
       return true;
     }
-    if (index === 1) {
-      const check = validateAttributes(form.listing_type, attributes);
-      if (!check.ok) {
-        toast.error(check.error);
-        return false;
-      }
-      return true;
-    }
-    if (index === 3) {
-      if (!form.description.trim() || form.description.trim().length < 20) {
-        toast.error('Описание — минимум 20 символов');
-        return false;
-      }
+    if (idStep === 'product') {
       if (form.delivery_method === 'auto') {
         const fields = buyerFields.map((f) => (f.label || '').trim()).filter(Boolean);
         if (!fields.length) {
           toast.error('Укажите хотя бы один атрибут покупателя');
+          return false;
+        }
+      } else if (needsAccessType(form.listing_type)) {
+        if (!productLogin.trim() || !productPassword.trim()) {
+          setTriedNext(true);
+          toast.error('Заполните логин и пароль');
           return false;
         }
       }
@@ -198,9 +337,14 @@ export default function CreateListingPage() {
     return true;
   };
 
+  const skipAttributes = attributeSchema.length === 0;
+
   const goNext = () => {
     if (!validateStep(step)) return;
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    let next = step + 1;
+    if (STEPS[next]?.id === 'attributes' && skipAttributes) next += 1;
+    setTriedNext(false);
+    setStep(Math.min(next, STEPS.length - 1));
   };
 
   const goBack = () => {
@@ -208,11 +352,43 @@ export default function CreateListingPage() {
       navigate(-1);
       return;
     }
-    setStep((s) => Math.max(s - 1, 0));
+    let prev = step - 1;
+    if (STEPS[prev]?.id === 'attributes' && skipAttributes) prev -= 1;
+    setTriedNext(false);
+    setStep(Math.max(prev, 0));
+  };
+
+  const closeWizard = () => {
+    if (window.confirm('Выйти из создания лота? Данные не сохранятся.')) {
+      navigate('/');
+    }
+  };
+
+  const pickGame = (item) => {
+    patchForm('game', item.name);
+    setStep(1);
+    setAssortmentQ('');
+  };
+
+  const pickType = (value) => {
+    patchForm('listing_type', value);
   };
 
   const onPublish = () => {
-    if (!validateStep(0) || !validateStep(1) || !validateStep(3)) return;
+    for (let i = 0; i < STEPS.length; i += 1) {
+      if (STEPS[i].id === 'attributes' && skipAttributes) continue;
+      if (!validateStep(i)) {
+        setStep(i);
+        return;
+      }
+    }
+
+    const mergedAttributes = {
+      ...attributes,
+      ...(accessType
+        ? { access_type: accessType === 'full' ? 'Полный доступ' : 'Общий доступ' }
+        : {}),
+    };
 
     const fields = form.delivery_method === 'auto'
       ? buyerFields
@@ -224,6 +400,10 @@ export default function CreateListingPage() {
         .filter((f) => f.label)
       : [];
 
+    const categoryId = form.category_id
+      || categoryIdForListingType(form.listing_type, categories)
+      || undefined;
+
     mutation.mutate({
       title: form.title.trim(),
       description: form.description.trim(),
@@ -231,13 +411,13 @@ export default function CreateListingPage() {
       original_price: form.original_price ? parseFloat(form.original_price) : null,
       game: form.game.trim(),
       listing_type: form.listing_type,
-      category_id: form.category_id || undefined,
+      category_id: categoryId || undefined,
       delivery_method: form.delivery_method,
-      delivery_instructions: form.delivery_instructions || undefined,
+      delivery_instructions: buildDeliveryInstructions(),
       buyer_fields: fields,
-      attributes,
+      attributes: mergedAttributes,
       images,
-      tags: attributesToTags(attributes),
+      tags: attributesToTags(mergedAttributes),
     });
   };
 
@@ -266,327 +446,561 @@ export default function CreateListingPage() {
     }
   };
 
-  const selectedGame = useMemo(() => resolveAssortmentItem(form.game), [form.game]);
-
   const progress = ((step + 1) / STEPS.length) * 100;
+  const stepId = STEPS[step].id;
+  const typeLabel = LISTING_TYPE_OPTIONS.find((o) => o.value === form.listing_type)?.label;
+  const canPrimary = (() => {
+    if (stepId === 'game') return Boolean(form.game);
+    if (stepId === 'type') return Boolean(form.listing_type);
+    if (stepId === 'delivery') {
+      if (needsAccessType(form.listing_type) && !accessType) return false;
+      return Boolean(form.delivery_method);
+    }
+    if (stepId === 'images') return true;
+    if (stepId === 'about') {
+      return form.title.trim().length >= 5 && form.description.trim().length >= 20;
+    }
+    if (stepId === 'price') return parseFloat(form.price) >= 1;
+    if (stepId === 'product') {
+      if (form.delivery_method === 'auto') {
+        return buyerFields.some((f) => (f.label || '').trim());
+      }
+      if (needsAccessType(form.listing_type)) {
+        return Boolean(productLogin.trim() && productPassword.trim());
+      }
+      return true;
+    }
+    if (stepId === 'attributes') {
+      return validateAttributes(form.listing_type, attributes).ok;
+    }
+    return true;
+  })();
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div className="min-h-[calc(100vh-4rem)] bg-dark-950 flex flex-col">
       <Seo
         title={isEdit ? 'Редактирование лота' : 'Разместить лот'}
         path={isEdit ? `/listings/${id}/edit` : '/listings/create'}
         noindex
       />
 
-      <div className="flex items-center gap-3 mb-4">
-        <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
-          <ChevronLeft size={20} />
-        </button>
-        <div className="flex-1 text-center">
-          <h1 className="text-lg font-semibold">{STEPS[step].title}</h1>
-          <p className="text-[11px] text-dark-500 mt-0.5">
-            Шаг {step + 1} из {STEPS.length}
-            {form.game ? ` · ${form.game}` : ''}
-          </p>
+      <div className="sticky top-0 z-40 bg-dark-950/95 backdrop-blur border-b border-dark-800">
+        <div className="max-w-xl mx-auto px-4 h-12 flex items-center gap-2">
+          <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
+            <ChevronLeft size={20} />
+          </button>
+          <h1 className="flex-1 text-center text-[15px] font-semibold truncate">
+            {stepId === 'images' ? `Фото ${images.length}/${MAX_IMAGES}` : STEPS[step].title}
+          </h1>
+          <button type="button" onClick={closeWizard} className="btn-ghost p-2 -mr-2" aria-label="Закрыть">
+            <X size={20} />
+          </button>
         </div>
-        <div className="w-9" />
+        <div className="h-1 bg-dark-800">
+          <div className="h-full bg-[#2B71F3] transition-all duration-300" style={{ width: `${progress}%` }} />
+        </div>
       </div>
 
-      <div className="h-1 rounded-full bg-dark-800 mb-6 overflow-hidden">
-        <div className="h-full bg-[#2B71F3] transition-all duration-300" style={{ width: `${progress}%` }} />
-      </div>
-
-      <div className="card p-5 sm:p-6">
-        {step === 0 && (
-          <div className="flex flex-col gap-5">
-            <AssortmentPicker
-              value={form.game}
-              onChange={(name) => patchForm('game', name)}
-              required
+      <div className="flex-1 max-w-xl mx-auto w-full px-4 py-4 pb-28">
+        {/* Context chip after game picked */}
+        {step > 0 && selectedGame && (
+          <div className="flex items-center gap-3 mb-4">
+            <img
+              src={selectedGame.icon || FALLBACK_ICON}
+              alt=""
+              className="w-10 h-10 rounded-xl object-cover ring-1 ring-white/10"
+              onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
             />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-white truncate">{selectedGame.name}</p>
+              {typeLabel && (
+                <p className="text-xs text-dark-400 truncate">{typeLabel}</p>
+              )}
+            </div>
+            {form.listing_type && (
+              <FeeBadge percent={feePercent} />
+            )}
+          </div>
+        )}
 
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Заголовок *</label>
+        {/* STEP: game */}
+        {stepId === 'game' && (
+          <div>
+            <div className="relative mb-3">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
               <input
-                className="input"
-                placeholder="Например: Cursor Pro 1 месяц"
-                value={form.title}
-                onChange={(e) => patchForm('title', e.target.value)}
+                className="input pl-10 h-11 rounded-full"
+                placeholder="Поиск игр и приложений"
+                value={assortmentQ}
+                onChange={(e) => setAssortmentQ(e.target.value)}
               />
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Тип лота *</label>
-              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
-                {LISTING_TYPE_OPTIONS.map((opt) => {
+            <div className="flex gap-2 overflow-x-auto mb-4" style={{ scrollbarWidth: 'none' }}>
+              {ASSORTMENT_TABS.map((tab) => {
+                const active = assortmentTab === tab.id;
+                const Icon = TAB_ICONS[tab.id] || Layers;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => { setAssortmentTab(tab.id); setAssortmentQ(''); }}
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium ${
+                      active ? 'bg-dark-700 text-white' : 'bg-dark-900 text-dark-300 border border-dark-800'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {tab.label}
+                    <span className="text-dark-500 text-xs">{tabCounts[tab.id] || 0}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto mb-5" style={{ scrollbarWidth: 'none' }}>
+              {POPULAR_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => {
+                    patchForm('listing_type', t.value);
+                    if (isReducedFeeListingType(t.value)) setFeeFilterOn(true);
+                  }}
+                  className="relative shrink-0 rounded-full px-3.5 py-2 text-sm bg-dark-900 border border-dark-800 text-dark-200"
+                >
+                  {t.label}
+                  {isReducedFeeListingType(t.value) && (
+                    <span className="absolute -top-1.5 -right-1">
+                      <FeeBadge />
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4">
+              {filteredAssortment.slice(0, 80).map((item) => (
+                <button
+                  key={item.name}
+                  type="button"
+                  onClick={() => pickGame(item)}
+                  className="flex flex-col items-center gap-1.5 group"
+                >
+                  <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10 group-active:scale-95 transition-transform">
+                    <img
+                      src={item.icon || FALLBACK_ICON}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
+                    />
+                  </div>
+                  <span className="text-[11px] text-dark-300 text-center line-clamp-2 leading-tight w-full">
+                    {item.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {!filteredAssortment.length && (
+              <p className="text-center text-dark-400 text-sm py-10">Ничего не найдено</p>
+            )}
+          </div>
+        )}
+
+        {/* STEP: type */}
+        {stepId === 'type' && (
+          <div>
+            <div className="relative mb-3">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
+              <input
+                className="input pl-10 h-11 rounded-full"
+                placeholder="Поиск раздела..."
+                value={assortmentQ}
+                onChange={(e) => setAssortmentQ(e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 mb-4 px-1">
+              <div className="flex items-center gap-2 text-sm text-emerald-400 font-medium">
+                <Tag size={16} />
+                Платёж {formatFeePercent(FEE_REDUCED)}
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={feeFilterOn}
+                onClick={() => setFeeFilterOn((v) => !v)}
+                className={`relative w-12 h-7 rounded-full transition-colors ${
+                  feeFilterOn ? 'bg-[#2B71F3]' : 'bg-dark-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-transform ${
+                    feeFilterOn ? 'translate-x-5' : ''
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {typeOptions
+                .filter((o) => {
+                  const q = assortmentQ.trim().toLowerCase();
+                  if (!q) return true;
+                  return o.label.toLowerCase().includes(q);
+                })
+                .map((opt) => {
                   const active = form.listing_type === opt.value;
+                  const reduced = isReducedFeeListingType(opt.value);
                   return (
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => patchForm('listing_type', opt.value)}
-                      className={`px-3 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                      onClick={() => pickType(opt.value)}
+                      className={`flex items-center gap-3 w-full rounded-2xl px-3 py-3 text-left border transition-colors ${
                         active
-                          ? 'bg-[#2B71F3] border-[#2B71F3] text-white'
-                          : 'bg-dark-800/80 border-dark-700 text-dark-200 hover:border-dark-500'
+                          ? 'border-[#2B71F3] bg-[#2B71F3]/10'
+                          : 'border-dark-800 bg-dark-900 hover:border-dark-600'
                       }`}
                     >
-                      {opt.label}
+                      <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-dark-800 shrink-0">
+                        <img
+                          src={selectedGame?.icon || FALLBACK_ICON}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                        {reduced && (
+                          <span className="absolute top-0 left-0">
+                            <FeeBadge className="rounded-none rounded-br-md" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-white">{selectedGame?.name || form.game}</p>
+                        <p className="text-sm text-dark-400">{opt.label}</p>
+                      </div>
+                      <span
+                        className={`w-5 h-5 rounded-full border-2 shrink-0 ${
+                          active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-600'
+                        }`}
+                      />
                     </button>
                   );
                 })}
-                {isEdit && existing?.listing_type === 'giftcard' && (
-                  <button
-                    type="button"
-                    onClick={() => patchForm('listing_type', 'giftcard')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                      form.listing_type === 'giftcard'
-                        ? 'bg-[#2B71F3] border-[#2B71F3] text-white'
-                        : 'bg-dark-800/80 border-dark-700 text-dark-200'
-                    }`}
-                  >
-                    Подарочная карта
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Категория</label>
-              <select
-                className="input"
-                value={form.category_id}
-                onChange={(e) => patchForm('category_id', e.target.value)}
-              >
-                <option value="">Без категории</option>
-                {categories?.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Цена (₽) *</label>
-                <input
-                  className="input"
-                  type="number"
-                  placeholder="500"
-                  min="1"
-                  value={form.price}
-                  onChange={(e) => patchForm('price', e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Старая цена</label>
-                <input
-                  className="input"
-                  type="number"
-                  placeholder="990"
-                  min="1"
-                  value={form.original_price}
-                  onChange={(e) => patchForm('original_price', e.target.value)}
-                />
-                {discountPreview > 0 && (
-                  <p className="text-rose-400 text-xs mt-1">Скидка {discountPreview}%</p>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-dark-800 bg-dark-950/60 px-4 py-3 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-dark-300">Комиссия площадки</span>
-                <span className="font-semibold text-white">{formatFeePercent(feePercent)}</span>
-              </div>
-              {parseFloat(form.price) > 0 && (
-                <div className="flex items-center justify-between gap-3 mt-1.5 text-dark-400">
-                  <span>Вы получите после сделки</span>
-                  <span className="text-emerald-400 font-medium">{formatPrice(feePreview.sellerReceives)}</span>
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {step === 1 && (
-          <div className="flex flex-col gap-6">
-            {form.game && (
-              <div className="flex items-center gap-2.5 text-sm text-dark-300">
-                {selectedGame && (
-                  <img
-                    src={selectedGame.icon}
-                    alt=""
-                    className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/10"
-                  />
-                )}
-                <span className="font-medium text-white">{form.game}</span>
-                <span className="text-dark-600">·</span>
-                <span>{LISTING_TYPE_OPTIONS.find((o) => o.value === form.listing_type)?.label || form.listing_type}</span>
-              </div>
+        {/* STEP: delivery */}
+        {stepId === 'delivery' && (
+          <div className="flex flex-col gap-3">
+            {needsAccessType(form.listing_type) && (
+              <>
+                {ACCESS_OPTIONS.map((opt) => {
+                  const active = accessType === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setAccessType(opt.value)}
+                      className={`flex items-start gap-3 w-full rounded-2xl px-4 py-3.5 text-left border ${
+                        active ? 'border-[#2B71F3] bg-[#2B71F3]/10' : 'border-dark-800 bg-dark-900'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-white">{opt.title}</p>
+                        <p className="text-sm text-dark-400 mt-0.5">{opt.description}</p>
+                      </div>
+                      <span
+                        className={`mt-1 w-5 h-5 rounded-full border-2 shrink-0 ${
+                          active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-600'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+                <div className="h-px bg-dark-800 my-1" />
+              </>
             )}
+
+            {[
+              {
+                value: 'manual',
+                title: 'Вручную через чат',
+                description: 'Передадите товар покупателю в чате сделки после оплаты',
+              },
+              {
+                value: 'auto',
+                title: 'Автовыдача',
+                description: 'Покупатель укажет данные, товар выдаётся по инструкции',
+              },
+            ].map((opt) => {
+              const active = form.delivery_method === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => patchForm('delivery_method', opt.value)}
+                  className={`flex items-start gap-3 w-full rounded-2xl px-4 py-3.5 text-left border ${
+                    active ? 'border-[#2B71F3] bg-[#2B71F3]/10' : 'border-dark-800 bg-dark-900'
+                  }`}
+                >
+                  <Package size={18} className="text-dark-300 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-white">{opt.title}</p>
+                    <p className="text-sm text-dark-400 mt-0.5">{opt.description}</p>
+                  </div>
+                  <span
+                    className={`mt-1 w-5 h-5 rounded-full border-2 shrink-0 ${
+                      active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-600'
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* STEP: attributes */}
+        {stepId === 'attributes' && (
+          <div className="flex flex-col gap-5">
             {attributeSchema.map((group) => (
               <ChipGroup
                 key={group.key}
-                label={`${group.label}${group.required ? ' *' : ''}`}
+                label={group.label}
                 options={group.options}
                 value={attributes[group.key] || ''}
-                onChange={(val) => setAttributes((prev) => ({ ...prev, [group.key]: val }))}
+                onChange={(v) => setAttributes((prev) => ({ ...prev, [group.key]: v }))}
               />
             ))}
-            {!attributeSchema.length && (
-              <p className="text-sm text-dark-400">Для этого типа дополнительные характеристики не нужны.</p>
+          </div>
+        )}
+
+        {/* STEP: images */}
+        {stepId === 'images' && (
+          <div className="flex flex-col items-center">
+            <label className="w-full max-w-sm aspect-[4/3] rounded-2xl border border-dashed border-dark-600
+                              bg-dark-900 flex flex-col items-center justify-center gap-3 cursor-pointer
+                              hover:border-[#2B71F3]/50 transition-colors">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                className="hidden"
+                onChange={onPickImages}
+                disabled={compressing || images.length >= MAX_IMAGES}
+              />
+              <div className="w-14 h-14 rounded-full bg-dark-800 flex items-center justify-center text-[#2B71F3]">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                  <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
+                  <path d="M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
+                </svg>
+              </div>
+              <span className="text-[#2B71F3] font-medium">
+                {compressing ? 'Сжимаем…' : 'Загрузить'}
+              </span>
+            </label>
+            <p className="text-sm text-dark-400 mt-4 text-center">
+              Загрузите фото 4:3 в порядке выбора на устройстве
+            </p>
+            {images.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 w-full mt-5">
+                {images.map((src, i) => (
+                  <div key={`${i}-${src.slice(0, 24)}`} className="relative aspect-[4/3] rounded-xl overflow-hidden">
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
 
-        {step === 2 && (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm text-dark-400">
-              Добавьте до {MAX_IMAGES} фото товара. Первое фото будет обложкой в каталоге.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {images.map((src, i) => (
-                <div key={`${i}-${src.slice(0, 32)}`} className="relative aspect-square rounded-xl overflow-hidden bg-dark-800 border border-dark-700">
-                  <img src={src} alt="" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-black/70 text-white flex items-center justify-center"
-                    aria-label="Удалить фото"
-                  >
-                    <X size={14} />
-                  </button>
-                  {i === 0 && (
-                    <span className="absolute bottom-2 left-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#2B71F3] text-white">
-                      Обложка
-                    </span>
-                  )}
-                </div>
-              ))}
-              {images.length < MAX_IMAGES && (
-                <label className="aspect-square rounded-xl border border-dashed border-dark-600 bg-dark-900/50
-                                  flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#2B71F3]/50 transition-colors">
-                  <ImagePlus size={22} className="text-dark-400" />
-                  <span className="text-xs text-dark-400">{compressing ? 'Сжатие…' : 'Добавить'}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    disabled={compressing}
-                    onChange={onPickImages}
-                  />
-                </label>
-              )}
-            </div>
+        {/* STEP: about */}
+        {stepId === 'about' && (
+          <div className="flex flex-col gap-3">
+            <input
+              className="input h-12"
+              placeholder="Название товара"
+              value={form.title}
+              onChange={(e) => patchForm('title', e.target.value)}
+            />
+            <textarea
+              className="input min-h-[160px] resize-none py-3"
+              placeholder="Описание товара"
+              value={form.description}
+              onChange={(e) => patchForm('description', e.target.value)}
+            />
           </div>
         )}
 
-        {step === 3 && (
-          <div className="flex flex-col gap-5">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Описание *</label>
-              <textarea
-                className="input min-h-[140px] resize-none"
-                placeholder="Подробно опишите товар: что входит, срок, способ передачи..."
-                value={form.description}
-                onChange={(e) => patchForm('description', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Способ передачи</label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: 'manual', label: 'Вручную (чат)' },
-                  { value: 'auto', label: 'Автовыдача' },
-                ].map((opt) => {
-                  const active = form.delivery_method === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => patchForm('delivery_method', opt.value)}
-                      className={`px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                        active
-                          ? 'bg-[#2B71F3] border-[#2B71F3] text-white'
-                          : 'bg-dark-800/80 border-dark-700 text-dark-200'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
+        {/* STEP: price */}
+        {stepId === 'price' && (
+          <div>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-2">
+              <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3">
+                <p className="text-xs text-dark-400 mb-1">Цена товара</p>
+                <div className="flex items-baseline gap-1">
+                  <input
+                    className="bg-transparent text-2xl font-bold text-white w-full outline-none"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={form.price}
+                    onChange={(e) => patchForm('price', e.target.value.replace(/[^\d.]/g, ''))}
+                  />
+                  <span className="text-dark-400 shrink-0">₽</span>
+                </div>
+              </div>
+              <div className="flex items-center text-dark-500 px-0.5">↔</div>
+              <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3">
+                <p className="text-xs text-dark-400 mb-1">Доход</p>
+                <p className="text-2xl font-bold text-emerald-400 truncate">
+                  {form.price ? Math.round(feePreview.sellerReceives) : '—'}
+                </p>
               </div>
             </div>
+            <div className="mt-3 flex items-center gap-2 text-sm text-emerald-400">
+              <Tag size={14} />
+              Платёж {formatFeePercent(feePercent)}
+            </div>
+            <p className="text-xs text-dark-500 mt-2">
+              Комиссия площадки удерживается при выплате. За вывод средств комиссию не берём.
+            </p>
+          </div>
+        )}
 
-            {form.delivery_method === 'auto' && (
-              <div className="rounded-xl border border-dark-700 bg-dark-800/40 p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-white">Атрибуты покупателя *</p>
-                  <p className="text-xs text-dark-400 mt-1">
-                    Покупатель укажет эти данные при покупке (например ID или ник).
-                  </p>
-                </div>
-                {buyerFields.map((field, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <input
-                      className="input flex-1"
-                      placeholder="Название поля, например: ID / ник"
-                      value={field.label}
-                      onChange={(e) => setBuyerFields((prev) => prev.map((f, i) => (
-                        i === index ? { ...f, label: e.target.value } : f
-                      )))}
-                    />
-                    {buyerFields.length > 1 && (
-                      <button
-                        type="button"
-                        className="btn-ghost p-2 text-dark-400 hover:text-red-400"
-                        onClick={() => setBuyerFields((prev) => prev.filter((_, i) => i !== index))}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
+        {/* STEP: product data */}
+        {stepId === 'product' && (
+          <div className="flex flex-col gap-3">
+            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3">
+              <p className="text-sm font-medium text-white flex items-center gap-2 mb-1">
+                <Package size={16} /> Способ передачи
+              </p>
+              <p className="text-sm text-white">
+                {form.delivery_method === 'auto' ? 'Автовыдача' : 'Вручную через чат'}
+                {accessType ? ` · ${accessType === 'full' ? 'Полный доступ' : 'Общий доступ'}` : ''}
+              </p>
+              <p className="text-xs text-dark-400 mt-0.5">
+                {form.delivery_method === 'auto'
+                  ? 'Покупатель заполнит поля при покупке'
+                  : 'Передадите данные в чате после оплаты'}
+              </p>
+            </div>
+
+            {form.delivery_method === 'auto' ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-dark-300">Что должен указать покупатель</p>
+                {buyerFields.map((field, idx) => (
+                  <input
+                    key={idx}
+                    className="input"
+                    placeholder="Например: ID / ник"
+                    value={field.label}
+                    onChange={(e) => {
+                      const next = [...buyerFields];
+                      next[idx] = { ...next[idx], label: e.target.value };
+                      setBuyerFields(next);
+                    }}
+                  />
                 ))}
                 {buyerFields.length < 5 && (
                   <button
                     type="button"
-                    className="btn-secondary text-sm inline-flex items-center gap-1.5"
-                    onClick={() => setBuyerFields((prev) => [...prev, { label: '', required: true }])}
+                    className="btn-ghost text-sm self-start"
+                    onClick={() => setBuyerFields((prev) => [...prev, { key: `field_${prev.length}`, label: '', required: true }])}
                   >
-                    <Plus size={14} /> Добавить поле
+                    + Поле
                   </button>
                 )}
               </div>
+            ) : (
+              <>
+                <div>
+                  <input
+                    className={`input ${triedNext && !productLogin.trim() ? 'border-red-500/60 bg-red-500/10' : ''}`}
+                    placeholder="Логин"
+                    value={productLogin}
+                    onChange={(e) => setProductLogin(e.target.value)}
+                    autoComplete="off"
+                  />
+                  {triedNext && !productLogin.trim() && needsAccessType(form.listing_type) && (
+                    <p className="text-xs text-red-400 mt-1">Обязательное поле</p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    className={`input pr-10 ${triedNext && !productPassword.trim() ? 'border-red-500/60 bg-red-500/10' : ''}`}
+                    placeholder="Пароль"
+                    type={showPassword ? 'text' : 'password'}
+                    value={productPassword}
+                    onChange={(e) => setProductPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400"
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                  {triedNext && !productPassword.trim() && needsAccessType(form.listing_type) && (
+                    <p className="text-xs text-red-400 mt-1">Обязательное поле</p>
+                  )}
+                </div>
+                <textarea
+                  className="input min-h-[88px] resize-none py-3"
+                  placeholder="Комментарий"
+                  value={productComment}
+                  onChange={(e) => setProductComment(e.target.value)}
+                />
+              </>
             )}
 
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Инструкции для покупателя</label>
-              <textarea
-                className="input resize-none"
-                rows={3}
-                placeholder="Что покупатель должен знать или предоставить..."
-                value={form.delivery_instructions}
-                onChange={(e) => patchForm('delivery_instructions', e.target.value)}
-              />
+            <button type="button" className="flex items-center gap-2 text-sm text-yellow-400/90 self-start mt-1">
+              <Shield size={14} /> Данные защищены
+            </button>
+
+            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3 mt-1">
+              <p className="text-sm font-medium text-white flex items-center gap-2 mb-2">
+                <Info size={14} /> Инструкция после продажи
+              </p>
+              <ul className="text-sm text-[#5B8CFF] space-y-1.5 list-disc pl-4">
+                <li>Удержание средств: оплата держится на стороне площадки до подтверждения.</li>
+                <li>Выполнение заказа: откройте чат сделки и передайте товар покупателю.</li>
+              </ul>
             </div>
           </div>
         )}
+      </div>
 
-        <div className="flex gap-3 pt-6">
-          {step < STEPS.length - 1 ? (
-            <button type="button" onClick={goNext} className="btn-primary flex-1 h-11 inline-flex items-center justify-center gap-1.5">
-              Далее <ChevronRight size={16} />
+      {/* Footer CTA */}
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-dark-950/95 backdrop-blur border-t border-dark-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="max-w-xl mx-auto px-4 py-3">
+          {stepId === 'product' ? (
+            <button
+              type="button"
+              onClick={onPublish}
+              disabled={mutation.isPending || !canPrimary}
+              className="w-full h-12 rounded-2xl font-semibold text-white transition-colors disabled:opacity-40
+                         bg-[#2B71F3] hover:bg-[#3d7ff5]"
+            >
+              {mutation.isPending ? 'Публикуем…' : isEdit ? 'Сохранить' : 'Опубликовать'}
             </button>
           ) : (
             <button
               type="button"
-              onClick={onPublish}
-              disabled={mutation.isPending || compressing}
-              className="btn-primary flex-1 h-11"
+              onClick={goNext}
+              disabled={stepId === 'images' ? false : !canPrimary}
+              className="w-full h-12 rounded-2xl font-semibold text-white transition-colors disabled:opacity-40
+                         disabled:bg-dark-700 bg-[#2B71F3] hover:bg-[#3d7ff5]"
             >
-              {mutation.isPending ? 'Сохранение...' : isEdit ? 'Сохранить' : 'Опубликовать лот'}
+              Далее
             </button>
           )}
         </div>
