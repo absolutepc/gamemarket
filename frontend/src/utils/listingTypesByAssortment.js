@@ -1749,6 +1749,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isJetbrains(item?.name || name, item?.search)) {
     return JETBRAINS_TYPES;
   }
+  if (isHiggsfield(item?.name || name, item?.search)) {
+    return HIGGSFIELD_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1816,6 +1819,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isFigma(itemName, itemSearch) && FIGMA_LABELS)
     || (isTradingview(itemName, itemSearch) && TRADINGVIEW_LABELS)
     || (isJetbrains(itemName, itemSearch) && JETBRAINS_LABELS)
+    || (isHiggsfield(itemName, itemSearch) && HIGGSFIELD_LABELS)
     || null;
 
   return allowed
