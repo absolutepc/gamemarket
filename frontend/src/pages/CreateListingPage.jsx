@@ -518,7 +518,7 @@ export default function CreateListingPage() {
       />
 
       <div className="sticky top-0 lg:top-20 z-40 bg-dark-950/95 backdrop-blur">
-        <div className="PAGE_WIDTH_CLASS">
+        <div className={PAGE_WIDTH_CLASS}>
           <div className="h-12 flex items-center gap-2">
             <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
               <ChevronLeft size={20} />
@@ -536,7 +536,7 @@ export default function CreateListingPage() {
         </div>
       </div>
 
-      <div className="flex-1 max-w-xl lg:max-w-6xl xl:max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 pb-28">
+      <div className={`flex-1 ${PAGE_WIDTH_CLASS} w-full py-4 pb-28`}>
         {/* Context chip after game picked */}
         {step > 0 && selectedGame && (
           <div className="flex items-center gap-3 mb-3">
@@ -998,7 +998,7 @@ export default function CreateListingPage() {
 
       {/* Footer CTA */}
       <div className="fixed inset-x-0 bottom-0 z-40 bg-dark-950/95 backdrop-blur border-t border-dark-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="PAGE_WIDTH_CLASS py-3">
+        <div className={`${PAGE_WIDTH_CLASS} py-3`}>
           {stepId === 'product' ? (
             <button
               type="button"
