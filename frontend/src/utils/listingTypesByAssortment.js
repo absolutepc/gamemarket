@@ -851,6 +851,21 @@ const PIXVERSE_LABELS = {
   other: 'Другое',
 };
 
+/** Wallpaper Engine */
+const WALLPAPER_ENGINE_TYPES = [
+  'other',
+  'account',
+  'services',
+  'keys',
+];
+
+const WALLPAPER_ENGINE_LABELS = {
+  other: 'Другое',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  keys: 'Ключи',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1744,6 +1759,16 @@ function isPixverse(name, search = '') {
     n === 'pixverse'
     || n.startsWith('pixverse ')
     || s.includes('pixverse')
+  );
+}
+
+function isWallpaperEngine(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'wallpaper engine'
+    || n.startsWith('wallpaper engine ')
+    || s.includes('wallpaper engine')
   );
 }
 
