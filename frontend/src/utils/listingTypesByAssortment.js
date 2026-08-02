@@ -802,6 +802,21 @@ const N8N_LABELS = {
   other: 'Другое',
 };
 
+/** Coursera */
+const COURSERA_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const COURSERA_LABELS = {
+  subscription: 'Подписка',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1669,6 +1684,12 @@ function isN8n(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'n8n' || n.startsWith('n8n ') || s.includes('n8n');
+}
+
+function isCoursera(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'coursera' || n.startsWith('coursera ') || s.includes('coursera');
 }
 
 function isApple(name, search = '') {
