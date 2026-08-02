@@ -173,6 +173,23 @@ const EAPLAY_LABELS = {
   services: 'Услуги',
 };
 
+/** Oculus Quest */
+const OCULUS_QUEST_TYPES = [
+  'services',
+  'games',
+  'topup',
+  'account',
+  'other',
+];
+
+const OCULUS_QUEST_LABELS = {
+  services: 'Услуги',
+  games: 'Игры',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -706,6 +723,20 @@ function isEaplay(name, search = '') {
     || n.startsWith('ea play ')
     || s.includes('ea play')
     || s.includes('eaplay')
+  );
+}
+
+function isOculusQuest(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'oculus quest'
+    || n === 'oculus'
+    || n === 'meta quest'
+    || n.startsWith('oculus ')
+    || n.startsWith('meta quest ')
+    || s.includes('oculus')
+    || s.includes('meta quest')
   );
 }
 
