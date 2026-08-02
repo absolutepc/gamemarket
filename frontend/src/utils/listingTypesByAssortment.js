@@ -1366,6 +1366,23 @@ const MANUS_LABELS = {
   other: 'Другое',
 };
 
+/** Ahrefs */
+const AHREFS_TYPES = [
+  'subscription',
+  'addons',
+  'account',
+  'services',
+  'other',
+];
+
+const AHREFS_LABELS = {
+  subscription: 'Подписки',
+  addons: 'Аддоны',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2530,6 +2547,12 @@ function isManus(name, search = '') {
   );
 }
 
+function isAhrefs(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'ahrefs' || n.startsWith('ahrefs ') || s.includes('ahrefs');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -3019,6 +3042,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isManus(item?.name || name, item?.search)) {
     return MANUS_TYPES;
   }
+  if (isAhrefs(item?.name || name, item?.search)) {
+    return AHREFS_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -3134,6 +3160,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isPico(itemName, itemSearch) && PICO_LABELS)
     || (isQobuz(itemName, itemSearch) && QOBUZ_LABELS)
     || (isManus(itemName, itemSearch) && MANUS_LABELS)
+    || (isAhrefs(itemName, itemSearch) && AHREFS_LABELS)
     || null;
 
   return allowed

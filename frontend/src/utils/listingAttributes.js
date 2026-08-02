@@ -593,6 +593,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['100', '500', '1000', '5000', '10000', 'Другое'],
     },
   ],
+  addons: [
+    {
+      key: 'addon_type',
+      label: 'Тип аддона',
+      required: false,
+      options: ['Site Audit', 'Content Explorer', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

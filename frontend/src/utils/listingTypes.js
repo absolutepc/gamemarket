@@ -80,6 +80,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'elixir', label: 'Элексир' },
   { value: 'trovo_ace', label: 'Trovo Ace' },
   { value: 'mana', label: 'Мана' },
+  // Ahrefs
+  { value: 'addons', label: 'Аддоны' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

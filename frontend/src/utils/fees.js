@@ -45,6 +45,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'elixir',
   'trovo_ace',
   'mana',
+  'addons',
 ]);
 
 export function isReducedFeeListingType(listingType) {

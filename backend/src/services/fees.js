@@ -47,6 +47,7 @@ const REDUCED_LISTING_TYPES = new Set([
   'elixir',
   'trovo_ace',
   'mana',
+  'addons',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

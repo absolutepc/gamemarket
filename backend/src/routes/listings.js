@@ -104,6 +104,7 @@ const LISTING_TYPES = [
   'elixir',
   'trovo_ace',
   'mana',
+  'addons',
   'ps_plus',
   'ea_play',
   'youtube_music',

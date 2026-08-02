@@ -69,6 +69,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   elixir: 'topups',
   trovo_ace: 'subscriptions',
   mana: 'topups',
+  addons: 'other',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
