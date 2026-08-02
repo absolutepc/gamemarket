@@ -673,6 +673,21 @@ const UBISOFT_LABELS = {
   rental: 'Аренда',
 };
 
+/** Windsurf */
+const WINDSURF_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const WINDSURF_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1474,6 +1489,12 @@ function isUbisoft(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'ubisoft' || n.startsWith('ubisoft ') || s.includes('ubisoft');
+}
+
+function isWindsurf(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'windsurf' || n.startsWith('windsurf ') || s.includes('windsurf');
 }
 
 function isApple(name, search = '') {
