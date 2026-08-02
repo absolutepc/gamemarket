@@ -539,7 +539,7 @@ export default function CreateListingPage() {
       <div className={`flex-1 ${PAGE_WIDTH_CLASS} w-full py-4 pb-28`}>
         {/* Context chip after game picked */}
         {step > 0 && selectedGame && (
-          <div className={`flex items-center gap-3 mb-3 ${stepId === 'type' ? 'max-w-xl mx-auto w-full' : ''}`}>
+          <div className="flex items-center gap-3 mb-3">
             <img
               src={selectedGame.icon || FALLBACK_ICON}
               alt=""
@@ -547,7 +547,7 @@ export default function CreateListingPage() {
               onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
             />
             <div className="min-w-0 flex-1">
-              <p className={`font-semibold text-white truncate ${stepId === 'type' ? 'text-lg' : ''}`}>{selectedGame.name}</p>
+              <p className="font-semibold text-white truncate">{selectedGame.name}</p>
               {stepId !== 'type' && typeLabel && (
                 <p className="text-xs text-dark-400 truncate">{typeLabel}</p>
               )}
