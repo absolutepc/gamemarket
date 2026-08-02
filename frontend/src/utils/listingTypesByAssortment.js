@@ -1884,6 +1884,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isWindsurf(item?.name || name, item?.search)) {
     return WINDSURF_TYPES;
   }
+  if (isLagofast(item?.name || name, item?.search)) {
+    return LAGOFAST_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1956,6 +1959,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isCanva(itemName, itemSearch) && CANVA_LABELS)
     || (isUbisoft(itemName, itemSearch) && UBISOFT_LABELS)
     || (isWindsurf(itemName, itemSearch) && WINDSURF_LABELS)
+    || (isLagofast(itemName, itemSearch) && LAGOFAST_LABELS)
     || null;
 
   return allowed
