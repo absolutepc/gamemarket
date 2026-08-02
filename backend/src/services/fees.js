@@ -36,6 +36,9 @@ const REDUCED_LISTING_TYPES = new Set([
   'bits',
   'tariff',
   'tokens',
+  'diamonds',
+  'superlikes',
+  'beans',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

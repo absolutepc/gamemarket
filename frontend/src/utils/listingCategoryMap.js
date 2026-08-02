@@ -51,6 +51,9 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   bits: 'topups',
   tariff: 'subscriptions',
   tokens: 'topups',
+  diamonds: 'topups',
+  superlikes: 'topups',
+  beans: 'topups',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

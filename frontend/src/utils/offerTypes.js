@@ -51,6 +51,9 @@ export const OFFER_PATH_BY_TYPE = {
   bits: 'bits',
   tariff: 'tariff',
   tokens: 'tokens',
+  diamonds: 'diamonds',
+  superlikes: 'superlikes',
+  beans: 'beans',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -120,6 +123,9 @@ export function offerTypeLabel(type) {
     bits: 'Bits',
     tariff: 'тариф',
     tokens: 'токены',
+    diamonds: 'алмазы',
+    superlikes: 'суперлайки',
+    beans: 'бобы',
   };
   return map[type] || 'товары';
 }

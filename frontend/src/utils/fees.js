@@ -34,6 +34,9 @@ export const REDUCED_LISTING_TYPES = new Set([
   'bits',
   'tariff',
   'tokens',
+  'diamonds',
+  'superlikes',
+  'beans',
 ]);
 
 export function isReducedFeeListingType(listingType) {

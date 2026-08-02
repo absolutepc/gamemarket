@@ -92,7 +92,6 @@ const SOCIAL_APP_TYPES = [
 
 const SOCIAL_APP_NAMES = new Set([
   'discord',
-  'likee',
 ]);
 
 /** AI tools / нейросети — только 4 основных типа */
@@ -209,6 +208,27 @@ const MICROSOFT_STORE_LABELS = {
   games: 'Игры',
   ubisoft_plus: 'Ubisoft+',
   game_pass: 'Game Pass',
+};
+
+/** Likee */
+const LIKEE_TYPES = [
+  'diamonds',
+  'services',
+  'account',
+  'superlikes',
+  'advertising',
+  'other',
+  'beans',
+];
+
+const LIKEE_LABELS = {
+  diamonds: 'Алмазы',
+  services: 'Услуги',
+  account: 'Аккаунты',
+  superlikes: 'Суперлайки',
+  advertising: 'Реклама',
+  other: 'Другое',
+  beans: 'Бобы',
 };
 
 /**
@@ -771,6 +791,12 @@ function isMicrosoftStore(name, search = '') {
   );
 }
 
+function isLikee(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'likee' || n.startsWith('likee ') || s.includes('likee');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1044,6 +1070,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isMicrosoftStore(item?.name || name, item?.search)) {
     return MICROSOFT_STORE_TYPES;
   }
+  if (isLikee(item?.name || name, item?.search)) {
+    return LIKEE_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1087,6 +1116,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isEaplay(itemName, itemSearch) && EAPLAY_LABELS)
     || (isOculusQuest(itemName, itemSearch) && OCULUS_QUEST_LABELS)
     || (isMicrosoftStore(itemName, itemSearch) && MICROSOFT_STORE_LABELS)
+    || (isLikee(itemName, itemSearch) && LIKEE_LABELS)
     || null;
 
   return allowed

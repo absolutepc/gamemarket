@@ -449,6 +449,30 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['100', '500', '1000', '5000', '10000', 'Другое'],
     },
   ],
+  diamonds: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
+  superlikes: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['10', '50', '100', '500', '1000', 'Другое'],
+    },
+  ],
+  beans: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',
