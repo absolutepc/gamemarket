@@ -459,6 +459,25 @@ const WINDOWS_LABELS = {
   services: 'Услуги',
 };
 
+/** CapCut */
+const CAPCUT_TYPES = [
+  'subscription',
+  'account',
+  'other',
+  'montage',
+  'services',
+  'rental',
+];
+
+const CAPCUT_LABELS = {
+  subscription: 'Подписка',
+  account: 'Аккаунты',
+  other: 'Другое',
+  montage: 'Монтаж',
+  services: 'Услуги',
+  rental: 'Аренда',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
