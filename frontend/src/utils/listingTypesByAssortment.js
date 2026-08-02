@@ -1858,6 +1858,12 @@ function isDzen(name, search = '') {
   return n === 'дзен' || n === 'dzen' || n.startsWith('дзен ') || s === 'дзен' || s.includes('dzen');
 }
 
+function isAbleton(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'ableton' || n.startsWith('ableton ') || s.includes('ableton');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2260,6 +2266,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isDzen(item?.name || name, item?.search)) {
     return DZEN_TYPES;
   }
+  if (isAbleton(item?.name || name, item?.search)) {
+    return ABLETON_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2346,6 +2355,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isTeamspeak(itemName, itemSearch) && TEAMSPEAK_LABELS)
     || (isSoundpad(itemName, itemSearch) && SOUNDPAD_LABELS)
     || (isDzen(itemName, itemSearch) && DZEN_LABELS)
+    || (isAbleton(itemName, itemSearch) && ABLETON_LABELS)
     || null;
 
   return allowed
