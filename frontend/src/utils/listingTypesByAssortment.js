@@ -123,6 +123,23 @@ const KLING_TYPES = [
   'topup',
 ];
 
+/** Suno */
+const SUNO_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const SUNO_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -487,7 +504,6 @@ const AI_SERVICE_NAMES = new Set([
   'gamma',
   'copilot',
   'leonardo ai',
-  'suno',
   'openai',
   'kling',
 ]);
@@ -511,6 +527,12 @@ function isKling(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'kling' || n.startsWith('kling ') || s.includes('kling');
+}
+
+function isSuno(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'suno' || n.startsWith('suno ') || s.includes('suno');
 }
 
 function isApple(name, search = '') {
@@ -703,6 +725,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isKling(item?.name || name, item?.search)) {
     return KLING_TYPES;
   }
+  if (isSuno(item?.name || name, item?.search)) {
+    return SUNO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -735,6 +760,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isApple(itemName, itemSearch) && APPLE_LABELS)
     || (isSpotify(itemName, itemSearch) && SPOTIFY_LABELS)
     || (isSoundcloud(itemName, itemSearch) && SOUNDCLOUD_LABELS)
+    || (isSuno(itemName, itemSearch) && SUNO_LABELS)
     || null;
 
   return allowed
