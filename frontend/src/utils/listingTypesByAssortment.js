@@ -2026,6 +2026,17 @@ function isBandicam(name, search = '') {
   return n === 'bandicam' || n.startsWith('bandicam ') || s.includes('bandicam');
 }
 
+function isBigoLive(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'bigo live'
+    || n === 'bigo'
+    || n.startsWith('bigo live ')
+    || s.includes('bigo live')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2449,6 +2460,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isBandicam(item?.name || name, item?.search)) {
     return BANDICAM_TYPES;
   }
+  if (isBigoLive(item?.name || name, item?.search)) {
+    return BIGO_LIVE_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2542,6 +2556,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isTangoLive(itemName, itemSearch) && TANGO_LIVE_LABELS)
     || (isRunway(itemName, itemSearch) && RUNWAY_LABELS)
     || (isBandicam(itemName, itemSearch) && BANDICAM_LABELS)
+    || (isBigoLive(itemName, itemSearch) && BIGO_LIVE_LABELS)
     || null;
 
   return allowed
