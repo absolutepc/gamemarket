@@ -467,6 +467,19 @@ const DUOLINGO_LABELS = {
   promocodes: 'Промокод',
 };
 
+/** Razer Gold */
+const RAZER_GOLD_TYPES = [
+  'giftcard',
+  'services',
+  'other',
+];
+
+const RAZER_GOLD_LABELS = {
+  giftcard: 'Подарочные карты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1160,6 +1173,16 @@ function isDuolingo(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'duolingo' || n.startsWith('duolingo ') || s.includes('duolingo');
+}
+
+function isRazerGold(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'razer gold'
+    || n.startsWith('razer gold ')
+    || s.includes('razer gold')
+  );
 }
 
 function isApple(name, search = '') {
