@@ -85,6 +85,7 @@ const LISTING_TYPES = [
   'twitch_drops',
   'bits',
   'tariff',
+  'tokens',
   'ps_plus',
   'ea_play',
   'youtube_music',

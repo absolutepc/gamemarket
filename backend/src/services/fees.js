@@ -35,6 +35,7 @@ const REDUCED_LISTING_TYPES = new Set([
   'vk_play',
   'bits',
   'tariff',
+  'tokens',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

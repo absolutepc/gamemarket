@@ -560,6 +560,23 @@ const EXITLAG_LABELS = {
   other: 'Другое',
 };
 
+/** Pax Historia */
+const PAX_HISTORIA_TYPES = [
+  'tokens',
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const PAX_HISTORIA_LABELS = {
+  tokens: 'Токены',
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -784,6 +801,18 @@ function isExitlag(name, search = '') {
   return n === 'exitlag' || n.startsWith('exitlag ') || s.includes('exitlag');
 }
 
+function isPaxHistoria(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'pax historia'
+    || n === 'paxhistoria'
+    || n.startsWith('pax historia ')
+    || s.includes('pax historia')
+    || s.includes('paxhistoria')
+  );
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -849,6 +878,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isExitlag(item?.name || name, item?.search)) {
     return EXITLAG_TYPES;
   }
+  if (isPaxHistoria(item?.name || name, item?.search)) {
+    return PAX_HISTORIA_TYPES;
+  }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
   }
@@ -912,6 +944,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isTwitch(itemName, itemSearch) && TWITCH_LABELS)
     || (isEsim(itemName, itemSearch) && ESIM_LABELS)
     || (isExitlag(itemName, itemSearch) && EXITLAG_LABELS)
+    || (isPaxHistoria(itemName, itemSearch) && PAX_HISTORIA_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)

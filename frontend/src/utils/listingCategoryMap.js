@@ -50,6 +50,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   twitch_drops: 'other',
   bits: 'topups',
   tariff: 'subscriptions',
+  tokens: 'topups',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

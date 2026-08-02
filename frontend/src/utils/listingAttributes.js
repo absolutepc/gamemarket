@@ -441,6 +441,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['1 ГБ', '3 ГБ', '5 ГБ', '10 ГБ', '20 ГБ', 'Безлимит', 'Другое'],
     },
   ],
+  tokens: [
+    {
+      key: 'amount',
+      label: 'Количество',
+      required: false,
+      options: ['100', '500', '1000', '5000', '10000', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

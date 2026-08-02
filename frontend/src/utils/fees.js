@@ -33,6 +33,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'vk_play',
   'bits',
   'tariff',
+  'tokens',
 ]);
 
 export function isReducedFeeListingType(listingType) {

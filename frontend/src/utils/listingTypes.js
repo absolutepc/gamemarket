@@ -49,6 +49,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'bits', label: 'Bits' },
   // eSIM
   { value: 'tariff', label: 'Тариф' },
+  // Pax Historia / tokens
+  { value: 'tokens', label: 'Токены' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },
