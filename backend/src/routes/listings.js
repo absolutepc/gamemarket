@@ -78,6 +78,8 @@ const LISTING_TYPES = [
   'montage',
   'ps_plus',
   'ea_play',
+  'youtube_music',
+  'youtube_tv',
 ];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [

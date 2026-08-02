@@ -399,6 +399,12 @@ function isPlaystation(name, search = '') {
   );
 }
 
+function isYoutube(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'youtube' || n.startsWith('youtube ') || s.includes('youtube');
+}
+
 function isAiService(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);

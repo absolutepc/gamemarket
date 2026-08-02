@@ -395,6 +395,22 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['EA Play', 'EA Play Pro'],
     },
   ],
+  youtube_music: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '6 месяцев', '1 год'],
+    },
+  ],
+  youtube_tv: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['1 месяц', '3 месяца', '6 месяцев', '1 год'],
+    },
+  ],
 };
 
 export function getAttributeSchema(listingType) {

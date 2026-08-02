@@ -37,6 +37,8 @@ export const OFFER_PATH_BY_TYPE = {
   montage: 'montage',
   ps_plus: 'ps-plus',
   ea_play: 'ea-play',
+  youtube_music: 'youtube-music',
+  youtube_tv: 'youtube-tv',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(

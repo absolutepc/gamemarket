@@ -23,6 +23,9 @@ const REDUCED_LISTING_TYPES = new Set([
   'games',
   'ps_plus',
   'ea_play',
+  'premium',
+  'youtube_music',
+  'youtube_tv',
 ]);
 
 function resolveFeePercent({ categorySlug, listingType } = {}) {

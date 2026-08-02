@@ -40,6 +40,9 @@ export const LISTING_TYPE_OPTIONS = [
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },
+  // YouTube
+  { value: 'youtube_music', label: 'YouTube Music' },
+  { value: 'youtube_tv', label: 'YouTube TV' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);

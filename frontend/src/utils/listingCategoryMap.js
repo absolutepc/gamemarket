@@ -37,6 +37,8 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   montage: 'social',
   ps_plus: 'subscriptions',
   ea_play: 'subscriptions',
+  youtube_music: 'subscriptions',
+  youtube_tv: 'subscriptions',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
