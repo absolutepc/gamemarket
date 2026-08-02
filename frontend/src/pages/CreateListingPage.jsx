@@ -17,6 +17,7 @@ import {
 } from '../utils/fees';
 import { formatPrice } from '../utils/format';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
+import { listingTypeOptionsForAssortment } from '../utils/listingTypesByAssortment';
 import {
   getAttributeSchema,
   validateAttributes,
@@ -219,10 +220,12 @@ export default function CreateListingPage() {
   }, [assortmentQ, tabItems, visibleAssortment]);
 
   const typeOptions = useMemo(() => {
-    const base = LISTING_TYPE_OPTIONS.filter((o) => o.value !== 'giftcard' || isEdit);
-    if (!feeFilterOn) return base;
-    return base.filter((o) => isReducedFeeListingType(o.value));
-  }, [feeFilterOn, isEdit]);
+    const forGame = listingTypeOptionsForAssortment(form.game || selectedGame, {
+      includeGiftcard: isEdit,
+    });
+    if (!feeFilterOn) return forGame;
+    return forGame.filter((o) => isReducedFeeListingType(o.value));
+  }, [feeFilterOn, isEdit, form.game, selectedGame]);
 
   const patchForm = (key, value) => {
     setForm((prev) => {
@@ -235,6 +238,17 @@ export default function CreateListingPage() {
       return next;
     });
   };
+
+  // Drop preselected type if it is not valid for the chosen game/app
+  useEffect(() => {
+    if (!form.game || !form.listing_type) return;
+    const allowed = listingTypeOptionsForAssortment(form.game, { includeGiftcard: isEdit });
+    if (!allowed.some((o) => o.value === form.listing_type)) {
+      setForm((prev) => ({ ...prev, listing_type: '', category_id: '' }));
+      setAttributes({});
+      setAccessType('');
+    }
+  }, [form.game, form.listing_type, isEdit]);
 
   const mutation = useMutation({
     mutationFn: (data) => (isEdit ? api.put(`/listings/${id}`, data) : api.post('/listings', data)),
@@ -344,6 +358,7 @@ export default function CreateListingPage() {
     let next = step + 1;
     if (STEPS[next]?.id === 'attributes' && skipAttributes) next += 1;
     setTriedNext(false);
+    setAssortmentQ('');
     setStep(Math.min(next, STEPS.length - 1));
   };
 
@@ -355,6 +370,7 @@ export default function CreateListingPage() {
     let prev = step - 1;
     if (STEPS[prev]?.id === 'attributes' && skipAttributes) prev -= 1;
     setTriedNext(false);
+    setAssortmentQ('');
     setStep(Math.max(prev, 0));
   };
 
@@ -558,7 +574,10 @@ export default function CreateListingPage() {
             </div>
 
             <div className="flex gap-2 overflow-x-auto mb-5" style={{ scrollbarWidth: 'none' }}>
-              {POPULAR_TYPES.map((t) => (
+              {POPULAR_TYPES.filter((t) => {
+                if (!form.game) return true;
+                return listingTypeOptionsForAssortment(form.game).some((o) => o.value === t.value);
+              }).map((t) => (
                 <button
                   key={t.value}
                   type="button"
