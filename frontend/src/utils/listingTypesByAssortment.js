@@ -1933,6 +1933,19 @@ function isClipStudioPaint(name, search = '') {
   );
 }
 
+function isCrunchyroll(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'кранчролл'
+    || n === 'crunchyroll'
+    || n.startsWith('кранчролл ')
+    || n.startsWith('crunchyroll ')
+    || s.includes('crunchyroll')
+    || s.includes('кранчролл')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2344,6 +2357,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isClipStudioPaint(item?.name || name, item?.search)) {
     return CLIP_STUDIO_PAINT_TYPES;
   }
+  if (isCrunchyroll(item?.name || name, item?.search)) {
+    return CRUNCHYROLL_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2433,6 +2449,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isAbleton(itemName, itemSearch) && ABLETON_LABELS)
     || (isObsStudio(itemName, itemSearch) && OBS_STUDIO_LABELS)
     || (isClipStudioPaint(itemName, itemSearch) && CLIP_STUDIO_PAINT_LABELS)
+    || (isCrunchyroll(itemName, itemSearch) && CRUNCHYROLL_LABELS)
     || null;
 
   return allowed
