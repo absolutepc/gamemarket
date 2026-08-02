@@ -90,6 +90,8 @@ export function offerTypeLabel(type) {
     coins: 'монеты',
     promotion: 'продвижение',
     montage: 'монтаж',
+    ps_plus: 'PS Plus',
+    ea_play: 'EA Play',
   };
   return map[type] || 'товары';
 }

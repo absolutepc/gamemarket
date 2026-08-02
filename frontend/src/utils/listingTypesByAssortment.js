@@ -262,6 +262,31 @@ const TIKTOK_LABELS = {
   subscription: 'Подписки',
 };
 
+/** PlayStation */
+const PLAYSTATION_TYPES = [
+  'topup',
+  'ps_plus',
+  'game_account',
+  'games',
+  'clean_account',
+  'rental',
+  'ea_play',
+  'services',
+  'other',
+];
+
+const PLAYSTATION_LABELS = {
+  topup: 'Пополнение бумажника',
+  ps_plus: 'PS Plus',
+  game_account: 'Аккаунты с играми',
+  games: 'Игры',
+  clean_account: 'Чистые аккаунты',
+  rental: 'Аренда',
+  ea_play: 'EA Play',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
@@ -336,6 +361,19 @@ function isTiktok(name, search = '') {
   return n === 'tiktok' || n.startsWith('tiktok ') || s.includes('tiktok');
 }
 
+function isPlaystation(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'playstation'
+    || n.startsWith('playstation ')
+    || n === 'ps5'
+    || n === 'ps4'
+    || n === 'psn'
+    || s.includes('playstation')
+  );
+}
+
 function isAiService(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -356,6 +394,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   const name = normalizeName(item?.name || gameOrItem);
   const kind = item?.kind || 'app';
 
+  if (isPlaystation(item?.name || name, item?.search)) {
+    return PLAYSTATION_TYPES;
+  }
   if (isTelegram(item?.name || name, item?.search)) {
     return TELEGRAM_TYPES;
   }
@@ -397,7 +438,8 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
   const itemName = typeof gameOrItem === 'string' ? gameOrItem : gameOrItem?.name;
   const itemSearch = typeof gameOrItem === 'object' ? gameOrItem?.search : '';
   const labelMap =
-    (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
+    (isPlaystation(itemName, itemSearch) && PLAYSTATION_LABELS)
+    || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
     || (isSteam(itemName, itemSearch) && STEAM_LABELS)
     || (isApple(itemName, itemSearch) && APPLE_LABELS)
