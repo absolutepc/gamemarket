@@ -1041,6 +1041,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isOculusQuest(item?.name || name, item?.search)) {
     return OCULUS_QUEST_TYPES;
   }
+  if (isMicrosoftStore(item?.name || name, item?.search)) {
+    return MICROSOFT_STORE_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1083,6 +1086,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isNeiroseti(itemName, itemSearch) && NEIROSETI_LABELS)
     || (isEaplay(itemName, itemSearch) && EAPLAY_LABELS)
     || (isOculusQuest(itemName, itemSearch) && OCULUS_QUEST_LABELS)
+    || (isMicrosoftStore(itemName, itemSearch) && MICROSOFT_STORE_LABELS)
     || null;
 
   return allowed
