@@ -738,6 +738,21 @@ const EPIC_GAMES_LABELS = {
   other: 'Другое',
 };
 
+/** Notion */
+const NOTION_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const NOTION_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
