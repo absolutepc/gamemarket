@@ -123,6 +123,15 @@ const DEEPSEEK_TYPES = [
   'other',
 ];
 
+/** Kling: базовые 4 типа ИИ + пополнение баланса */
+const KLING_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+  'topup',
+];
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
@@ -143,9 +152,10 @@ const AI_SERVICE_NAMES = new Set([
   'leonardo ai',
   'suno',
   'openai',
+  'kling',
 ]);
 
-const AI_NAME_RE = /\b(ai|gpt|claude|cursor|gemini|grok|kimi|llm|нейро)\b|чатгпт|midjourney|perplexity|deepseek|runway|copilot|leonardo|character\.?\s*ai/i;
+const AI_NAME_RE = /\b(ai|gpt|claude|cursor|gemini|grok|kimi|llm|нейро|kling)\b|чатгпт|midjourney|perplexity|deepseek|runway|copilot|leonardo|character\.?\s*ai/i;
 
 function normalizeName(name) {
   return String(name || '')
@@ -158,6 +168,12 @@ function isDeepSeek(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'deepseek' || n.startsWith('deepseek ') || s.includes('deepseek');
+}
+
+function isKling(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'kling' || n.startsWith('kling ') || s.includes('kling');
 }
 
 function isAiService(name, search = '') {
@@ -184,6 +200,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isDeepSeek(item?.name || name, item?.search)) {
     return DEEPSEEK_TYPES;
+  }
+  if (isKling(item?.name || name, item?.search)) {
+    return KLING_TYPES;
   }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
