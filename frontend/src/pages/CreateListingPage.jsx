@@ -501,7 +501,7 @@ export default function CreateListingPage() {
       />
 
       <div className="sticky top-0 z-40 bg-dark-950/95 backdrop-blur border-b border-dark-800">
-        <div className="max-w-xl mx-auto px-4 h-12 flex items-center gap-2">
+        <div className="max-w-xl lg:max-w-4xl mx-auto px-4 h-12 flex items-center gap-2">
           <button type="button" onClick={goBack} className="btn-ghost p-2 -ml-2" aria-label="Назад">
             <ChevronLeft size={20} />
           </button>
@@ -517,7 +517,7 @@ export default function CreateListingPage() {
         </div>
       </div>
 
-      <div className="flex-1 max-w-xl mx-auto w-full px-4 py-4 pb-28">
+      <div className="flex-1 max-w-xl lg:max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 pb-28">
         {/* Context chip after game picked */}
         {step > 0 && selectedGame && (
           <div className="flex items-center gap-3 mb-4">
@@ -597,7 +597,7 @@ export default function CreateListingPage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-8 gap-3 sm:gap-4">
               {filteredAssortment.slice(0, 80).map((item) => (
                 <button
                   key={item.name}
@@ -1000,7 +1000,7 @@ export default function CreateListingPage() {
 
       {/* Footer CTA */}
       <div className="fixed inset-x-0 bottom-0 z-40 bg-dark-950/95 backdrop-blur border-t border-dark-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="max-w-xl mx-auto px-4 py-3">
+        <div className="max-w-xl lg:max-w-4xl mx-auto px-4 sm:px-6 py-3">
           {stepId === 'product' ? (
             <button
               type="button"
