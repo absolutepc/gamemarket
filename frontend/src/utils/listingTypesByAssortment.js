@@ -1413,6 +1413,21 @@ const RECRAFT_LABELS = {
   other: 'Другое',
 };
 
+/** Hugging Face */
+const HUGGING_FACE_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const HUGGING_FACE_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2595,6 +2610,18 @@ function isRecraft(name, search = '') {
   return n === 'recraft' || n.startsWith('recraft ') || s.includes('recraft');
 }
 
+function isHuggingFace(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'hugging face'
+    || n === 'huggingface'
+    || n.startsWith('hugging face ')
+    || s.includes('hugging face')
+    || s.includes('huggingface')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -3093,6 +3120,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isRecraft(item?.name || name, item?.search)) {
     return RECRAFT_TYPES;
   }
+  if (isHuggingFace(item?.name || name, item?.search)) {
+    return HUGGING_FACE_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -3211,6 +3241,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isAhrefs(itemName, itemSearch) && AHREFS_LABELS)
     || (isImazing(itemName, itemSearch) && IMAZING_LABELS)
     || (isRecraft(itemName, itemSearch) && RECRAFT_LABELS)
+    || (isHuggingFace(itemName, itemSearch) && HUGGING_FACE_LABELS)
     || null;
 
   return allowed
