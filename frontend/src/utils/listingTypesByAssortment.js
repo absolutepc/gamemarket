@@ -2162,6 +2162,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isPixverse(item?.name || name, item?.search)) {
     return PIXVERSE_TYPES;
   }
+  if (isWallpaperEngine(item?.name || name, item?.search)) {
+    return WALLPAPER_ENGINE_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2244,6 +2247,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isCoursera(itemName, itemSearch) && COURSERA_LABELS)
     || (isTripo(itemName, itemSearch) && TRIPO_LABELS)
     || (isPixverse(itemName, itemSearch) && PIXVERSE_LABELS)
+    || (isWallpaperEngine(itemName, itemSearch) && WALLPAPER_ENGINE_LABELS)
     || null;
 
   return allowed
