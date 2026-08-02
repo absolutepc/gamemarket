@@ -1984,6 +1984,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isUbisoft(itemName, itemSearch) && UBISOFT_LABELS)
     || (isWindsurf(itemName, itemSearch) && WINDSURF_LABELS)
     || (isLagofast(itemName, itemSearch) && LAGOFAST_LABELS)
+    || (isLovable(itemName, itemSearch) && LOVABLE_LABELS)
     || null;
 
   return allowed
