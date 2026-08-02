@@ -576,6 +576,21 @@ const FIGMA_LABELS = {
   other: 'Другое',
 };
 
+/** TradingView */
+const TRADINGVIEW_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const TRADINGVIEW_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
