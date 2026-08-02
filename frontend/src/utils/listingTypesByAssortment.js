@@ -72,7 +72,6 @@ const GAME_PLATFORM_TYPES = [
 const GAME_PLATFORM_NAMES = new Set([
   'epic games',
   'nintendo',
-  'ea play',
   'origin',
   'ubisoft',
   'gog',
@@ -153,6 +152,25 @@ const NEIROSETI_LABELS = {
   account: 'Аккаунты',
   services: 'Услуги',
   topup: 'Пополнение баланса',
+};
+
+/** EA Play */
+const EAPLAY_TYPES = [
+  'subscription',
+  'giftcard',
+  'account',
+  'other',
+  'games',
+  'services',
+];
+
+const EAPLAY_LABELS = {
+  subscription: 'Подписка',
+  giftcard: 'Подарочные карты',
+  account: 'Аккаунты',
+  other: 'Другое',
+  games: 'Игры',
+  services: 'Услуги',
 };
 
 /**
