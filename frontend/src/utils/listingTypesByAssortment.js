@@ -1503,6 +1503,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isDuolingo(item?.name || name, item?.search)) {
     return DUOLINGO_TYPES;
   }
+  if (isRazerGold(item?.name || name, item?.search)) {
+    return RAZER_GOLD_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1561,6 +1564,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isVoicemod(itemName, itemSearch) && VOICEMOD_LABELS)
     || (isHeygen(itemName, itemSearch) && HEYGEN_LABELS)
     || (isDuolingo(itemName, itemSearch) && DUOLINGO_LABELS)
+    || (isRazerGold(itemName, itemSearch) && RAZER_GOLD_LABELS)
     || null;
 
   return allowed
