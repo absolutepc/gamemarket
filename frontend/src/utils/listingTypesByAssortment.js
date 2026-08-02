@@ -1383,6 +1383,21 @@ const AHREFS_LABELS = {
   other: 'Другое',
 };
 
+/** iMazing */
+const IMAZING_TYPES = [
+  'keys',
+  'account',
+  'services',
+  'other',
+];
+
+const IMAZING_LABELS = {
+  keys: 'Ключи',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
