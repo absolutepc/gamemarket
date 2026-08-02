@@ -960,6 +960,21 @@ const CLIP_STUDIO_PAINT_LABELS = {
   services: 'Услуги',
 };
 
+/** КранчРолл / Crunchyroll */
+const CRUNCHYROLL_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const CRUNCHYROLL_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
