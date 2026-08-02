@@ -2123,6 +2123,17 @@ function isBusuu(name, search = '') {
   return n === 'busuu' || n.startsWith('busuu ') || s.includes('busuu');
 }
 
+function isPrimeVideo(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'prime video'
+    || n === 'amazon prime video'
+    || n.startsWith('prime video ')
+    || s.includes('prime video')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2558,6 +2569,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isBusuu(item?.name || name, item?.search)) {
     return BUSUU_TYPES;
   }
+  if (isPrimeVideo(item?.name || name, item?.search)) {
+    return PRIME_VIDEO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2655,6 +2669,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isKrea(itemName, itemSearch) && KREA_LABELS)
     || (isCrosshairX(itemName, itemSearch) && CROSSHAIR_X_LABELS)
     || (isBusuu(itemName, itemSearch) && BUSUU_LABELS)
+    || (isPrimeVideo(itemName, itemSearch) && PRIME_VIDEO_LABELS)
     || null;
 
   return allowed
