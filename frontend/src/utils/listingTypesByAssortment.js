@@ -1835,6 +1835,12 @@ function isSoundpad(name, search = '') {
   return n === 'soundpad' || n.startsWith('soundpad ') || s.includes('soundpad');
 }
 
+function isDzen(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'дзен' || n === 'dzen' || n.startsWith('дзен ') || s === 'дзен' || s.includes('dzen');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2234,6 +2240,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isSoundpad(item?.name || name, item?.search)) {
     return SOUNDPAD_TYPES;
   }
+  if (isDzen(item?.name || name, item?.search)) {
+    return DZEN_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2319,6 +2328,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isWallpaperEngine(itemName, itemSearch) && WALLPAPER_ENGINE_LABELS)
     || (isTeamspeak(itemName, itemSearch) && TEAMSPEAK_LABELS)
     || (isSoundpad(itemName, itemSearch) && SOUNDPAD_LABELS)
+    || (isDzen(itemName, itemSearch) && DZEN_LABELS)
     || null;
 
   return allowed
