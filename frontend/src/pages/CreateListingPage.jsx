@@ -688,17 +688,21 @@ export default function CreateListingPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => pickType(opt.value)}
-                    className={`flex items-center gap-3 w-full px-1 py-3 text-left border-b border-dark-800/80 last:border-b-0 transition-colors ${
-                      active ? 'bg-[#2B71F3]/5' : 'hover:bg-dark-900/60'
+                    className={`group flex items-center gap-3 w-full px-3 py-3 text-left rounded-xl border-b border-dark-800/80 last:border-b-0 transition-colors ${
+                      active
+                        ? 'bg-[#2B71F3]/15 text-white'
+                        : 'hover:bg-[#2B71F3]/20 hover:text-[#8EB6FF]'
                     }`}
                   >
-                    <span className="min-w-0 flex-1 text-[15px] font-medium text-white">
+                    <span className="min-w-0 flex-1 text-[15px] font-medium text-white group-hover:text-[#8EB6FF]">
                       {opt.label}
                     </span>
                     {reduced && <FeeBadge />}
                     <span
-                      className={`w-5 h-5 rounded-full border-2 shrink-0 ${
-                        active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-500'
+                      className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors ${
+                        active
+                          ? 'border-[#2B71F3] bg-[#2B71F3]'
+                          : 'border-dark-500 group-hover:border-[#2B71F3]'
                       }`}
                     />
                   </button>
