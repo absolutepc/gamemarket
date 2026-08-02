@@ -1665,6 +1665,12 @@ function isPicsart(name, search = '') {
   return n === 'picsart' || n.startsWith('picsart ') || s.includes('picsart');
 }
 
+function isN8n(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'n8n' || n.startsWith('n8n ') || s.includes('n8n');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2043,6 +2049,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isPicsart(item?.name || name, item?.search)) {
     return PICSART_TYPES;
   }
+  if (isN8n(item?.name || name, item?.search)) {
+    return N8N_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2121,6 +2130,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isNotion(itemName, itemSearch) && NOTION_LABELS)
     || (isPhotoroom(itemName, itemSearch) && PHOTOROOM_LABELS)
     || (isPicsart(itemName, itemSearch) && PICSART_LABELS)
+    || (isN8n(itemName, itemSearch) && N8N_LABELS)
     || null;
 
   return allowed
