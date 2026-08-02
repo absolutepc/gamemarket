@@ -678,7 +678,7 @@ export default function CreateListingPage() {
 
         {/* STEP: type */}
         {stepId === 'type' && (
-          <div className="max-w-xl mx-auto w-full">
+          <div>
             <div className="flex flex-col">
               {typeOptions.map((opt) => {
                 const active = form.listing_type === opt.value;
@@ -688,7 +688,7 @@ export default function CreateListingPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => pickType(opt.value)}
-                    className={`group flex items-center gap-4 w-full px-3 py-4 text-left rounded-xl border-b border-dark-800/80 last:border-b-0 transition-colors ${
+                    className={`group flex items-center gap-3 w-full px-3 py-3 text-left rounded-xl border-b border-dark-800/80 last:border-b-0 transition-colors ${
                       active
                         ? 'bg-[#2B71F3]/15 text-white'
                         : 'hover:bg-[#2B71F3]/20 hover:text-[#8EB6FF]'
@@ -699,7 +699,7 @@ export default function CreateListingPage() {
                     </span>
                     {reduced && <FeeBadge />}
                     <span
-                      className={`w-6 h-6 rounded-full border-2 shrink-0 transition-colors ${
+                      className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors ${
                         active
                           ? 'border-[#2B71F3] bg-[#2B71F3]'
                           : 'border-dark-500 group-hover:border-[#2B71F3]'
