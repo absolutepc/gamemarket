@@ -49,6 +49,7 @@ export const OFFER_PATH_BY_TYPE = {
   gifts: 'gifts',
   twitch_drops: 'twitch-drops',
   bits: 'bits',
+  tariff: 'tariff',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -116,6 +117,7 @@ export function offerTypeLabel(type) {
     gifts: 'подарки',
     twitch_drops: 'Twitch Drops',
     bits: 'Bits',
+    tariff: 'тариф',
   };
   return map[type] || 'товары';
 }

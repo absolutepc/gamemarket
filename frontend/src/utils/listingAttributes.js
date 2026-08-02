@@ -427,6 +427,20 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['100', '500', '1000', '5000', '10000', 'Другое'],
     },
   ],
+  tariff: [
+    {
+      key: 'duration',
+      label: 'Срок',
+      required: true,
+      options: ['7 дней', '14 дней', '1 месяц', '3 месяца', '6 месяцев', '1 год'],
+    },
+    {
+      key: 'data',
+      label: 'Трафик',
+      required: false,
+      options: ['1 ГБ', '3 ГБ', '5 ГБ', '10 ГБ', '20 ГБ', 'Безлимит', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

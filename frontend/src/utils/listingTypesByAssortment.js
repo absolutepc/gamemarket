@@ -528,6 +528,21 @@ const TWITCH_LABELS = {
   bits: 'Bits',
 };
 
+/** eSIM */
+const ESIM_TYPES = [
+  'tariff',
+  'services',
+  'topup',
+  'other',
+];
+
+const ESIM_LABELS = {
+  tariff: 'Тариф',
+  services: 'Услуги',
+  topup: 'Пополнение баланса',
+  other: 'Другое',
+};
+
 /** YouTube */
 const YOUTUBE_TYPES = [
   'premium',
@@ -740,6 +755,12 @@ function isTwitch(name, search = '') {
   return n === 'twitch' || n.startsWith('twitch ') || s.includes('twitch');
 }
 
+function isEsim(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'esim' || n === 'e-sim' || n.startsWith('esim ') || s.includes('esim');
+}
+
 function isYoutube(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -798,6 +819,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   }
   if (isTwitch(item?.name || name, item?.search)) {
     return TWITCH_TYPES;
+  }
+  if (isEsim(item?.name || name, item?.search)) {
+    return ESIM_TYPES;
   }
   if (isYoutube(item?.name || name, item?.search)) {
     return YOUTUBE_TYPES;
@@ -860,6 +884,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isCapcut(itemName, itemSearch) && CAPCUT_LABELS)
     || (isVkontakte(itemName, itemSearch) && VKONTAKTE_LABELS)
     || (isTwitch(itemName, itemSearch) && TWITCH_LABELS)
+    || (isEsim(itemName, itemSearch) && ESIM_LABELS)
     || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
