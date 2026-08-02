@@ -94,6 +94,8 @@ export function offerTypeLabel(type) {
     montage: 'монтаж',
     ps_plus: 'PS Plus',
     ea_play: 'EA Play',
+    youtube_music: 'YouTube Music',
+    youtube_tv: 'YouTube TV',
   };
   return map[type] || 'товары';
 }

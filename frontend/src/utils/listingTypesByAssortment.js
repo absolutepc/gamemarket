@@ -100,7 +100,6 @@ const SOCIAL_APP_NAMES = new Set([
   'вконтакте',
   'likee',
   'twitch',
-  'youtube',
 ]);
 
 /** AI tools / нейросети — только 4 основных типа */
@@ -306,6 +305,33 @@ const PLAYSTATION_LABELS = {
   other: 'Другое',
 };
 
+/** YouTube */
+const YOUTUBE_TYPES = [
+  'premium',
+  'channels',
+  'mods',
+  'services',
+  'youtube_music',
+  'advertising',
+  'montage',
+  'design',
+  'other',
+  'youtube_tv',
+];
+
+const YOUTUBE_LABELS = {
+  premium: 'Премиум',
+  channels: 'Каналы',
+  mods: 'Моды',
+  services: 'Услуги',
+  youtube_music: 'YouTube Music',
+  advertising: 'Реклама',
+  montage: 'Монтаж',
+  design: 'Дизайн',
+  other: 'Другое',
+  youtube_tv: 'YouTube TV',
+};
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
@@ -428,6 +454,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isPlaystation(item?.name || name, item?.search)) {
     return PLAYSTATION_TYPES;
   }
+  if (isYoutube(item?.name || name, item?.search)) {
+    return YOUTUBE_TYPES;
+  }
   if (isTelegram(item?.name || name, item?.search)) {
     return TELEGRAM_TYPES;
   }
@@ -473,6 +502,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
   const itemSearch = typeof gameOrItem === 'object' ? gameOrItem?.search : '';
   const labelMap =
     (isPlaystation(itemName, itemSearch) && PLAYSTATION_LABELS)
+    || (isYoutube(itemName, itemSearch) && YOUTUBE_LABELS)
     || (isTelegram(itemName, itemSearch) && TELEGRAM_LABELS)
     || (isTiktok(itemName, itemSearch) && TIKTOK_LABELS)
     || (isSteam(itemName, itemSearch) && STEAM_LABELS)
