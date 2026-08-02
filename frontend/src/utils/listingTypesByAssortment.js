@@ -975,6 +975,19 @@ const CRUNCHYROLL_LABELS = {
   other: 'Другое',
 };
 
+/** Tango Live */
+const TANGO_LIVE_TYPES = [
+  'coins',
+  'services',
+  'other',
+];
+
+const TANGO_LIVE_LABELS = {
+  coins: 'Монеты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
