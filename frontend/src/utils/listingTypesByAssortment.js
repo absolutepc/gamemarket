@@ -480,6 +480,21 @@ const RAZER_GOLD_LABELS = {
   other: 'Другое',
 };
 
+/** Splice */
+const SPLICE_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const SPLICE_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1183,6 +1198,12 @@ function isRazerGold(name, search = '') {
     || n.startsWith('razer gold ')
     || s.includes('razer gold')
   );
+}
+
+function isSplice(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'splice' || n.startsWith('splice ') || s.includes('splice');
 }
 
 function isApple(name, search = '') {
