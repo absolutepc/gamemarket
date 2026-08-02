@@ -1986,6 +1986,12 @@ function isTangoLive(name, search = '') {
   );
 }
 
+function isRunway(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'runway' || n.startsWith('runway ') || s.includes('runway');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2403,6 +2409,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isTangoLive(item?.name || name, item?.search)) {
     return TANGO_LIVE_TYPES;
   }
+  if (isRunway(item?.name || name, item?.search)) {
+    return RUNWAY_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2494,6 +2503,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isClipStudioPaint(itemName, itemSearch) && CLIP_STUDIO_PAINT_LABELS)
     || (isCrunchyroll(itemName, itemSearch) && CRUNCHYROLL_LABELS)
     || (isTangoLive(itemName, itemSearch) && TANGO_LIVE_LABELS)
+    || (isRunway(itemName, itemSearch) && RUNWAY_LABELS)
     || null;
 
   return allowed
