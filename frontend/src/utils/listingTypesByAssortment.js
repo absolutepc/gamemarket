@@ -1417,6 +1417,18 @@ function isHiggsfield(name, search = '') {
   );
 }
 
+function isOpenrouter(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'openrouter'
+    || n === 'open router'
+    || n.startsWith('openrouter ')
+    || s.includes('openrouter')
+    || s.includes('open router')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1765,6 +1777,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isHiggsfield(item?.name || name, item?.search)) {
     return HIGGSFIELD_TYPES;
   }
+  if (isOpenrouter(item?.name || name, item?.search)) {
+    return OPENROUTER_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1833,6 +1848,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isTradingview(itemName, itemSearch) && TRADINGVIEW_LABELS)
     || (isJetbrains(itemName, itemSearch) && JETBRAINS_LABELS)
     || (isHiggsfield(itemName, itemSearch) && HIGGSFIELD_LABELS)
+    || (isOpenrouter(itemName, itemSearch) && OPENROUTER_LABELS)
     || null;
 
   return allowed
