@@ -591,6 +591,23 @@ const TRADINGVIEW_LABELS = {
   other: 'Другое',
 };
 
+/** JetBrains */
+const JETBRAINS_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const JETBRAINS_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1345,6 +1362,18 @@ function isTradingview(name, search = '') {
     || n.startsWith('tradingview ')
     || s.includes('tradingview')
     || s.includes('trading view')
+  );
+}
+
+function isJetbrains(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'jetbrains'
+    || n === 'jet brains'
+    || n.startsWith('jetbrains ')
+    || s.includes('jetbrains')
+    || s.includes('jet brains')
   );
 }
 
