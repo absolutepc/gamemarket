@@ -70,7 +70,6 @@ const GAME_PLATFORM_TYPES = [
 ];
 
 const GAME_PLATFORM_NAMES = new Set([
-  'epic games',
   'nintendo',
   'origin',
   'gog',
