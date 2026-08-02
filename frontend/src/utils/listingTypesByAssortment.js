@@ -688,6 +688,21 @@ const WINDSURF_LABELS = {
   other: 'Другое',
 };
 
+/** LagoFast */
+const LAGOFAST_TYPES = [
+  'subscription',
+  'services',
+  'other',
+  'account',
+];
+
+const LAGOFAST_LABELS = {
+  subscription: 'Подписки',
+  services: 'Услуги',
+  other: 'Другое',
+  account: 'Аккаунты',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1495,6 +1510,18 @@ function isWindsurf(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'windsurf' || n.startsWith('windsurf ') || s.includes('windsurf');
+}
+
+function isLagofast(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'lagofast'
+    || n === 'lago fast'
+    || n.startsWith('lagofast ')
+    || s.includes('lagofast')
+    || s.includes('lago fast')
+  );
 }
 
 function isApple(name, search = '') {
