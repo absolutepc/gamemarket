@@ -1163,6 +1163,23 @@ const QUIZLET_LABELS = {
   other: 'Другое',
 };
 
+/** Mimo */
+const MIMO_TYPES = [
+  'subscription',
+  'topup',
+  'account',
+  'services',
+  'other',
+];
+
+const MIMO_LABELS = {
+  subscription: 'Подписки',
+  topup: 'Пополнение баланса',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2232,6 +2249,12 @@ function isQuizlet(name, search = '') {
   return n === 'quizlet' || n.startsWith('quizlet ') || s.includes('quizlet');
 }
 
+function isMimo(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'mimo' || n.startsWith('mimo ') || s === 'mimo' || s.startsWith('mimo ');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2682,6 +2705,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isQuizlet(item?.name || name, item?.search)) {
     return QUIZLET_TYPES;
   }
+  if (isMimo(item?.name || name, item?.search)) {
+    return MIMO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2784,6 +2810,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isUdio(itemName, itemSearch) && UDIO_LABELS)
     || (isAudioEditors(itemName, itemSearch) && AUDIO_EDITORS_LABELS)
     || (isQuizlet(itemName, itemSearch) && QUIZLET_LABELS)
+    || (isMimo(itemName, itemSearch) && MIMO_LABELS)
     || null;
 
   return allowed
