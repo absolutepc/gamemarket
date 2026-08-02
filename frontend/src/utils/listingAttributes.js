@@ -489,6 +489,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['Плагин', 'Скрипт', 'Расширение', 'Другое'],
     },
   ],
+  guides: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['PDF', 'Видео', 'Статья', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

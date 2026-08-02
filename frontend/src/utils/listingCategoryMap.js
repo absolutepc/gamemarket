@@ -56,6 +56,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   beans: 'topups',
   promocodes: 'gift-cards',
   plugins: 'other',
+  guides: 'other',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {

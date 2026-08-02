@@ -91,6 +91,7 @@ const LISTING_TYPES = [
   'beans',
   'promocodes',
   'plugins',
+  'guides',
   'ps_plus',
   'ea_play',
   'youtube_music',

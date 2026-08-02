@@ -56,6 +56,7 @@ export const OFFER_PATH_BY_TYPE = {
   beans: 'beans',
   promocodes: 'promocodes',
   plugins: 'plugins',
+  guides: 'guides',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -130,6 +131,7 @@ export function offerTypeLabel(type) {
     beans: 'бобы',
     promocodes: 'промокоды',
     plugins: 'плагины',
+    guides: 'руководства',
   };
   return map[type] || 'товары';
 }

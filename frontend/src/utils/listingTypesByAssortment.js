@@ -346,6 +346,23 @@ const CHAI_LABELS = {
   other: 'Другое',
 };
 
+/** Zoom */
+const ZOOM_TYPES = [
+  'subscription',
+  'account',
+  'guides',
+  'services',
+  'other',
+];
+
+const ZOOM_LABELS = {
+  subscription: 'Подписка',
+  account: 'Аккаунты',
+  guides: 'Руководства',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -986,6 +1003,12 @@ function isChai(name, search = '') {
   );
 }
 
+function isZoom(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'zoom' || n.startsWith('zoom ') || s.includes('zoom');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1283,6 +1306,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isChai(item?.name || name, item?.search)) {
     return CHAI_TYPES;
   }
+  if (isZoom(item?.name || name, item?.search)) {
+    return ZOOM_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1334,6 +1360,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isAutodesk(itemName, itemSearch) && AUTODESK_LABELS)
     || (isNetflix(itemName, itemSearch) && NETFLIX_LABELS)
     || (isChai(itemName, itemSearch) && CHAI_LABELS)
+    || (isZoom(itemName, itemSearch) && ZOOM_LABELS)
     || null;
 
   return allowed

@@ -59,6 +59,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'promocodes', label: 'Промокоды' },
   // Autodesk
   { value: 'plugins', label: 'Плагины' },
+  // Zoom
+  { value: 'guides', label: 'Руководства' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },
