@@ -1,16 +1,16 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import api from '../utils/api';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
-import { getAssortmentBySlug, getGamePath } from '../utils/gameSlug';
+import { getAssortmentPath, resolveAssortmentLanding } from '../utils/gameSlug';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const FALLBACK_ICON = '/assortment/other-apps.png';
 
-const LANDING_TYPE_CHIPS = [
+const GAME_TYPE_CHIPS = [
   { value: '', label: 'Все' },
   { value: 'account', label: 'Аккаунты' },
   { value: 'currency', label: 'Валюта' },
@@ -22,32 +22,53 @@ const LANDING_TYPE_CHIPS = [
   { value: 'topup', label: 'Пополнение' },
 ];
 
-function kindLabel(kind) {
-  if (kind === 'mobile') return 'мобильной игре';
-  if (kind === 'pc') return 'игре';
-  return 'сервисе';
-}
+const APP_TYPE_CHIPS = [
+  { value: '', label: 'Все' },
+  { value: 'subscription', label: 'Подписки' },
+  { value: 'account', label: 'Аккаунты' },
+  { value: 'topup', label: 'Пополнение' },
+  { value: 'keys', label: 'Ключи' },
+  { value: 'services', label: 'Услуги' },
+  { value: 'other', label: 'Другое' },
+];
 
 function buildSeoCopy(item) {
   const name = item.name;
-  const title = `${name} — купить аккаунты, валюту и услуги`;
-  const description =
-    `Lootz — маркетплейс игровых товаров и услуг для ${name}: аккаунты, валюта, скины, бусты и ключи. ` +
-    'Безопасные сделки через эскроу.';
-  const intro =
-    `На Lootz собраны предложения по ${kindLabel(item.kind)} ${name}: аккаунты, игровая валюта, предметы, скины, бусты и ключи. ` +
-    'Покупайте и продавайте с защитой эскроу — деньги удерживаются до подтверждения сделки.';
-  return { title, description, intro };
+  if (item.kind === 'app') {
+    return {
+      title: `${name} — купить подписку, аккаунт или пополнение`,
+      description:
+        `Lootz — маркетплейс цифровых товаров для ${name}: подписки, аккаунты, пополнения и услуги. ` +
+        'Безопасные сделки через эскроу.',
+      intro:
+        `На Lootz собраны предложения по сервису ${name}: подписки, аккаунты, пополнения баланса и связанные услуги. ` +
+        'Покупайте и продавайте с защитой эскроу — деньги удерживаются до подтверждения сделки.',
+      h1Default: `${name} — подписки и услуги`,
+    };
+  }
+  const kindPhrase = item.kind === 'mobile' ? 'мобильной игре' : 'игре';
+  return {
+    title: `${name} — купить аккаунты, валюту и услуги`,
+    description:
+      `Lootz — маркетплейс игровых товаров и услуг для ${name}: аккаунты, валюта, скины, бусты и ключи. ` +
+      'Безопасные сделки через эскроу.',
+    intro:
+      `На Lootz собраны предложения по ${kindPhrase} ${name}: аккаунты, игровая валюта, предметы, скины, бусты и ключи. ` +
+      'Покупайте и продавайте с защитой эскроу — деньги удерживаются до подтверждения сделки.',
+    h1Default: `${name} — товары и услуги`,
+  };
 }
 
-export default function GameLandingPage() {
+export default function AssortmentLandingPage({ section = 'games' }) {
   const { slug } = useParams();
   const [params, setParams] = useSearchParams();
-  const item = useMemo(() => getAssortmentBySlug(slug), [slug]);
+  const resolved = useMemo(() => resolveAssortmentLanding(slug, section), [slug, section]);
+  const item = resolved.item;
 
   const type = params.get('type') || '';
   const page = parseInt(params.get('page') || '1', 10) || 1;
   const sort = params.get('sort') || 'newest';
+  const typeChips = section === 'apps' ? APP_TYPE_CHIPS : GAME_TYPE_CHIPS;
 
   const filters = useMemo(
     () => ({
@@ -61,7 +82,7 @@ export default function GameLandingPage() {
   );
 
   const { data, isLoading } = useQuery({
-    queryKey: ['game-landing', filters],
+    queryKey: ['assortment-landing', section, filters],
     queryFn: () => {
       const p = new URLSearchParams();
       Object.entries(filters).forEach(([k, v]) => {
@@ -72,24 +93,44 @@ export default function GameLandingPage() {
     enabled: Boolean(item),
   });
 
+  if (resolved.redirectPath) {
+    return <Navigate to={resolved.redirectPath} replace />;
+  }
+
   if (!item) {
+    const notFoundLabel = section === 'apps' ? 'Приложение не найдено' : 'Игра не найдена';
     return (
       <div className={`${PAGE_WIDTH_CLASS} py-16 text-center`}>
-        <Seo title="Игра не найдена" description="Страница не найдена" path={`/games/${slug || ''}`} noindex />
+        <Seo
+          title={notFoundLabel}
+          description="Страница не найдена"
+          path={`/${section}/${slug || ''}`}
+          noindex
+        />
         <Package className="mx-auto text-dark-600 mb-4" size={40} />
         <h1 className="text-xl font-bold mb-2">Страница не найдена</h1>
-        <p className="text-dark-400 mb-6">Такой игры или сервиса нет в каталоге Lootz.</p>
-        <Link to="/apps" className="btn-primary inline-flex">Все игры и сервисы</Link>
+        <p className="text-dark-400 mb-6">
+          {section === 'apps'
+            ? 'Такого приложения или сервиса нет в каталоге Lootz.'
+            : 'Такой игры нет в каталоге Lootz.'}
+        </p>
+        <Link
+          to={section === 'apps' ? '/apps?tab=apps' : '/apps'}
+          className="btn-primary inline-flex"
+        >
+          {section === 'apps' ? 'Все приложения' : 'Все игры и сервисы'}
+        </Link>
       </div>
     );
   }
 
-  const { title, description, intro } = buildSeoCopy(item);
-  const path = getGamePath(item);
+  const { title, description, intro, h1Default } = buildSeoCopy(item);
+  const path = getAssortmentPath(item);
   const typeLabel = LISTING_TYPE_OPTIONS.find((o) => o.value === type)?.label;
-  const h1 = typeLabel ? `${item.name}: ${typeLabel}` : `${item.name} — товары и услуги`;
+  const h1 = typeLabel ? `${item.name}: ${typeLabel}` : h1Default;
   const total = data?.total || 0;
   const pages = data?.pages || 1;
+  const sectionCrumb = section === 'apps' ? 'Приложения' : 'Игры';
 
   const setType = (nextType) => {
     const next = new URLSearchParams(params);
@@ -114,7 +155,12 @@ export default function GameLandingPage() {
       <nav className="text-sm text-dark-500 mb-4 flex flex-wrap items-center gap-1.5">
         <Link to="/" className="hover:text-dark-300">Главная</Link>
         <span>/</span>
-        <Link to="/apps" className="hover:text-dark-300">Игры и сервисы</Link>
+        <Link
+          to={section === 'apps' ? '/apps?tab=apps' : '/apps'}
+          className="hover:text-dark-300"
+        >
+          {sectionCrumb}
+        </Link>
         <span>/</span>
         <span className="text-dark-300">{item.name}</span>
       </nav>
@@ -147,7 +193,7 @@ export default function GameLandingPage() {
       </header>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {LANDING_TYPE_CHIPS.map((chip) => {
+        {typeChips.map((chip) => {
           const active = type === chip.value;
           return (
             <button
@@ -218,3 +264,6 @@ export default function GameLandingPage() {
     </div>
   );
 }
+
+/** @deprecated use AssortmentLandingPage */
+export { AssortmentLandingPage as GameLandingPage };

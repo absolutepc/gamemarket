@@ -11,6 +11,18 @@ function baseSlugFromItem(item) {
     .replace(/^-|-$/g, '') || 'item';
 }
 
+/** URL section: apps for services, games for PC/mobile titles */
+export function getLandingSection(kindOrItem) {
+  const kind = typeof kindOrItem === 'string' ? kindOrItem : kindOrItem?.kind;
+  return kind === 'app' ? 'apps' : 'games';
+}
+
+export function sectionMatchesKind(section, kind) {
+  if (section === 'apps') return kind === 'app';
+  if (section === 'games') return kind === 'pc' || kind === 'mobile';
+  return false;
+}
+
 const bySlug = new Map();
 const slugByKey = new Map();
 
@@ -36,7 +48,6 @@ export function getAssortmentSlug(item) {
   }
   const base = baseSlugFromItem(item);
   if (bySlug.has(base)) return base;
-  // Prefer mapped slug when icon collided and got a -2 suffix during index build
   for (const [slug, entry] of bySlug) {
     if (entry.icon === item.icon && (entry.name === item.name || entry.name === item.catalog)) {
       return slug;
@@ -45,15 +56,34 @@ export function getAssortmentSlug(item) {
   return base;
 }
 
-/** Path like /games/cs2 */
-export function getGamePath(item) {
+/** Path like /games/cs2 or /apps/chatgpt */
+export function getAssortmentPath(item) {
   const slug = getAssortmentSlug(item);
-  return slug ? `/games/${slug}` : '/catalog';
+  if (!slug) return '/catalog';
+  return `/${getLandingSection(item)}/${slug}`;
+}
+
+/** @deprecated use getAssortmentPath */
+export function getGamePath(item) {
+  return getAssortmentPath(item);
 }
 
 export function getAssortmentBySlug(slug) {
   if (!slug) return null;
   return bySlug.get(String(slug).toLowerCase()) || null;
+}
+
+/**
+ * Resolve slug within a URL section. If the item belongs to the other section,
+ * returns { item, redirectPath } so the page can redirect.
+ */
+export function resolveAssortmentLanding(slug, section) {
+  const item = getAssortmentBySlug(slug);
+  if (!item) return { item: null, redirectPath: null };
+  if (sectionMatchesKind(section, item.kind)) {
+    return { item, redirectPath: null };
+  }
+  return { item: null, redirectPath: getAssortmentPath(item) };
 }
 
 export function getAllGameLandingSlugs() {

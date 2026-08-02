@@ -44,7 +44,7 @@ router.get('/sitemap.xml', async (req, res) => {
         priority: p.priority,
       })),
       ...gameLandings.map((g) => ({
-        loc: `${siteUrl}/games/${g.slug}`,
+        loc: `${siteUrl}/${g.section || (g.kind === 'app' ? 'apps' : 'games')}/${g.slug}`,
         lastmod: now,
         changefreq: 'daily',
         priority: '0.8',
