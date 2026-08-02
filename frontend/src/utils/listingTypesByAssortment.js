@@ -158,6 +158,21 @@ const APPLE_LABELS = {
   rental: 'Аренда',
 };
 
+/** Soundcloud */
+const SOUNDCLOUD_TYPES = [
+  'subscription',
+  'other',
+  'services',
+  'account',
+];
+
+const SOUNDCLOUD_LABELS = {
+  subscription: 'Подписки',
+  other: 'Другое',
+  services: 'Услуги',
+  account: 'Аккаунты',
+};
+
 const AI_SERVICE_NAMES = new Set([
   'cursor',
   'claude',
