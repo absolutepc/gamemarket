@@ -1304,6 +1304,21 @@ const TIDAL_LABELS = {
   other: 'Другое',
 };
 
+/** Envato Elements */
+const ENVATO_ELEMENTS_TYPES = [
+  'subscription',
+  'account',
+  'services',
+  'other',
+];
+
+const ENVATO_ELEMENTS_LABELS = {
+  subscription: 'Подписки',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2434,6 +2449,17 @@ function isTidal(name, search = '') {
   return n === 'tidal' || n.startsWith('tidal ') || s.includes('tidal');
 }
 
+function isEnvatoElements(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'envato elements'
+    || n === 'envato'
+    || n.startsWith('envato ')
+    || s.includes('envato')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2911,6 +2937,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isTidal(item?.name || name, item?.search)) {
     return TIDAL_TYPES;
   }
+  if (isEnvatoElements(item?.name || name, item?.search)) {
+    return ENVATO_ELEMENTS_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -3022,6 +3051,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isSlack(itemName, itemSearch) && SLACK_LABELS)
     || (isHailuo(itemName, itemSearch) && HAILUO_LABELS)
     || (isTidal(itemName, itemSearch) && TIDAL_LABELS)
+    || (isEnvatoElements(itemName, itemSearch) && ENVATO_ELEMENTS_LABELS)
     || null;
 
   return allowed
