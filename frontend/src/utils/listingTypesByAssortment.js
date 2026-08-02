@@ -312,6 +312,23 @@ const AUTODESK_LABELS = {
   services: 'Услуги',
 };
 
+/** Netflix */
+const NETFLIX_TYPES = [
+  'account',
+  'subscription',
+  'services',
+  'giftcard',
+  'other',
+];
+
+const NETFLIX_LABELS = {
+  account: 'Аккаунты',
+  subscription: 'Подписка',
+  services: 'Услуги',
+  giftcard: 'Подарочные карты',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -932,6 +949,12 @@ function isAutodesk(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
   return n === 'autodesk' || n.startsWith('autodesk ') || s.includes('autodesk');
+}
+
+function isNetflix(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'netflix' || n.startsWith('netflix ') || s.includes('netflix');
 }
 
 function isApple(name, search = '') {
