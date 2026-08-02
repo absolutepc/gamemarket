@@ -1709,6 +1709,17 @@ function isCoursera(name, search = '') {
   return n === 'coursera' || n.startsWith('coursera ') || s.includes('coursera');
 }
 
+function isTripo(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'tripo'
+    || n === 'tripo ai'
+    || n.startsWith('tripo ')
+    || s.includes('tripo')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2093,6 +2104,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isCoursera(item?.name || name, item?.search)) {
     return COURSERA_TYPES;
   }
+  if (isTripo(item?.name || name, item?.search)) {
+    return TRIPO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2173,6 +2187,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isPicsart(itemName, itemSearch) && PICSART_LABELS)
     || (isN8n(itemName, itemSearch) && N8N_LABELS)
     || (isCoursera(itemName, itemSearch) && COURSERA_LABELS)
+    || (isTripo(itemName, itemSearch) && TRIPO_LABELS)
     || null;
 
   return allowed
