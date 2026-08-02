@@ -1319,6 +1319,21 @@ const ENVATO_ELEMENTS_LABELS = {
   other: 'Другое',
 };
 
+/** PICO */
+const PICO_TYPES = [
+  'games',
+  'account',
+  'services',
+  'other',
+];
+
+const PICO_LABELS = {
+  games: 'Игры',
+  account: 'Аккаунты',
+  services: 'Услуги',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -2460,6 +2475,12 @@ function isEnvatoElements(name, search = '') {
   );
 }
 
+function isPico(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'pico' || n.startsWith('pico ') || s === 'pico' || s.startsWith('pico ');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2940,6 +2961,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isEnvatoElements(item?.name || name, item?.search)) {
     return ENVATO_ELEMENTS_TYPES;
   }
+  if (isPico(item?.name || name, item?.search)) {
+    return PICO_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -3052,6 +3076,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isHailuo(itemName, itemSearch) && HAILUO_LABELS)
     || (isTidal(itemName, itemSearch) && TIDAL_LABELS)
     || (isEnvatoElements(itemName, itemSearch) && ENVATO_ELEMENTS_LABELS)
+    || (isPico(itemName, itemSearch) && PICO_LABELS)
     || null;
 
   return allowed
