@@ -539,7 +539,7 @@ export default function CreateListingPage() {
       <div className={`flex-1 ${PAGE_WIDTH_CLASS} w-full py-4 pb-28`}>
         {/* Context chip after game picked */}
         {step > 0 && selectedGame && (
-          <div className="flex items-center gap-3 mb-3">
+          <div className={`flex items-center gap-3 mb-3 ${stepId === 'type' ? 'max-w-xl mx-auto w-full' : ''}`}>
             <img
               src={selectedGame.icon || FALLBACK_ICON}
               alt=""
@@ -547,7 +547,7 @@ export default function CreateListingPage() {
               onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
             />
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-white truncate">{selectedGame.name}</p>
+              <p className={`font-semibold text-white truncate ${stepId === 'type' ? 'text-lg' : ''}`}>{selectedGame.name}</p>
               {stepId !== 'type' && typeLabel && (
                 <p className="text-xs text-dark-400 truncate">{typeLabel}</p>
               )}
@@ -678,7 +678,7 @@ export default function CreateListingPage() {
 
         {/* STEP: type */}
         {stepId === 'type' && (
-          <div>
+          <div className="max-w-xl mx-auto w-full">
             <div className="flex flex-col">
               {typeOptions.map((opt) => {
                 const active = form.listing_type === opt.value;
@@ -688,18 +688,18 @@ export default function CreateListingPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => pickType(opt.value)}
-                    className={`group flex items-center gap-3 w-full px-3 py-3 text-left rounded-xl border-b border-dark-800/80 last:border-b-0 transition-colors ${
+                    className={`group flex items-center gap-4 w-full px-3 py-4 text-left rounded-xl border-b border-dark-800/80 last:border-b-0 transition-colors ${
                       active
                         ? 'bg-[#2B71F3]/15 text-white'
                         : 'hover:bg-[#2B71F3]/20 hover:text-[#8EB6FF]'
                     }`}
                   >
-                    <span className="min-w-0 flex-1 text-[15px] font-medium text-white group-hover:text-[#8EB6FF]">
+                    <span className="min-w-0 flex-1 text-xl sm:text-2xl font-semibold text-white group-hover:text-[#8EB6FF]">
                       {opt.label}
                     </span>
                     {reduced && <FeeBadge />}
                     <span
-                      className={`w-5 h-5 rounded-full border-2 shrink-0 transition-colors ${
+                      className={`w-6 h-6 rounded-full border-2 shrink-0 transition-colors ${
                         active
                           ? 'border-[#2B71F3] bg-[#2B71F3]'
                           : 'border-dark-500 group-hover:border-[#2B71F3]'
