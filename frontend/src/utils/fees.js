@@ -38,6 +38,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'superlikes',
   'beans',
   'promocodes',
+  'plugins',
 ]);
 
 export function isReducedFeeListingType(listingType) {

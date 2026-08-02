@@ -481,6 +481,14 @@ export const LISTING_ATTRIBUTE_SCHEMAS = {
       options: ['7 дней', '14 дней', '1 месяц', '3 месяца', '6 месяцев', '1 год', 'Бессрочно'],
     },
   ],
+  plugins: [
+    {
+      key: 'format',
+      label: 'Формат',
+      required: false,
+      options: ['Плагин', 'Скрипт', 'Расширение', 'Другое'],
+    },
+  ],
   promotion: [
     {
       key: 'format',

@@ -57,6 +57,8 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'beans', label: 'Бобы' },
   // GearUP
   { value: 'promocodes', label: 'Промокоды' },
+  // Autodesk
+  { value: 'plugins', label: 'Плагины' },
   // PlayStation
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },

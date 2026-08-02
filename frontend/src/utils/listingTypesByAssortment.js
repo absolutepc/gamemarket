@@ -297,6 +297,21 @@ const POLYBUZZ_LABELS = {
   other: 'Другое',
 };
 
+/** Autodesk */
+const AUTODESK_TYPES = [
+  'other',
+  'subscription',
+  'plugins',
+  'services',
+];
+
+const AUTODESK_LABELS = {
+  other: 'Другое',
+  subscription: 'Подписки',
+  plugins: 'Плагины',
+  services: 'Услуги',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -913,6 +928,12 @@ function isPolybuzz(name, search = '') {
   );
 }
 
+function isAutodesk(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'autodesk' || n.startsWith('autodesk ') || s.includes('autodesk');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -1201,6 +1222,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isPolybuzz(item?.name || name, item?.search)) {
     return POLYBUZZ_TYPES;
   }
+  if (isAutodesk(item?.name || name, item?.search)) {
+    return AUTODESK_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1249,6 +1273,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isElevenlabs(itemName, itemSearch) && ELEVENLABS_LABELS)
     || (isGearup(itemName, itemSearch) && GEARUP_LABELS)
     || (isPolybuzz(itemName, itemSearch) && POLYBUZZ_LABELS)
+    || (isAutodesk(itemName, itemSearch) && AUTODESK_LABELS)
     || null;
 
   return allowed

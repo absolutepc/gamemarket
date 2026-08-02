@@ -90,6 +90,7 @@ const LISTING_TYPES = [
   'superlikes',
   'beans',
   'promocodes',
+  'plugins',
   'ps_plus',
   'ea_play',
   'youtube_music',

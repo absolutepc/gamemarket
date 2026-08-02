@@ -55,6 +55,7 @@ export const OFFER_PATH_BY_TYPE = {
   superlikes: 'superlikes',
   beans: 'beans',
   promocodes: 'promocodes',
+  plugins: 'plugins',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -128,6 +129,7 @@ export function offerTypeLabel(type) {
     superlikes: 'суперлайки',
     beans: 'бобы',
     promocodes: 'промокоды',
+    plugins: 'плагины',
   };
   return map[type] || 'товары';
 }
