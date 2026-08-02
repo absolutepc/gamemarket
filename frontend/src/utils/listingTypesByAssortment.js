@@ -3296,6 +3296,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isRecraft(itemName, itemSearch) && RECRAFT_LABELS)
     || (isHuggingFace(itemName, itemSearch) && HUGGING_FACE_LABELS)
     || (isGog(itemName, itemSearch) && GOG_LABELS)
+    || (isNoping(itemName, itemSearch) && NOPING_LABELS)
     || null;
 
   return allowed
