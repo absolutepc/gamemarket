@@ -1451,6 +1451,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isVoicemod(item?.name || name, item?.search)) {
     return VOICEMOD_TYPES;
   }
+  if (isHeygen(item?.name || name, item?.search)) {
+    return HEYGEN_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1507,6 +1510,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isReplit(itemName, itemSearch) && REPLIT_LABELS)
     || (isDesignCatalog(itemName, itemSearch) && DESIGN_CATALOG_LABELS)
     || (isVoicemod(itemName, itemSearch) && VOICEMOD_LABELS)
+    || (isHeygen(itemName, itemSearch) && HEYGEN_LABELS)
     || null;
 
   return allowed
