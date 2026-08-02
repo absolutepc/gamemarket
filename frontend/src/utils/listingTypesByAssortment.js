@@ -1421,6 +1421,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isDesignCatalog(item?.name || name, item?.search)) {
     return DESIGN_CATALOG_TYPES;
   }
+  if (isVoicemod(item?.name || name, item?.search)) {
+    return VOICEMOD_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1476,6 +1479,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isZepeto(itemName, itemSearch) && ZEPETO_LABELS)
     || (isReplit(itemName, itemSearch) && REPLIT_LABELS)
     || (isDesignCatalog(itemName, itemSearch) && DESIGN_CATALOG_LABELS)
+    || (isVoicemod(itemName, itemSearch) && VOICEMOD_LABELS)
     || null;
 
   return allowed
