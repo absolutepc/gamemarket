@@ -2384,6 +2384,12 @@ function isElement(name, search = '') {
   return n === 'element' || s === 'element';
 }
 
+function isSlack(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'slack' || n.startsWith('slack ') || s.includes('slack');
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -2852,6 +2858,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isElement(item?.name || name, item?.search)) {
     return ELEMENT_TYPES;
   }
+  if (isSlack(item?.name || name, item?.search)) {
+    return SLACK_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -2960,6 +2969,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isHosting(itemName, itemSearch) && HOSTING_LABELS)
     || (isTrovo(itemName, itemSearch) && TROVO_LABELS)
     || (isElement(itemName, itemSearch) && ELEMENT_LABELS)
+    || (isSlack(itemName, itemSearch) && SLACK_LABELS)
     || null;
 
   return allowed
