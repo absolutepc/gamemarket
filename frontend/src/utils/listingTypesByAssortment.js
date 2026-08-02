@@ -384,6 +384,21 @@ const ZEPETO_LABELS = {
   rental: 'Аренда',
 };
 
+/** Replit */
+const REPLIT_TYPES = [
+  'subscription',
+  'services',
+  'account',
+  'other',
+];
+
+const REPLIT_LABELS = {
+  subscription: 'Подписки',
+  services: 'Услуги',
+  account: 'Аккаунты',
+  other: 'Другое',
+};
+
 /**
  * Apple — разделы как на Playerok.
  * Порядок важен: так показываем в визарде.
@@ -1041,6 +1056,12 @@ function isZepeto(name, search = '') {
     || s.includes('zepeto')
     || s.includes('zapeto')
   );
+}
+
+function isReplit(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return n === 'replit' || n.startsWith('replit ') || s.includes('replit');
 }
 
 function isApple(name, search = '') {
