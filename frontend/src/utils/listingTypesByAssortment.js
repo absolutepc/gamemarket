@@ -697,6 +697,18 @@ function isNeiroseti(name, search = '') {
   );
 }
 
+function isEaplay(name, search = '') {
+  const n = normalizeName(name);
+  const s = normalizeName(search);
+  return (
+    n === 'ea play'
+    || n === 'eaplay'
+    || n.startsWith('ea play ')
+    || s.includes('ea play')
+    || s.includes('eaplay')
+  );
+}
+
 function isApple(name, search = '') {
   const n = normalizeName(name);
   const s = normalizeName(search);
@@ -961,6 +973,9 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isNeiroseti(item?.name || name, item?.search)) {
     return NEIROSETI_TYPES;
   }
+  if (isEaplay(item?.name || name, item?.search)) {
+    return EAPLAY_TYPES;
+  }
   if (isAiService(item?.name || name, item?.search)) {
     return AI_SERVICE_TYPES;
   }
@@ -1001,6 +1016,7 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     || (isSoundcloud(itemName, itemSearch) && SOUNDCLOUD_LABELS)
     || (isSuno(itemName, itemSearch) && SUNO_LABELS)
     || (isNeiroseti(itemName, itemSearch) && NEIROSETI_LABELS)
+    || (isEaplay(itemName, itemSearch) && EAPLAY_LABELS)
     || null;
 
   return allowed
