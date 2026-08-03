@@ -38,7 +38,7 @@ export default function GoogleCallbackPage() {
           code_verifier: saved.codeVerifier,
           redirect_uri: saved.redirectUri,
           state: payload.state || saved.state,
-          ...oauthAccountTypePayload(),
+          ...(await oauthAccountTypePayload()),
         });
 
         sessionStorage.removeItem('google_oauth');

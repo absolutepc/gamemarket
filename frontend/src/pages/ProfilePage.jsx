@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera } from 'lucide-react';
+import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
@@ -191,7 +191,18 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{profile.username}</h1>
-              {profile.is_verified && <BadgeCheck size={18} className="text-brand-400" />}
+              {profile.is_founding_seller ? (
+                <BadgeCheck size={18} className="text-amber-300" title="Founding Seller" />
+              ) : profile.is_verified ? (
+                <BadgeCheck size={18} className="text-brand-400" />
+              ) : null}
+              {profile.is_founding_seller && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-200 text-[11px] font-semibold px-2 py-0.5">
+                  <Crown size={11} />
+                  Founding Seller
+                  {profile.founding_seller_number ? ` #${profile.founding_seller_number}` : ''}
+                </span>
+              )}
               {isOwn && (
                 <button
                   type="button"

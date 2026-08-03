@@ -5,6 +5,44 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
 const { normalizeCriteria, ratingFromCriteria } = require('../utils/reviewCriteria');
 const { LISTING_SHOWCASE_DAYS } = require('../services/listingExpiry');
+const { tryGrantFoundingSeller } = require('../services/founders');
+
+function publicSellerUser(u) {
+  return {
+    id: u.id,
+    username: u.username,
+    email: u.email,
+    role: u.role,
+    account_type: u.account_type || 'buyer',
+    account_type_chosen: u.account_type_chosen !== false,
+    needs_account_type: u.account_type_chosen === false,
+    is_founding_seller: Boolean(u.is_founding_seller),
+    founding_seller_number: u.founding_seller_number || null,
+    balance: u.balance,
+    avatar_url: u.avatar_url,
+    rating: u.rating,
+    sales_count: u.sales_count,
+    auth_provider: u.auth_provider,
+    is_verified: Boolean(u.is_verified),
+  };
+}
+
+async function grantFoundersIfEligible(user, req) {
+  const result = await tryGrantFoundingSeller(pool, user, {
+    fingerprint: req.body?.device_fingerprint,
+    ip: req.ip,
+  });
+  if (result.granted) {
+    const { rows } = await pool.query(
+      `SELECT id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
+              rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number
+       FROM users WHERE id = $1`,
+      [user.id]
+    );
+    return { user: rows[0], founders: result };
+  }
+  return { user, founders: result };
+}
 
 router.get('/me/wallet-history', authenticate(), async (req, res) => {
   const { rows } = await pool.query(
@@ -46,40 +84,34 @@ router.post('/me/become-seller',
   strictLimiter,
   [
     body('accept_seller_terms').custom((v) => v === true || v === 'true'),
+    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
-    if (req.user.account_type === 'seller') {
-      return res.json({
-        user: {
-          id: req.user.id,
-          username: req.user.username,
-          email: req.user.email,
-          role: req.user.role,
-          account_type: 'seller',
-          account_type_chosen: true,
-          needs_account_type: false,
-          balance: req.user.balance,
-          avatar_url: req.user.avatar_url,
-          rating: req.user.rating,
-          sales_count: req.user.sales_count,
-          auth_provider: req.user.auth_provider,
-        },
-      });
+    let userRow = req.user;
+    if (req.user.account_type !== 'seller') {
+      const { rows } = await pool.query(
+        `UPDATE users SET account_type = 'seller', account_type_chosen = TRUE, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
+                   rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number`,
+        [req.user.id]
+      );
+      userRow = rows[0];
+    } else {
+      const { rows } = await pool.query(
+        `SELECT id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
+                rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number
+         FROM users WHERE id = $1`,
+        [req.user.id]
+      );
+      userRow = rows[0];
     }
-    const { rows } = await pool.query(
-      `UPDATE users SET account_type = 'seller', account_type_chosen = TRUE, updated_at = NOW()
-       WHERE id = $1
-       RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url, rating, sales_count, auth_provider`,
-      [req.user.id]
-    );
-    const u = rows[0];
+
+    const { user, founders } = await grantFoundersIfEligible(userRow, req);
     res.json({
-      user: {
-        ...u,
-        account_type_chosen: true,
-        needs_account_type: false,
-      },
+      user: publicSellerUser(user),
+      founders,
     });
   }
 );
@@ -91,6 +123,7 @@ router.post('/me/account-type',
   [
     body('account_type').isIn(['buyer', 'seller']),
     body('accept_seller_terms').optional(),
+    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
@@ -102,21 +135,16 @@ router.post('/me/account-type',
       });
     }
     if (req.user.account_type_chosen !== false && req.user.account_type === accountType) {
+      let user = req.user;
+      let founders = null;
+      if (accountType === 'seller' && !user.is_founding_seller) {
+        const granted = await grantFoundersIfEligible(user, req);
+        user = granted.user;
+        founders = granted.founders;
+      }
       return res.json({
-        user: {
-          id: req.user.id,
-          username: req.user.username,
-          email: req.user.email,
-          role: req.user.role,
-          account_type: accountType,
-          account_type_chosen: true,
-          needs_account_type: false,
-          balance: req.user.balance,
-          avatar_url: req.user.avatar_url,
-          rating: req.user.rating,
-          sales_count: req.user.sales_count,
-          auth_provider: req.user.auth_provider,
-        },
+        user: publicSellerUser({ ...user, account_type: accountType }),
+        founders,
       });
     }
     // Allow first choice freely; if already seller, keep seller (no downgrade here)
@@ -126,16 +154,20 @@ router.post('/me/account-type',
     const { rows } = await pool.query(
       `UPDATE users SET account_type = $1, account_type_chosen = TRUE, updated_at = NOW()
        WHERE id = $2
-       RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url, rating, sales_count, auth_provider`,
+       RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
+                 rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number`,
       [accountType, req.user.id]
     );
-    const u = rows[0];
+    let user = rows[0];
+    let founders = null;
+    if (accountType === 'seller') {
+      const granted = await grantFoundersIfEligible(user, req);
+      user = granted.user;
+      founders = granted.founders;
+    }
     res.json({
-      user: {
-        ...u,
-        account_type_chosen: true,
-        needs_account_type: false,
-      },
+      user: publicSellerUser(user),
+      founders,
     });
   }
 );
@@ -403,7 +435,9 @@ router.post('/reviews',
 router.get('/:username', apiLimiter, async (req, res) => {
   const { rows } = await pool.query(
     `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
-            COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified
+            COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified,
+            COALESCE(is_founding_seller, FALSE) AS is_founding_seller,
+            founding_seller_number
      FROM users WHERE LOWER(username)=LOWER($1) AND is_banned=FALSE`,
     [req.params.username]
   );

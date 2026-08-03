@@ -259,12 +259,14 @@ router.get('/', apiLimiter, async (req, res) => {
               u.username AS seller_username, u.avatar_url AS seller_avatar,
               u.rating AS seller_rating, u.sales_count AS seller_sales,
               u.reviews_count AS seller_reviews,
+              COALESCE(u.is_founding_seller, FALSE) AS seller_is_founding,
+              u.founding_seller_number AS seller_founding_number,
               c.name AS category_name, c.slug AS category_slug
        FROM listings l
        JOIN users u ON u.id = l.seller_id
        LEFT JOIN categories c ON c.id = l.category_id
        ${where}
-       ORDER BY l.is_featured DESC, ${orderBy}
+       ORDER BY COALESCE(u.is_founding_seller, FALSE) DESC, l.is_featured DESC, ${orderBy}
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
       [...params, take, offset]
     ),
@@ -289,6 +291,8 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
     `SELECT l.*, u.username AS seller_username, u.avatar_url AS seller_avatar,
             u.rating AS seller_rating, u.sales_count AS seller_sales,
             u.reviews_count AS seller_reviews, u.created_at AS seller_since,
+            COALESCE(u.is_founding_seller, FALSE) AS seller_is_founding,
+            u.founding_seller_number AS seller_founding_number,
             c.name AS category_name, c.slug AS category_slug
      FROM listings l
      JOIN users u ON u.id = l.seller_id
@@ -305,6 +309,7 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
   const fee = calcPlatformFee(listing.price, {
     categorySlug: listing.category_slug,
     listingType: listing.listing_type,
+    isFoundingSeller: listing.seller_is_founding,
   });
   res.json({
     ...listing,

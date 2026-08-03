@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield, Star, Eye, Clock, MessageCircle, Pencil, Trash2, Zap,
-  ChevronLeft, ChevronRight, Lock, CheckSquare, Package,
+  ChevronLeft, ChevronRight, Lock, CheckSquare, Package, Crown,
 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -538,8 +538,14 @@ export default function ListingPage() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-semibold text-lg text-white group-hover:text-[#5B8CFF] transition-colors truncate">
+              <div className="font-semibold text-lg text-white group-hover:text-[#5B8CFF] transition-colors truncate flex items-center gap-2">
                 {listing.seller_username}
+                {listing.seller_is_founding && (
+                  <span className="inline-flex items-center gap-1 shrink-0 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-200 text-[11px] font-semibold px-2 py-0.5">
+                    <Crown size={11} />
+                    Founders
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1.5 mt-1 text-sm flex-wrap">
                 <div className="flex items-center gap-0.5 text-[#5B8CFF]">

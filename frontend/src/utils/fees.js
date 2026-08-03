@@ -1,11 +1,12 @@
 /**
  * Lootz fees: like Playerok, but 2.5% lower.
- * 7.5%: донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
- * 17.5%: всё остальное
+ * 7.5% / 17.5% standard; Founders: 5% / 10%.
  */
 
 export const FEE_REDUCED = 0.075;
 export const FEE_STANDARD = 0.175;
+export const FEE_FOUNDERS_REDUCED = 0.05;
+export const FEE_FOUNDERS_STANDARD = 0.10;
 
 const REDUCED_CATEGORY_SLUGS = new Set([
   'subscriptions',
@@ -65,10 +66,18 @@ export function isReducedFeeListingType(listingType) {
   return REDUCED_LISTING_TYPES.has(listingType);
 }
 
-export function resolveFeePercent({ categorySlug, listingType } = {}) {
-  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return FEE_REDUCED;
-  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return FEE_REDUCED;
-  return FEE_STANDARD;
+function isReducedTier({ categorySlug, listingType } = {}) {
+  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return true;
+  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return true;
+  return false;
+}
+
+export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
+  const reduced = isReducedTier({ categorySlug, listingType });
+  if (isFoundingSeller) {
+    return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
+  }
+  return reduced ? FEE_REDUCED : FEE_STANDARD;
 }
 
 export function formatFeePercent(percent) {

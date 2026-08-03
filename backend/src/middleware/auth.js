@@ -21,6 +21,9 @@ function authenticate(required = true) {
         `SELECT id, username, email, role, is_banned, balance, frozen_balance, avatar_url, rating, sales_count,
                 COALESCE(account_type, 'buyer') AS account_type,
                 COALESCE(account_type_chosen, TRUE) AS account_type_chosen,
+                COALESCE(is_founding_seller, FALSE) AS is_founding_seller,
+                founding_seller_number,
+                is_verified,
                 auth_provider, vk_id, apple_id, google_id, last_seen_at
          FROM users WHERE id = $1`,
         [payload.sub]

@@ -6,6 +6,7 @@ import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import SocialLoginButtons from '../components/SocialLoginButtons';
 import { ACCOUNT_TYPE_OPTIONS, ACCOUNT_TYPES } from '../utils/accountTypes';
+import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 
 const TYPE_ICONS = {
   buyer: ShoppingBag,
@@ -40,14 +41,19 @@ export default function RegisterPage() {
       };
       if (data.account_type === ACCOUNT_TYPES.seller) {
         payload.accept_seller_terms = true;
+        payload.device_fingerprint = (await getDeviceFingerprint()) || undefined;
       }
       const res = await api.post('/auth/register', payload);
       setAuth(res.data.user, res.data.accessToken);
-      toast.success(
-        data.account_type === ACCOUNT_TYPES.seller
-          ? 'Аккаунт продавца создан!'
-          : 'Аккаунт покупателя создан!'
-      );
+      if (res.data?.founders?.granted) {
+        toast.success(`Founding Seller #${res.data.founders.number}!`);
+      } else {
+        toast.success(
+          data.account_type === ACCOUNT_TYPES.seller
+            ? 'Аккаунт продавца создан!'
+            : 'Аккаунт покупателя создан!'
+        );
+      }
       navigate(data.account_type === ACCOUNT_TYPES.seller ? '/listings/create' : '/');
     } catch (err) {
       toast.error(err.response?.data?.error || 'Ошибка регистрации');

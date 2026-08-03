@@ -57,6 +57,7 @@ router.post('/register',
     body('password').isLength({ min: 8 }).matches(/(?=.*[A-Za-z])(?=.*\d)/),
     body('account_type').optional().isIn(['buyer', 'seller']),
     body('accept_seller_terms').optional().isBoolean(),
+    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
@@ -79,12 +80,31 @@ router.post('/register',
       }
       const hash = await bcrypt.hash(password, 12);
       const { rows } = await client.query(
-        `INSERT INTO users (username, email, password_hash, account_type, account_type_chosen)
-         VALUES ($1,$2,$3,$4,TRUE)
-         RETURNING id, username, email, role, balance, avatar_url, account_type, account_type_chosen`,
+        `INSERT INTO users (username, email, password_hash, account_type, account_type_chosen, auth_provider)
+         VALUES ($1,$2,$3,$4,TRUE,'email')
+         RETURNING id, username, email, role, balance, avatar_url, account_type, account_type_chosen,
+                   is_founding_seller, founding_seller_number, auth_provider, is_verified`,
         [username, email, hash, accountType]
       );
-      const user = rows[0];
+      let user = rows[0];
+      let founders = null;
+      if (accountType === 'seller') {
+        const { tryGrantFoundingSeller } = require('../services/founders');
+        // Release connection before nested pool transaction in tryGrant
+        founders = await tryGrantFoundingSeller(pool, user, {
+          fingerprint: req.body.device_fingerprint,
+          ip: req.ip,
+        });
+        if (founders.granted) {
+          const refreshed = await client.query(
+            `SELECT id, username, email, role, balance, avatar_url, account_type, account_type_chosen,
+                    is_founding_seller, founding_seller_number, auth_provider, is_verified
+             FROM users WHERE id = $1`,
+            [user.id]
+          );
+          user = refreshed.rows[0];
+        }
+      }
       const { accessToken, refreshToken } = generateTokens(user.id);
       const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
       const expiresAt = new Date(Date.now() + REFRESH_EXPIRES_DAYS * 86400000);
@@ -99,7 +119,7 @@ router.post('/register',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: REFRESH_EXPIRES_DAYS * 86400000,
       });
-      res.status(201).json({ accessToken, user: publicUser(user) });
+      res.status(201).json({ accessToken, user: publicUser(user), founders });
     } finally {
       client.release();
     }
@@ -193,11 +213,14 @@ function publicUser(user) {
     account_type: accountType,
     account_type_chosen: chosen,
     needs_account_type: !chosen,
+    is_founding_seller: Boolean(user.is_founding_seller),
+    founding_seller_number: user.founding_seller_number || null,
     balance: user.balance,
     avatar_url: user.avatar_url,
     rating: user.rating,
     sales_count: user.sales_count,
     auth_provider: user.auth_provider || 'email',
+    is_verified: Boolean(user.is_verified),
   };
 }
 
@@ -240,12 +263,25 @@ async function issueSession(res, req, user) {
 }
 
 async function respondOAuth(res, req, user, { created = false } = {}) {
+  let founders = null;
+  if (user.account_type === 'seller' && !user.is_founding_seller) {
+    const { tryGrantFoundingSeller } = require('../services/founders');
+    founders = await tryGrantFoundingSeller(pool, user, {
+      fingerprint: req.body?.device_fingerprint,
+      ip: req.ip,
+    });
+    if (founders.granted) {
+      const { rows } = await pool.query('SELECT * FROM users WHERE id=$1', [user.id]);
+      user = rows[0];
+    }
+  }
   const accessToken = await issueSession(res, req, user);
   res.json({
     accessToken,
     user: publicUser(user),
     created,
     needs_account_type: needsAccountType(user),
+    founders,
   });
 }
 

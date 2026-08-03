@@ -36,7 +36,7 @@ export default function VkCallbackPage() {
           device_id: payload.device_id || payload.deviceId,
           redirect_uri: saved.redirectUri,
           state: payload.state || saved.state,
-          ...oauthAccountTypePayload(),
+          ...(await oauthAccountTypePayload()),
         });
 
         sessionStorage.removeItem('vk_oauth');

@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
-  Trophy, ShoppingBag, Store, ArrowRight, Shield, Layers, Percent, Zap,
+  Trophy, ShoppingBag, Store, ArrowRight, Shield, Layers, Percent, Zap, Crown, BadgeCheck,
 } from 'lucide-react';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
+import api from '../utils/api';
 
 const AUTO_MS = 7000;
 
@@ -17,6 +19,16 @@ const SLIDES = [
     cta: { to: '/catalog', label: 'Участвовать' },
     secondary: { to: '/become-seller', label: 'Стать продавцом' },
     tone: 'contest',
+  },
+  {
+    id: 'founders',
+    eyebrow: 'Программа Founders',
+    title: 'Первые 100 продавцов',
+    subtitle:
+      'Комиссия 5% вместо 7.5% и 10% вместо 17.5%, золотая галочка, приоритет в поиске и бейдж Founding Seller. Один аккаунт на человека — места ограничены.',
+    cta: { to: '/become-seller', label: 'Стать Founding Seller' },
+    secondary: { to: '/register', label: 'Регистрация' },
+    tone: 'founders',
   },
   {
     id: 'escrow',
@@ -67,10 +79,13 @@ const SLIDES = [
   },
 ];
 
+function formatCount(n) {
+  return new Intl.NumberFormat('ru-RU').format(Math.max(0, Number(n) || 0));
+}
+
 function ContestVisual() {
   return (
     <>
-      {/* Mobile: tags under MacBook (pre-today layout) */}
       <div className="relative w-full h-full max-w-md mx-auto flex flex-col items-center justify-center lg:hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_40%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
         <div className="relative z-10 w-[78%] max-w-[280px] sm:max-w-[320px]">
@@ -99,7 +114,6 @@ function ContestVisual() {
         </div>
       </div>
 
-      {/* Desktop: MacBook only — tags stay in text column */}
       <div className="relative w-full h-full hidden lg:flex items-center justify-start">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_45%,rgba(43,113,243,0.35),transparent_55%)] pointer-events-none" />
         <img
@@ -111,6 +125,65 @@ function ContestVisual() {
         />
       </div>
     </>
+  );
+}
+
+function FoundersVisual({ buyersCount, foundersJoined, foundersLimit }) {
+  const joined = foundersJoined ?? 0;
+  const limit = foundersLimit || 100;
+  const pct = Math.min(100, Math.round((joined / limit) * 100));
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center px-2">
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                   w-[260px] h-[260px] rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle,rgba(212,175,55,0.28) 0%,rgba(212,175,55,0.1) 42%,transparent 72%)',
+        }}
+        aria-hidden
+      />
+      <div className="relative z-10 w-full max-w-[300px] rounded-3xl border border-amber-500/30 bg-dark-900/80 backdrop-blur-sm p-4 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+            <Crown size={20} className="text-amber-300" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-white leading-tight">Founders</div>
+            <div className="text-[11px] text-amber-200/80">Founding Seller</div>
+          </div>
+          <BadgeCheck size={18} className="ml-auto text-amber-300" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className="rounded-xl bg-dark-950/70 border border-dark-700 px-2.5 py-2">
+            <div className="text-[10px] text-dark-400 mb-0.5">Покупатели</div>
+            <div className="text-lg font-extrabold text-white tabular-nums leading-none">
+              {formatCount(buyersCount)}
+            </div>
+          </div>
+          <div className="rounded-xl bg-dark-950/70 border border-dark-700 px-2.5 py-2">
+            <div className="text-[10px] text-dark-400 mb-0.5">Founders</div>
+            <div className="text-lg font-extrabold text-amber-200 tabular-nums leading-none">
+              {joined}/{limit}
+            </div>
+          </div>
+        </div>
+
+        <div className="h-1.5 rounded-full bg-dark-800 overflow-hidden mb-3">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-[width] duration-700"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        <ul className="space-y-1.5 text-[11px] text-dark-200">
+          <li className="flex items-center gap-1.5"><Percent size={11} className="text-amber-300" /> Комиссия 5% / 10%</li>
+          <li className="flex items-center gap-1.5"><BadgeCheck size={11} className="text-amber-300" /> Золотая галочка</li>
+          <li className="flex items-center gap-1.5"><Trophy size={11} className="text-amber-300" /> Выше в поиске</li>
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -192,17 +265,9 @@ function DeliveryVisual() {
   );
 }
 
-const VISUALS = {
-  contest: ContestVisual,
-  escrow: EscrowVisual,
-  sell: SellVisual,
-  apps: AppsVisual,
-  fees: FeesVisual,
-  delivery: DeliveryVisual,
-};
-
 const TONE_BG = {
   contest: 'from-[#12141c] via-[#161a28] to-[#101214]',
+  founders: 'from-[#16140f] via-[#1a1710] to-[#101214]',
   escrow: 'from-[#101816] via-[#121a18] to-[#101214]',
   sell: 'from-[#10141c] via-[#121826] to-[#101214]',
   apps: 'from-[#10141c] via-[#141a2a] to-[#101214]',
@@ -213,6 +278,12 @@ const TONE_BG = {
 export default function HomeHeroSlider() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+
+  const { data: stats } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: () => api.get('/stats/platform').then((r) => r.data),
+    staleTime: 60_000,
+  });
 
   const go = useCallback((dir) => {
     setIndex((i) => (i + dir + SLIDES.length) % SLIDES.length);
@@ -227,7 +298,22 @@ export default function HomeHeroSlider() {
   }, [paused, go, index]);
 
   const slide = SLIDES[index];
-  const Visual = VISUALS[slide.tone];
+
+  let VisualNode = null;
+  if (slide.tone === 'contest') VisualNode = <ContestVisual />;
+  else if (slide.tone === 'founders') {
+    VisualNode = (
+      <FoundersVisual
+        buyersCount={stats?.buyers_count}
+        foundersJoined={stats?.founders?.joined}
+        foundersLimit={stats?.founders?.limit}
+      />
+    );
+  } else if (slide.tone === 'escrow') VisualNode = <EscrowVisual />;
+  else if (slide.tone === 'sell') VisualNode = <SellVisual />;
+  else if (slide.tone === 'apps') VisualNode = <AppsVisual />;
+  else if (slide.tone === 'fees') VisualNode = <FeesVisual />;
+  else if (slide.tone === 'delivery') VisualNode = <DeliveryVisual />;
 
   return (
     <section
@@ -258,6 +344,11 @@ export default function HomeHeroSlider() {
                       <Trophy size={14} className="text-amber-300" />
                       {slide.eyebrow}
                     </>
+                  ) : slide.tone === 'founders' ? (
+                    <>
+                      <Crown size={14} className="text-amber-300" />
+                      {slide.eyebrow}
+                    </>
                   ) : (
                     slide.eyebrow
                   )}
@@ -269,25 +360,40 @@ export default function HomeHeroSlider() {
                   {slide.subtitle}
                 </p>
 
-                {/* Desktop: tags in text column (mobile tags are under MacBook) */}
                 <div
                   className={`hidden lg:flex flex-wrap items-center gap-2 mb-4 sm:mb-5 min-h-[34px] ${
-                    slide.tone === 'contest' ? '' : 'invisible'
+                    slide.tone === 'contest' || slide.tone === 'founders' ? '' : 'invisible'
                   }`}
-                  aria-hidden={slide.tone !== 'contest'}
+                  aria-hidden={slide.tone !== 'contest' && slide.tone !== 'founders'}
                 >
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-1 text-[11px] text-dark-200">
-                    <Trophy size={12} className="text-amber-300" />
-                    256 ГБ · 2 приза / месяц
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 text-[11px] font-medium">
-                    <Store size={12} className="text-[#2B71F3] shrink-0" />
-                    1× продавцам
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 text-[11px] font-medium">
-                    <ShoppingBag size={12} className="text-emerald-400 shrink-0" />
-                    1× покупателям
-                  </div>
+                  {slide.tone === 'contest' && (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-dark-700 px-2.5 py-1 text-[11px] text-dark-200">
+                        <Trophy size={12} className="text-amber-300" />
+                        256 ГБ · 2 приза / месяц
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 text-[11px] font-medium">
+                        <Store size={12} className="text-[#2B71F3] shrink-0" />
+                        1× продавцам
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-dark-700 px-2.5 py-1.5 text-[11px] font-medium">
+                        <ShoppingBag size={12} className="text-emerald-400 shrink-0" />
+                        1× покупателям
+                      </div>
+                    </>
+                  )}
+                  {slide.tone === 'founders' && (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-amber-500/30 px-2.5 py-1 text-[11px] text-amber-100">
+                        <ShoppingBag size={12} className="text-emerald-400" />
+                        Покупателей: {formatCount(stats?.buyers_count)}
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-amber-500/30 px-2.5 py-1.5 text-[11px] font-medium text-amber-100">
+                        <Crown size={12} className="text-amber-300 shrink-0" />
+                        Founders {stats?.founders?.joined ?? 0}/{stats?.founders?.limit ?? 100}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -308,7 +414,7 @@ export default function HomeHeroSlider() {
             </div>
 
             <div className="order-1 lg:order-2 h-[210px] sm:h-[240px] lg:h-auto min-h-0 flex items-center justify-center">
-              {Visual ? <Visual /> : null}
+              {VisualNode}
             </div>
           </div>
 

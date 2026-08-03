@@ -1,3 +1,5 @@
+import { getDeviceFingerprint } from './deviceFingerprint';
+
 const STORAGE_KEY = 'oauth_account_choice';
 
 /** Persist buyer/seller choice before OAuth redirect (Google / VK). */
@@ -32,10 +34,13 @@ export function clearOAuthAccountChoice() {
 }
 
 /** Extra fields for /auth/google|vk|apple body */
-export function oauthAccountTypePayload() {
+export async function oauthAccountTypePayload() {
   const choice = readOAuthAccountChoice();
-  if (!choice) return {};
-  const payload = { account_type: choice.account_type };
+  const fingerprint = await getDeviceFingerprint();
+  const payload = {};
+  if (fingerprint) payload.device_fingerprint = fingerprint;
+  if (!choice) return payload;
+  payload.account_type = choice.account_type;
   if (choice.account_type === 'seller') {
     payload.accept_seller_terms = true;
   }

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
+import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import {
   resolveFeePercent,
@@ -187,9 +188,11 @@ export default function CreateListingPage() {
     [form.listing_type]
   );
 
+  const user = useAuthStore((s) => s.user);
   const feePercent = resolveFeePercent({
     categorySlug: selectedCategory?.slug,
     listingType: form.listing_type,
+    isFoundingSeller: Boolean(user?.is_founding_seller),
   });
   const feePreview = calcSellerReceives(form.price, feePercent);
 

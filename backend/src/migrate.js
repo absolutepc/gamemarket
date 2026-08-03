@@ -202,6 +202,21 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type_chosen BOOLEAN;
 UPDATE users SET account_type_chosen = TRUE WHERE account_type_chosen IS NULL;
 ALTER TABLE users ALTER COLUMN account_type_chosen SET DEFAULT FALSE;
 ALTER TABLE users ALTER COLUMN account_type_chosen SET NOT NULL;
+-- Founders program (first 100 sellers)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_founding_seller BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founding_seller_number INT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founding_seller_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founders_email_norm TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founders_fingerprint TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founders_ip TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founding_seller_number
+  ON users (founding_seller_number) WHERE founding_seller_number IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founders_email_norm
+  ON users (founders_email_norm) WHERE is_founding_seller = TRUE AND founders_email_norm IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founders_fingerprint
+  ON users (founders_fingerprint) WHERE is_founding_seller = TRUE AND founders_fingerprint IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_is_founding_seller
+  ON users (is_founding_seller) WHERE is_founding_seller = TRUE;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS original_price DECIMAL(12,2);
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_id BIGINT UNIQUE;

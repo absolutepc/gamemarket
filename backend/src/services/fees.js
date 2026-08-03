@@ -1,10 +1,13 @@
 /**
  * Lootz fees: Playerok-like tiers, ~2.5% lower.
  * Playerok ~10% / ~20%  →  Lootz 7.5% / 17.5%
+ * Founders: 5% / 10%
  *
- * 7.5%: донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
- * 17.5%: всё остальное
+ * 7.5% (5% founders): донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
+ * 17.5% (10% founders): всё остальное
  */
+
+const { FEE_FOUNDERS_REDUCED, FEE_FOUNDERS_STANDARD } = require('./founders');
 
 const FEE_REDUCED = 0.075;
 const FEE_STANDARD = 0.175;
@@ -63,14 +66,18 @@ const REDUCED_LISTING_TYPES = new Set([
   'nintendo_switch_online',
 ]);
 
-function resolveFeePercent({ categorySlug, listingType } = {}) {
-  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) {
-    return FEE_REDUCED;
+function isReducedTier({ categorySlug, listingType } = {}) {
+  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return true;
+  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return true;
+  return false;
+}
+
+function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
+  const reduced = isReducedTier({ categorySlug, listingType });
+  if (isFoundingSeller) {
+    return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
   }
-  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) {
-    return FEE_REDUCED;
-  }
-  return FEE_STANDARD;
+  return reduced ? FEE_REDUCED : FEE_STANDARD;
 }
 
 function calcPlatformFee(price, opts = {}) {
@@ -83,6 +90,7 @@ function calcPlatformFee(price, opts = {}) {
     feePercentLabel: `${(percent * 100).toFixed(1)}%`,
     fee,
     sellerReceives,
+    isFoundingSeller: Boolean(opts.isFoundingSeller),
   };
 }
 
@@ -93,9 +101,12 @@ function feePercentForCategorySlug(slug) {
 module.exports = {
   FEE_REDUCED,
   FEE_STANDARD,
+  FEE_FOUNDERS_REDUCED,
+  FEE_FOUNDERS_STANDARD,
   PLATFORM_FEE_PERCENT: FEE_REDUCED, // legacy default (reduced tier)
   REDUCED_CATEGORY_SLUGS,
   REDUCED_LISTING_TYPES,
+  isReducedTier,
   resolveFeePercent,
   calcPlatformFee,
   feePercentForCategorySlug,

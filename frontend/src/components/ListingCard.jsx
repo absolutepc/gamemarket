@@ -85,6 +85,11 @@ export default function ListingCard({
                 Снят с витрины
               </span>
             )}
+            {!isInactive && listing.seller_is_founding && (
+              <span className="badge bg-amber-500/95 text-dark-950 text-[10px] font-semibold">
+                Founders
+              </span>
+            )}
             {!isInactive && listing.is_featured && (
               <span className="badge bg-[#2B71F3]/95 text-white text-[10px] font-semibold">ТОП</span>
             )}

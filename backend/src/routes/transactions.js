@@ -30,9 +30,11 @@ router.post('/',
       await client.query('BEGIN');
 
       const { rows: listings } = await client.query(
-        `SELECT l.*, c.slug AS category_slug
+        `SELECT l.*, c.slug AS category_slug,
+                COALESCE(u.is_founding_seller, FALSE) AS seller_is_founding
          FROM listings l
          LEFT JOIN categories c ON c.id = l.category_id
+         JOIN users u ON u.id = l.seller_id
          WHERE l.id=$1 AND l.status='active'
          FOR UPDATE OF l`,
         [listing_id]
@@ -71,6 +73,7 @@ router.post('/',
       const { fee, sellerReceives } = calcPlatformFee(price, {
         categorySlug: listing.category_slug,
         listingType: listing.listing_type,
+        isFoundingSeller: listing.seller_is_founding,
       });
 
       await client.query(

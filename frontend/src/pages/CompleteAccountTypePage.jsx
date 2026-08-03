@@ -6,6 +6,7 @@ import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import { ACCOUNT_TYPE_OPTIONS, ACCOUNT_TYPES } from '../utils/accountTypes';
+import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 
 const TYPE_ICONS = {
   buyer: ShoppingBag,
@@ -37,14 +38,19 @@ export default function CompleteAccountTypePage() {
       const payload = { account_type: accountType };
       if (accountType === ACCOUNT_TYPES.seller) {
         payload.accept_seller_terms = true;
+        payload.device_fingerprint = (await getDeviceFingerprint()) || undefined;
       }
       const { data } = await api.post('/users/me/account-type', payload);
       if (data?.user) setUser(data.user);
-      toast.success(
-        accountType === ACCOUNT_TYPES.seller
-          ? 'Аккаунт продавца активирован'
-          : 'Аккаунт покупателя готов'
-      );
+      if (data?.founders?.granted) {
+        toast.success(`Founding Seller #${data.founders.number}`);
+      } else {
+        toast.success(
+          accountType === ACCOUNT_TYPES.seller
+            ? 'Аккаунт продавца активирован'
+            : 'Аккаунт покупателя готов'
+        );
+      }
       navigate(accountType === ACCOUNT_TYPES.seller ? '/listings/create' : '/', { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.error || 'Не удалось сохранить тип аккаунта');

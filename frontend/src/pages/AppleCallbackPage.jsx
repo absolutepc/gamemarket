@@ -43,7 +43,7 @@ export default function AppleCallbackPage() {
         const { data } = await api.post('/auth/apple', {
           identityToken,
           user,
-          ...oauthAccountTypePayload(),
+          ...(await oauthAccountTypePayload()),
         });
 
         sessionStorage.removeItem('apple_id_token');
