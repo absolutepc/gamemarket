@@ -123,7 +123,7 @@ export default function FoundersPage() {
           </li>
           <li className="flex items-start gap-2">
             <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />
-            Один слот на человека (email / устройство / IP)
+            Один слот на человека (по email)
           </li>
         </ul>
       </div>

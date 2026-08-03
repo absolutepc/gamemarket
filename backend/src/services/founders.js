@@ -71,33 +71,10 @@ async function grantFoundingSellerInTx(client, user, { fingerprint, ip, emailNor
     return { granted: false, reason: 'email_identity_used', joined, limit: FOUNDERS_LIMIT };
   }
 
+  // Fingerprint/IP are stored for admin review only — not hard blockers.
+  // Coarse client fingerprints (UA + screen + timezone) collide across sellers.
   const fp = sanitizeFingerprint(fingerprint);
-  if (fp) {
-    const fpTaken = await client.query(
-      `SELECT id FROM users
-       WHERE is_founding_seller = TRUE AND founders_fingerprint = $1
-       LIMIT 1`,
-      [fp]
-    );
-    if (fpTaken.rows[0]) {
-      return { granted: false, reason: 'device_used', joined, limit: FOUNDERS_LIMIT };
-    }
-  }
-
   const ipStr = ip && String(ip).trim() ? String(ip).trim().slice(0, 64) : null;
-  if (ipStr && ipStr !== '::1' && ipStr !== '127.0.0.1') {
-    const ipTaken = await client.query(
-      `SELECT id FROM users
-       WHERE is_founding_seller = TRUE
-         AND founders_ip IS NOT NULL
-         AND founders_ip = $1
-       LIMIT 1`,
-      [ipStr]
-    );
-    if (ipTaken.rows[0]) {
-      return { granted: false, reason: 'ip_used', joined, limit: FOUNDERS_LIMIT };
-    }
-  }
 
   const nextNumber = joined + 1;
   const { rows } = await client.query(
@@ -151,34 +128,32 @@ async function submitFoundersApplication(pool, user, { message, fingerprint, ip 
   const ipStr = ip && String(ip).trim() ? String(ip).trim().slice(0, 64) : null;
   const note = String(message || '').trim().slice(0, 1000) || null;
 
-  // Block if this identity already holds or has a pending application
-  const conflict = await pool.query(
-    `(
-       SELECT 'founder' AS kind FROM users
-       WHERE is_founding_seller = TRUE AND (
-         founders_email_norm = $1
-         OR ($2::text IS NOT NULL AND founders_fingerprint = $2)
-         OR ($3::text IS NOT NULL AND founders_ip = $3 AND founders_ip NOT IN ('::1','127.0.0.1'))
-       )
-       LIMIT 1
-     )
-     UNION ALL
-     (
-       SELECT 'pending' AS kind FROM founders_applications
-       WHERE status = 'pending' AND user_id <> $4 AND (
-         email_norm = $1
-         OR ($2::text IS NOT NULL AND device_fingerprint = $2)
-         OR ($3::text IS NOT NULL AND ip = $3 AND ip NOT IN ('::1','127.0.0.1'))
-       )
-       LIMIT 1
-     )
+  // Hard block only on email identity — device/IP fingerprints are too coarse
+  // (same Chrome + resolution + timezone collide across many sellers) and were
+  // silently rejecting real applications so admins never saw them.
+  const emailTaken = await pool.query(
+    `SELECT id FROM users
+     WHERE is_founding_seller = TRUE AND founders_email_norm = $1
      LIMIT 1`,
-    [emailNorm, fp, ipStr, user.id]
+    [emailNorm]
   );
-  if (conflict.rows[0]) {
+  if (emailTaken.rows[0]) {
     return {
       ok: false,
-      error: 'Заявка с этого email/устройства/IP уже есть или слот занят',
+      error: 'На этот email уже выдан слот Founders',
+      code: 'IDENTITY_USED',
+    };
+  }
+  const pendingEmail = await pool.query(
+    `SELECT id FROM founders_applications
+     WHERE status = 'pending' AND email_norm = $1 AND user_id <> $2
+     LIMIT 1`,
+    [emailNorm, user.id]
+  );
+  if (pendingEmail.rows[0]) {
+    return {
+      ok: false,
+      error: 'Заявка с этого email уже на рассмотрении',
       code: 'IDENTITY_USED',
     };
   }
@@ -201,13 +176,65 @@ async function submitFoundersApplication(pool, user, { message, fingerprint, ip 
     return { ok: false, error: 'Заявка уже одобрена', code: 'ALREADY_APPROVED' };
   }
 
-  const { rows } = await pool.query(
-    `INSERT INTO founders_applications
-       (user_id, status, message, device_fingerprint, ip, email_norm)
-     VALUES ($1, 'pending', $2, $3, $4, $5)
-     RETURNING *`,
-    [user.id, note, fp, ipStr, emailNorm]
-  );
+  let rows;
+  try {
+    ({ rows } = await pool.query(
+      `INSERT INTO founders_applications
+         (user_id, status, message, device_fingerprint, ip, email_norm)
+       VALUES ($1, 'pending', $2, $3, $4, $5)
+       RETURNING *`,
+      [user.id, note, fp, ipStr, emailNorm]
+    ));
+  } catch (err) {
+    // Table missing (migrate skipped) — create and retry once
+    if (err.code === '42P01') {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS founders_applications (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          status VARCHAR(20) NOT NULL DEFAULT 'pending',
+          message TEXT,
+          device_fingerprint TEXT,
+          ip TEXT,
+          email_norm TEXT,
+          admin_note TEXT,
+          reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+          reviewed_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      ({ rows } = await pool.query(
+        `INSERT INTO founders_applications
+           (user_id, status, message, device_fingerprint, ip, email_norm)
+         VALUES ($1, 'pending', $2, $3, $4, $5)
+         RETURNING *`,
+        [user.id, note, fp, ipStr, emailNorm]
+      ));
+    } else {
+      throw err;
+    }
+  }
+
+  // Notify admins so the queue is visible even without refreshing stats
+  try {
+    const admins = await pool.query(
+      `SELECT id FROM users WHERE role = 'admin' AND COALESCE(is_banned, FALSE) = FALSE`
+    );
+    for (const admin of admins.rows) {
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, body, data)
+         VALUES ($1, 'founders_application', 'Новая заявка Founders', $2, $3)`,
+        [
+          admin.id,
+          `${user.username || 'Продавец'} подал заявку в Founders`,
+          JSON.stringify({ application_id: rows[0].id, username: user.username }),
+        ]
+      );
+    }
+  } catch {
+    /* notifications best-effort */
+  }
 
   return { ok: true, application: rows[0] };
 }
@@ -225,30 +252,35 @@ async function getMyFoundersApplication(pool, userId) {
 }
 
 async function listFoundersApplications(pool, { status = 'pending', limit = 50 } = {}) {
-  const take = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+  const take = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
   const params = [];
   let where = '';
   if (status && status !== 'all') {
-    params.push(status);
+    params.push(String(status));
     where = `WHERE a.status = $${params.length}`;
   }
   params.push(take);
-  const { rows } = await pool.query(
-    `SELECT a.*,
-            u.username, u.email, u.avatar_url, u.auth_provider, u.sales_count, u.account_type,
-            u.is_founding_seller, u.founding_seller_number,
-            rev.username AS reviewer_username
-     FROM founders_applications a
-     JOIN users u ON u.id = a.user_id
-     LEFT JOIN users rev ON rev.id = a.reviewed_by
-     ${where}
-     ORDER BY
-       CASE a.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
-       a.created_at ASC
-     LIMIT $${params.length}`,
-    params
-  );
-  return rows;
+  try {
+    const { rows } = await pool.query(
+      `SELECT a.*,
+              u.username, u.email, u.avatar_url, u.auth_provider, u.sales_count, u.account_type,
+              u.is_founding_seller, u.founding_seller_number,
+              rev.username AS reviewer_username
+       FROM founders_applications a
+       JOIN users u ON u.id = a.user_id
+       LEFT JOIN users rev ON rev.id = a.reviewed_by
+       ${where}
+       ORDER BY
+         CASE a.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+         a.created_at ASC
+       LIMIT $${params.length}`,
+      params
+    );
+    return rows;
+  } catch (err) {
+    if (err.code === '42P01') return [];
+    throw err;
+  }
 }
 
 async function approveFoundersApplication(pool, applicationId, adminUser, { adminNote } = {}) {

@@ -11,7 +11,7 @@ export default function AdminFoundersPage() {
   const [filter, setFilter] = useState('pending');
   const [notes, setNotes] = useState({});
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['admin-founders', filter],
     queryFn: () => api.get(`/admin/founders/applications?status=${filter}`).then((r) => r.data),
   });
@@ -77,8 +77,26 @@ export default function AdminFoundersPage() {
 
       {isLoading ? (
         <div className="card h-40 animate-pulse" />
+      ) : isError ? (
+        <div className="card p-8 text-center">
+          <p className="text-red-300 mb-3">
+            {error?.response?.data?.error || 'Не удалось загрузить заявки'}
+          </p>
+          <button type="button" className="btn-secondary" onClick={() => refetch()} disabled={isFetching}>
+            Повторить
+          </button>
+        </div>
       ) : applications.length === 0 ? (
-        <div className="card p-8 text-center text-dark-400">Заявок нет</div>
+        <div className="card p-8 text-center text-dark-400">
+          Заявок нет
+          <button
+            type="button"
+            className="block mx-auto mt-3 text-sm text-[#5B8CFF] hover:underline"
+            onClick={() => refetch()}
+          >
+            Обновить
+          </button>
+        </div>
       ) : (
         <div className="flex flex-col gap-4">
           {applications.map((a) => (
