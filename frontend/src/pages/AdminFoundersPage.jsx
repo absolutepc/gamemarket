@@ -67,7 +67,7 @@ export default function AdminFoundersPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className={`${PAGE_WIDTH_CLASS} py-8`}>
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <Crown className="text-amber-300" size={22} />
         <h1 className="text-2xl font-bold">Founders — заявки</h1>
