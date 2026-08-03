@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Crown, CheckCircle, XCircle, UserMinus } from 'lucide-react';
+import { Crown, CheckCircle, XCircle, UserMinus, Hash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { formatRelative } from '../utils/format';
@@ -59,11 +59,33 @@ export default function AdminFoundersPage() {
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
   });
 
+  const renumberMutation = useMutation({
+    mutationFn: () => api.post('/admin/founders/renumber'),
+    onSuccess: (res) => {
+      const n = res.data?.joined ?? 0;
+      toast.success(n ? `Номера сжаты: 1…${n}` : 'Нет участников для нумерации');
+      qc.invalidateQueries({ queryKey: ['admin-founders'] });
+      qc.invalidateQueries({ queryKey: ['platform-stats'] });
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+  });
+
   const revokeUser = (userId, noteKey) => {
     if (!window.confirm('Снять статус Founding Seller? Комиссия вернётся к стандартной, слот освободится.')) {
       return;
     }
     revokeMutation.mutate({ userId, admin_note: notes[noteKey] || undefined });
+  };
+
+  const renumberMembers = () => {
+    if (
+      !window.confirm(
+        'Сжать номера Founders в 1…N по дате вступления? Пробелы (#1 пропал, есть #3) будут закрыты.'
+      )
+    ) {
+      return;
+    }
+    renumberMutation.mutate();
   };
 
   return (
@@ -129,6 +151,19 @@ export default function AdminFoundersPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-dark-400">
+                После снятия статуса номер освобождается и при новой выдаче берётся наименьший свободный.
+              </p>
+              <button
+                type="button"
+                className="btn-secondary h-9 px-3 inline-flex items-center gap-1.5 text-sm"
+                disabled={renumberMutation.isPending || !members.length}
+                onClick={renumberMembers}
+              >
+                <Hash size={14} /> Сжать номера 1…N
+              </button>
+            </div>
             {members.map((m) => (
               <div key={m.id} className="card p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
