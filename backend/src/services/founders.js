@@ -40,6 +40,23 @@ async function getFoundersJoined(client) {
   return rows[0]?.n || 0;
 }
 
+/** Lowest free Founding Seller number in 1..FOUNDERS_LIMIT (fills gaps after revoke). */
+async function nextFoundingSellerNumber(client) {
+  const { rows } = await client.query(
+    `SELECT g.n::int AS n
+     FROM generate_series(1, $1) AS g(n)
+     WHERE NOT EXISTS (
+       SELECT 1 FROM users u
+       WHERE u.is_founding_seller = TRUE
+         AND u.founding_seller_number = g.n
+     )
+     ORDER BY g.n
+     LIMIT 1`,
+    [FOUNDERS_LIMIT]
+  );
+  return rows[0]?.n || null;
+}
+
 /**
  * Grant Founding Seller after admin approval (atomic).
  * @param {import('pg').PoolClient} client — must already be in a transaction with advisory lock
@@ -76,11 +93,11 @@ async function grantFoundingSellerInTx(client, user, { fingerprint, ip, emailNor
   const fp = sanitizeFingerprint(fingerprint);
   const ipStr = ip && String(ip).trim() ? String(ip).trim().slice(0, 64) : null;
 
-  // Use MAX+1 so revoked numbers (nulled) or gaps never collide with unique index
-  const { rows: maxRows } = await client.query(
-    `SELECT COALESCE(MAX(founding_seller_number), 0)::int AS m FROM users`
-  );
-  const nextNumber = (maxRows[0]?.m || 0) + 1;
+  const nextNumber = await nextFoundingSellerNumber(client);
+  if (!nextNumber) {
+    return { granted: false, reason: 'sold_out', joined, limit: FOUNDERS_LIMIT };
+  }
+
   const { rows } = await client.query(
     `UPDATE users SET
        is_founding_seller = TRUE,
@@ -526,6 +543,62 @@ async function revokeFoundingSeller(pool, userId, adminUser, { adminNote } = {})
   }
 }
 
+/**
+ * Reassign active Founding Sellers to contiguous numbers 1..N
+ * (order: founding_seller_at, then current number). Fixes gaps after revoke.
+ */
+async function compactFoundingSellerNumbers(pool) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock($1)', [FOUNDERS_ADVISORY_LOCK]);
+
+    const { rows: members } = await client.query(
+      `SELECT id, founding_seller_number
+       FROM users
+       WHERE is_founding_seller = TRUE
+       ORDER BY founding_seller_at ASC NULLS LAST,
+                founding_seller_number ASC NULLS LAST,
+                id ASC
+       FOR UPDATE`
+    );
+
+    // Clear first to avoid unique collisions while shifting
+    await client.query(
+      `UPDATE users SET founding_seller_number = NULL, updated_at = NOW()
+       WHERE is_founding_seller = TRUE`
+    );
+
+    const assigned = [];
+    for (let i = 0; i < members.length; i += 1) {
+      const number = i + 1;
+      await client.query(
+        `UPDATE users SET founding_seller_number = $2, updated_at = NOW()
+         WHERE id = $1`,
+        [members[i].id, number]
+      );
+      assigned.push({
+        user_id: members[i].id,
+        previous_number: members[i].founding_seller_number,
+        number,
+      });
+    }
+
+    await client.query('COMMIT');
+    return {
+      ok: true,
+      joined: assigned.length,
+      limit: FOUNDERS_LIMIT,
+      assigned,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 async function getPlatformStats(pool) {
   try {
     const { rows } = await pool.query(
@@ -623,6 +696,7 @@ module.exports = {
   approveFoundersApplication,
   rejectFoundersApplication,
   revokeFoundingSeller,
+  compactFoundingSellerNumbers,
   getPlatformStats,
   getFoundersJoined,
 };

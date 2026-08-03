@@ -10,6 +10,7 @@ const {
   approveFoundersApplication,
   rejectFoundersApplication,
   revokeFoundingSeller,
+  compactFoundingSellerNumbers,
   getPlatformStats,
 } = require('../services/founders');
 const { getAdminAudienceStats } = require('../services/adminStats');
@@ -267,6 +268,17 @@ router.post(
     res.json(result);
   }
 );
+
+/** Pack active Founding Seller numbers into 1..N (fill gaps). */
+router.post('/founders/renumber', async (_req, res) => {
+  try {
+    const result = await compactFoundingSellerNumbers(pool);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось перенумеровать Founders' });
+  }
+});
 
 /** Audience totals + online (admin dashboard) */
 router.get('/stats', async (req, res) => {
