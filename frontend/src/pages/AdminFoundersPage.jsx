@@ -75,7 +75,8 @@ export default function AdminFoundersPage() {
           {founders.joined ?? 0}/{founders.limit ?? 100}
           {founders.pending_applications != null ? ` · ожидают: ${founders.pending_applications}` : ''}
         </span>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
+          <Link to="/admin/stats" className="btn-ghost text-sm">Статистика</Link>
           <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
           <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
         </div>

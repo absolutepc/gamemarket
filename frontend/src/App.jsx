@@ -23,6 +23,8 @@ import AppleCallbackPage from './pages/AppleCallbackPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import AdminDisputesPage from './pages/AdminDisputesPage';
 import AdminAssortmentPage from './pages/AdminAssortmentPage';
+import AdminFoundersPage from './pages/AdminFoundersPage';
+import AdminStatsPage from './pages/AdminStatsPage';
 import AppsPage from './pages/AppsPage';
 import GameLandingPage from './pages/GameLandingPage';
 import AboutPage from './pages/AboutPage';
@@ -32,7 +34,6 @@ import AdminRoute from './components/AdminRoute';
 import BecomeSellerPage from './pages/BecomeSellerPage';
 import CompleteAccountTypePage from './pages/CompleteAccountTypePage';
 import FoundersPage from './pages/FoundersPage';
-import AdminFoundersPage from './pages/AdminFoundersPage';
 import ImportListingsPage from './pages/ImportListingsPage';
 import useAuthStore from './store/authStore';
 
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="listings/:id/edit" element={<CreateListingPage />} />
         </Route>
         <Route element={<AdminRoute />}>
+          <Route path="admin/stats" element={<AdminStatsPage />} />
           <Route path="admin/disputes" element={<AdminDisputesPage />} />
           <Route path="admin/assortment" element={<AdminAssortmentPage />} />
           <Route path="admin/founders" element={<AdminFoundersPage />} />

@@ -91,6 +91,9 @@ export default function AdminAssortmentPage() {
           <h1 className="text-2xl font-bold">Каталог</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link to="/admin/stats" className="btn-ghost text-sm inline-flex items-center gap-1.5">
+            Статистика
+          </Link>
           <Link to="/admin/disputes" className="btn-ghost text-sm inline-flex items-center gap-1.5">
             <Scale size={14} /> Споры
           </Link>

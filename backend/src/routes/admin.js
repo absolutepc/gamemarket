@@ -267,4 +267,18 @@ router.post(
   }
 );
 
+/** Audience totals + online (admin dashboard) */
+router.get('/stats', async (req, res) => {
+  try {
+    const { getAdminAudienceStats } = require('../services/adminStats');
+    const stats = await getAdminAudienceStats(pool, {
+      onlineMinutes: req.query.online_minutes,
+    });
+    res.json(stats);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось загрузить статистику' });
+  }
+});
+
 module.exports = router;
