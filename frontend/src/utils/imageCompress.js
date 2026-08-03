@@ -1,7 +1,7 @@
 /**
  * Compress an image File to a JPEG data URL for listing storage (MVP without S3).
  */
-export function compressImageFile(file, { maxSide = 900, quality = 0.72 } = {}) {
+export function compressImageFile(file, { maxSide = 800, quality = 0.68 } = {}) {
   return new Promise((resolve, reject) => {
     if (!file || !file.type?.startsWith('image/')) {
       reject(new Error('Выберите изображение'));
