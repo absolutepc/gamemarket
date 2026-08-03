@@ -7,6 +7,7 @@ import api from '../utils/api';
 import { ASSORTMENT } from '../data/assortment';
 import { normalizeAssortmentKey } from '../utils/assortmentIcons';
 import { useHiddenAssortmentKeys } from '../hooks/useAssortmentCatalog';
+import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 
 const KIND_LABEL = {
   app: 'Приложение',
@@ -83,7 +84,7 @@ export default function AdminAssortmentPage() {
   const busy = hideMutation.isPending || unhideMutation.isPending;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className={`${PAGE_WIDTH_CLASS} py-8`}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
           <EyeOff className="text-brand-400" size={22} />
@@ -98,7 +99,7 @@ export default function AdminAssortmentPage() {
           </Link>
         </div>
       </div>
-      <p className="text-sm text-dark-400 mb-6">
+      <p className="text-sm text-dark-400 mb-6 max-w-3xl">
         Скрывайте лишние позиции — они пропадут из выбора при создании лота, с главной и страницы приложений.
         Старые лоты сохранят иконки. Можно восстановить в любой момент.
       </p>
@@ -121,7 +122,7 @@ export default function AdminAssortmentPage() {
         </span>
       </div>
 
-      <div className="relative mb-4">
+      <div className="relative mb-4 max-w-xl">
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500" />
         <input
           className="input pl-9"
@@ -155,7 +156,7 @@ export default function AdminAssortmentPage() {
         {filtered.length === 0 ? (
           <div className="p-8 text-center text-dark-400">Ничего не найдено</div>
         ) : (
-          <ul className="divide-y divide-dark-800 max-h-[70vh] overflow-y-auto">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 max-h-[70vh] overflow-y-auto divide-y sm:divide-y-0 divide-dark-800 sm:gap-px sm:bg-dark-800">
             {filtered.map((item) => {
               const key = normalizeAssortmentKey(item.name);
               const isHidden = hiddenKeys.has(key);
@@ -163,7 +164,7 @@ export default function AdminAssortmentPage() {
               return (
                 <li
                   key={`${item.kind}-${item.name}`}
-                  className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 ${
+                  className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 bg-dark-900 ${
                     isHidden ? 'bg-amber-500/5' : ''
                   }`}
                 >
