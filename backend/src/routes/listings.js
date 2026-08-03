@@ -7,6 +7,7 @@ const { authenticate } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
 const { calcPlatformFee } = require('../services/fees');
 const { LISTING_SHOWCASE_DAYS } = require('../services/listingExpiry');
+const { enrichListingAttributes } = require('../services/listingImport');
 
 function showcaseDaysLeft(publishedAt) {
   if (!publishedAt) return LISTING_SHOWCASE_DAYS;
@@ -349,7 +350,17 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
     [req.params.id]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Listing not found' });
-  const listing = rows[0];
+  let listing = rows[0];
+
+  // Early imports stored empty attributes — infer duration/plan for storefront + persist once
+  const enriched = enrichListingAttributes(listing);
+  listing = enriched.listing;
+  if (enriched.changed) {
+    pool.query(
+      'UPDATE listings SET attributes = $1::jsonb WHERE id = $2',
+      [JSON.stringify(enriched.attributes), listing.id],
+    ).catch(() => {});
+  }
 
   const counted = await recordListingView(listing.id, listing.seller_id, req);
   if (counted) listing.views_count = Number(listing.views_count || 0) + 1;

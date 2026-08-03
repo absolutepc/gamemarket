@@ -10,6 +10,32 @@ import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 import { formatPrice } from '../utils/format';
 import { resolveAssortmentItem } from '../utils/assortmentIcons';
+import { LISTING_ATTRIBUTE_SCHEMAS } from '../utils/listingAttributes';
+
+const SUB_DURATION_OPTIONS = LISTING_ATTRIBUTE_SCHEMAS.subscription.find((g) => g.key === 'duration')?.options || [];
+const SUB_PLAN_OPTIONS = LISTING_ATTRIBUTE_SCHEMAS.subscription.find((g) => g.key === 'plan')?.options || [];
+
+function guessSubscriptionAttributes(title, description = '') {
+  const hay = `${title || ''} ${description || ''}`;
+  let duration = '';
+  if (/1\s*год|12\s*мес|one\s*year|\b1\s*year\b/i.test(hay)) duration = '1 год';
+  else if (/6\s*мес|полгода|6\s*month/i.test(hay)) duration = '6 месяцев';
+  else if (/3\s*мес|3\s*month/i.test(hay)) duration = '3 месяца';
+  else if (/14\s*дн|2\s*недел|14\s*day/i.test(hay)) duration = '14 дней';
+  else if (/7\s*дн|1\s*недел|7\s*day/i.test(hay)) duration = '7 дней';
+  else if (/1\s*мес|месяц|\bmonth\b/i.test(hay)) duration = '1 месяц';
+
+  let plan = '';
+  if (/pro\s*plus|pro\+|про\s*плюс/i.test(hay)) plan = 'Pro Plus';
+  else if (/\bultra\b|ультра/i.test(hay)) plan = 'Ultra';
+  else if (/\benterprise\b/i.test(hay)) plan = 'Enterprise';
+  else if (/\bbusiness\b|бизнес/i.test(hay)) plan = 'Business';
+  else if (/\btrial\b|триал/i.test(hay)) plan = 'Trial';
+  else if (/\bbasic\b|базов/i.test(hay)) plan = 'Basic';
+  else if (/\bpro\b|про\b/i.test(hay)) plan = 'Pro';
+
+  return { duration, plan };
+}
 
 const EXAMPLE_JSON = `[
   {
@@ -51,6 +77,8 @@ function newLotForm() {
     gameManual: false,
     listing_type: 'other',
     typeManual: false,
+    duration: '',
+    plan: '',
     image_url: '',
   };
 }
@@ -86,12 +114,25 @@ function enrichItemsWithAssortment(items) {
     const game = String(item.game || '').trim() || guessedGame;
     const listingType = String(item.listing_type || item.type || '').trim()
       || guessTypeFromText(title, description);
+    const guessedSub = guessSubscriptionAttributes(title, description);
+    const attributes = {
+      ...(item.attributes && typeof item.attributes === 'object' ? item.attributes : {}),
+    };
+    if (listingType === 'subscription') {
+      if (!attributes.duration) {
+        attributes.duration = item.duration || guessedSub.duration || '';
+      }
+      if (!attributes.plan) {
+        attributes.plan = item.plan || guessedSub.plan || '';
+      }
+    }
     return {
       ...item,
       title,
       description,
       game: game || 'Другое',
       listing_type: listingType,
+      attributes,
     };
   });
 }
@@ -124,6 +165,11 @@ export default function ImportListingsPage() {
       }
       if (!f.typeManual) {
         next.listing_type = guessTypeFromText(title, f.description);
+      }
+      if (next.listing_type === 'subscription') {
+        const guessed = guessSubscriptionAttributes(title, f.description);
+        if (!f.duration) next.duration = guessed.duration;
+        if (!f.plan) next.plan = guessed.plan;
       }
       return next;
     }));
@@ -168,6 +214,12 @@ export default function ImportListingsPage() {
             game,
             listing_type: form.listing_type || guessTypeFromText(title, description),
             images: form.image_url.trim() ? [form.image_url.trim()] : [],
+            attributes: (form.listing_type === 'subscription' || guessTypeFromText(title, description) === 'subscription')
+              ? {
+                duration: form.duration || guessSubscriptionAttributes(title, description).duration,
+                plan: form.plan || guessSubscriptionAttributes(title, description).plan,
+              }
+              : {},
           });
         }
         if (!items.length) {
@@ -229,6 +281,21 @@ export default function ImportListingsPage() {
       if (patch.title != null && patch.game === undefined) {
         const guessed = guessGameFromTitle(patch.title);
         if (guessed) next.game = guessed;
+      }
+      const title = next.title;
+      const description = next.description;
+      const listingType = next.listing_type;
+      if (listingType === 'subscription') {
+        const guessed = guessSubscriptionAttributes(title, description);
+        const attrs = { ...(next.attributes || {}) };
+        if (patch.attributes) {
+          Object.assign(attrs, patch.attributes);
+        }
+        if (patch.title != null || patch.description != null || patch.listing_type != null) {
+          if (!attrs.duration) attrs.duration = guessed.duration;
+          if (!attrs.plan) attrs.plan = guessed.plan;
+        }
+        next.attributes = attrs;
       }
       return next;
     }));
@@ -377,12 +444,19 @@ export default function ImportListingsPage() {
                       className="input w-full min-h-[100px]"
                       placeholder="Что входит, как выдаёте…"
                       value={form.description}
-                      onChange={(e) => updateForm(form.id, {
-                        description: e.target.value.slice(0, 5000),
-                        ...(!form.typeManual
-                          ? { listing_type: guessTypeFromText(form.title, e.target.value) }
-                          : {}),
-                      })}
+                      onChange={(e) => {
+                        const description = e.target.value.slice(0, 5000);
+                        const listing_type = form.typeManual
+                          ? form.listing_type
+                          : guessTypeFromText(form.title, description);
+                        const patch = { description, listing_type };
+                        if (listing_type === 'subscription') {
+                          const guessed = guessSubscriptionAttributes(form.title, description);
+                          if (!form.duration) patch.duration = guessed.duration;
+                          if (!form.plan) patch.plan = guessed.plan;
+                        }
+                        updateForm(form.id, patch);
+                      }}
                     />
                   </div>
                   <div className="grid sm:grid-cols-3 gap-2">
@@ -413,10 +487,16 @@ export default function ImportListingsPage() {
                       <select
                         className="input w-full"
                         value={form.listing_type}
-                        onChange={(e) => updateForm(form.id, {
-                          listing_type: e.target.value,
-                          typeManual: true,
-                        })}
+                        onChange={(e) => {
+                          const listing_type = e.target.value;
+                          const patch = { listing_type, typeManual: true };
+                          if (listing_type === 'subscription') {
+                            const guessed = guessSubscriptionAttributes(form.title, form.description);
+                            if (!form.duration) patch.duration = guessed.duration;
+                            if (!form.plan) patch.plan = guessed.plan;
+                          }
+                          updateForm(form.id, patch);
+                        }}
                       >
                         {LISTING_TYPE_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
@@ -424,6 +504,36 @@ export default function ImportListingsPage() {
                       </select>
                     </div>
                   </div>
+                  {form.listing_type === 'subscription' && (
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-sm text-dark-300 mb-1">Срок подписки</label>
+                        <select
+                          className="input w-full"
+                          value={form.duration}
+                          onChange={(e) => updateForm(form.id, { duration: e.target.value })}
+                        >
+                          <option value="">Выберите…</option>
+                          {SUB_DURATION_OPTIONS.map((o) => (
+                            <option key={o} value={o}>{o}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-dark-300 mb-1">Тип подписки</label>
+                        <select
+                          className="input w-full"
+                          value={form.plan}
+                          onChange={(e) => updateForm(form.id, { plan: e.target.value })}
+                        >
+                          <option value="">Выберите…</option>
+                          {SUB_PLAN_OPTIONS.map((o) => (
+                            <option key={o} value={o}>{o}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm text-dark-300 mb-1">Ссылка на фото (необязательно)</label>
                     <input
@@ -538,6 +648,34 @@ export default function ImportListingsPage() {
                         ))}
                       </select>
                     </div>
+                    {d.listing_type === 'subscription' && (
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        <select
+                          className="input h-10"
+                          value={d.attributes?.duration || ''}
+                          onChange={(e) => updateDraft(d.key, {
+                            attributes: { ...(d.attributes || {}), duration: e.target.value },
+                          })}
+                        >
+                          <option value="">Срок подписки…</option>
+                          {SUB_DURATION_OPTIONS.map((o) => (
+                            <option key={o} value={o}>{o}</option>
+                          ))}
+                        </select>
+                        <select
+                          className="input h-10"
+                          value={d.attributes?.plan || ''}
+                          onChange={(e) => updateDraft(d.key, {
+                            attributes: { ...(d.attributes || {}), plan: e.target.value },
+                          })}
+                        >
+                          <option value="">Тип подписки…</option>
+                          {SUB_PLAN_OPTIONS.map((o) => (
+                            <option key={o} value={o}>{o}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <textarea
                       className="input w-full min-h-[72px] text-sm"
                       value={d.description}

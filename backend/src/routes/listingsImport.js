@@ -4,7 +4,11 @@ const xss = require('xss');
 const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
-const { buildDraftsFromPayload, MAX_IMPORT } = require('../services/listingImport');
+const {
+  buildDraftsFromPayload,
+  MAX_IMPORT,
+  mergePublicAttributes,
+} = require('../services/listingImport');
 const { calcPlatformFee } = require('../services/fees');
 const listingsRoute = require('./listings');
 
@@ -152,7 +156,14 @@ router.post(
             ? { source_seller: String(d._import.source_seller).slice(0, 80) }
             : {}),
         };
-        const attrs = storeAttributes(d.attributes, importMeta);
+        // Re-merge from title so review edits / early empty attrs still get duration & plan
+        const mergedPublic = mergePublicAttributes(
+          d.attributes,
+          listingType,
+          title,
+          description,
+        );
+        const attrs = storeAttributes(mergedPublic, importMeta);
 
         const { rows } = await pool.query(
           `INSERT INTO listings

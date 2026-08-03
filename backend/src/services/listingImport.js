@@ -7,7 +7,16 @@
 const MAX_IMPORT = 50;
 
 const TYPE_KEYWORDS = [
-  ['subscription', [/подписк/i, /subscription/i, /premium/i, /ps\s*plus/i, /game\s*pass/i]],
+  ['subscription', [
+    /подписк/i,
+    /subscription/i,
+    /premium/i,
+    /ps\s*plus/i,
+    /game\s*pass/i,
+    /\bpro\s*plus\b/i,
+    /\bpro\+\b/i,
+    /\b\d+\s*(мес|месяц|дн|день|год)/i,
+  ]],
   ['donate', [/донат/i, /donate/i]],
   ['topup', [/пополнен/i, /top[\s-]?up/i, /баланс/i]],
   ['currency', [/валют/i, /coins?/i, /гколд|gcoin|uc\b|robux|v-?bucks/i]],
@@ -37,6 +46,49 @@ function guessListingType(item) {
     if (patterns.some((re) => re.test(hay))) return type;
   }
   return 'other';
+}
+
+/** Infer Playerok-style subscription chips from title/description */
+function guessSubscriptionAttributes(title, description = '') {
+  const hay = `${title || ''} ${description || ''}`;
+  let duration = null;
+  if (/1\s*год|12\s*мес|one\s*year|\b1\s*year\b/i.test(hay)) duration = '1 год';
+  else if (/6\s*мес|полгода|6\s*month/i.test(hay)) duration = '6 месяцев';
+  else if (/3\s*мес|3\s*month/i.test(hay)) duration = '3 месяца';
+  else if (/14\s*дн|2\s*недел|14\s*day/i.test(hay)) duration = '14 дней';
+  else if (/7\s*дн|1\s*недел|7\s*day/i.test(hay)) duration = '7 дней';
+  else if (/1\s*мес|месяц|\bmonth\b|1\s*m\.?/i.test(hay)) duration = '1 месяц';
+
+  let plan = null;
+  if (/pro\s*plus|pro\+|про\s*плюс/i.test(hay)) plan = 'Pro Plus';
+  else if (/\bultra\b|ультра/i.test(hay)) plan = 'Ultra';
+  else if (/\benterprise\b/i.test(hay)) plan = 'Enterprise';
+  else if (/\bbusiness\b|бизнес/i.test(hay)) plan = 'Business';
+  else if (/\btrial\b|триал/i.test(hay)) plan = 'Trial';
+  else if (/\bbasic\b|базов/i.test(hay)) plan = 'Basic';
+  else if (/\bpro\b|про\b/i.test(hay)) plan = 'Pro';
+
+  const out = {};
+  if (duration) out.duration = duration;
+  if (plan) out.plan = plan;
+  return out;
+}
+
+function mergePublicAttributes(raw, listingType, title, description) {
+  const out = {};
+  const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  for (const [key, value] of Object.entries(src)) {
+    if (!key || key.startsWith('_')) continue;
+    if (['imported_from', 'source_seller', 'source_url', 'external_id'].includes(key)) continue;
+    const v = value == null ? '' : String(value).trim().slice(0, 80);
+    if (v) out[key] = v;
+  }
+  if (listingType === 'subscription') {
+    const guessed = guessSubscriptionAttributes(title, description);
+    if (!out.duration && guessed.duration) out.duration = guessed.duration;
+    if (!out.plan && guessed.plan) out.plan = guessed.plan;
+  }
+  return out;
 }
 
 function parsePrice(raw) {
@@ -147,20 +199,27 @@ function toDraft(raw, index, { provider, profile }) {
     .slice(0, 100);
   const listingType = guessListingType(raw);
   const images = normalizeImageList(raw.images || raw.image || raw.photos);
+  const description = ensureDescription(title, raw.description || raw.desc);
+  const attributes = mergePublicAttributes(raw.attributes, listingType, title, description);
   const warnings = [];
   if (!title || title.length < 5) warnings.push('Короткое или пустое название');
   if (price == null || price < 1) warnings.push('Нужна цена ≥ 1 ₽');
   if (!game) warnings.push('Не указана игра/сервис');
+  if (listingType === 'subscription') {
+    if (!attributes.duration) warnings.push('Укажите срок подписки');
+    if (!attributes.plan) warnings.push('Укажите тип подписки');
+  }
+  const hardFail = (!title || title.length < 5) || price == null || price < 1 || !game;
 
   return {
     key: String(raw.external_id || raw.id || raw.source_url || `row-${index}`),
-    selected: warnings.length === 0,
+    selected: !hardFail,
     provider,
     source_profile: profile?.url || null,
     source_url: raw.source_url || raw.url || null,
     external_id: raw.external_id || raw.id || null,
     title: title || `Лот ${index + 1}`,
-    description: ensureDescription(title, raw.description || raw.desc),
+    description,
     price: price != null ? Math.round(price * 100) / 100 : null,
     original_price: original != null && price != null && original > price ? original : null,
     game: game || 'Другое',
@@ -168,8 +227,7 @@ function toDraft(raw, index, { provider, profile }) {
     delivery_method: 'manual',
     images,
     tags: Array.isArray(raw.tags) ? raw.tags.slice(0, 12) : [],
-    // Public attributes stay empty — import meta is private (_import)
-    attributes: {},
+    attributes,
     _import: {
       provider,
       ...(profile?.username ? { source_seller: profile.username } : {}),
@@ -243,9 +301,44 @@ function buildDraftsFromPayload(body) {
   };
 }
 
+/** Fill missing duration/plan on already-published subscription lots (e.g. early imports). */
+function enrichListingAttributes(listing) {
+  if (!listing || typeof listing !== 'object') {
+    return { listing, attributes: {}, changed: false };
+  }
+  const listingType = String(listing.listing_type || '');
+  const attrs = listing.attributes && typeof listing.attributes === 'object' && !Array.isArray(listing.attributes)
+    ? { ...listing.attributes }
+    : {};
+  const titleHay = `${listing.title || ''} ${listing.description || ''}`;
+  const looksLikeSub = listingType === 'subscription'
+    || listingType === 'premium'
+    || (Boolean(attrs._import) && /подписк|pro\s*plus|\bpro\b|месяц|month|premium/i.test(titleHay));
+  if (!looksLikeSub) {
+    return { listing, attributes: attrs, changed: false };
+  }
+  const guessed = guessSubscriptionAttributes(listing.title, listing.description);
+  let changed = false;
+  if (!attrs.duration && guessed.duration) {
+    attrs.duration = guessed.duration;
+    changed = true;
+  }
+  if (!attrs.plan && guessed.plan) {
+    attrs.plan = guessed.plan;
+    changed = true;
+  }
+  if (!changed) {
+    return { listing, attributes: attrs, changed: false };
+  }
+  return { listing: { ...listing, attributes: attrs }, attributes: attrs, changed: true };
+}
+
 module.exports = {
   MAX_IMPORT,
   buildDraftsFromPayload,
   parsePlayerokProfileUrl,
   guessListingType,
+  guessSubscriptionAttributes,
+  mergePublicAttributes,
+  enrichListingAttributes,
 };
