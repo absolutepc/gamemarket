@@ -269,7 +269,19 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="font-bold text-lg mb-4">Активные лоты ({activeListings.length})</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="font-bold text-lg">Активные лоты ({activeListings.length})</h2>
+          {isOwn && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to={sellPathForUser(currentUser)} className="btn-primary text-sm h-9 px-3 inline-flex items-center">
+                Создать лот
+              </Link>
+              <Link to="/listings/import" className="btn-secondary text-sm h-9 px-3 inline-flex items-center">
+                Импорт
+              </Link>
+            </div>
+          )}
+        </div>
         {isOwn && (
           <p className="text-xs text-dark-400 mb-3">
             Лоты висят на витрине 30 дней, затем их нужно снова активировать.
@@ -298,12 +310,6 @@ export default function ProfilePage() {
         ) : (
           <div className="card p-8 text-center text-dark-400 text-sm">
             Нет активных лотов
-            {isOwn && (
-              <div className="mt-3">
-                <Link to={sellPathForUser(currentUser)} className="btn-primary text-sm">Создать лот</Link>
-                <Link to="/listings/import" className="btn-secondary text-sm">Импорт</Link>
-              </div>
-            )}
           </div>
         )}
       </div>
