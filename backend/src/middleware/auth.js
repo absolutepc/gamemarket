@@ -59,12 +59,36 @@ function authenticate(required = true) {
   };
 }
 
+function roleSatisfies(userRole, requiredRole) {
+  if (userRole === requiredRole) return true;
+  // owner is a superset of admin
+  if (requiredRole === 'admin' && userRole === 'owner') return true;
+  return false;
+}
+
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
-    if (!roles.includes(req.user.role)) return res.status(403).json({ error: 'Insufficient permissions' });
+    const ok = roles.some((role) => roleSatisfies(req.user.role, role));
+    if (!ok) return res.status(403).json({ error: 'Insufficient permissions' });
     next();
   };
 }
 
-module.exports = { authenticate, requireRole, JWT_SECRET };
+/** Platform owner only — finance / treasury. */
+function requireOwner() {
+  return requireRole('owner');
+}
+
+function isPlatformOwner(user) {
+  return user?.role === 'owner';
+}
+
+module.exports = {
+  authenticate,
+  requireRole,
+  requireOwner,
+  isPlatformOwner,
+  roleSatisfies,
+  JWT_SECRET,
+};

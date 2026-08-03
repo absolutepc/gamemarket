@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { body } = require('express-validator');
 const pool = require('../config/database');
-const { authenticate, requireRole } = require('../middleware/auth');
+const { authenticate, requireRole, requireOwner } = require('../middleware/auth');
 const { validate } = require('../middleware/security');
 const { releaseEscrow, refundEscrow } = require('../services/escrow');
 const {
@@ -426,8 +426,8 @@ router.post('/contests/:id/draw', async (req, res) => {
   }
 });
 
-/** Platform finance / treasury ledger */
-router.get('/finance', async (req, res) => {
+/** Platform finance / treasury ledger — owner only */
+router.get('/finance', requireOwner(), async (req, res) => {
   try {
     await backfillPlatformLedger(pool).catch((err) => {
       console.error('platform ledger backfill', err.message);
@@ -451,6 +451,7 @@ router.get('/finance', async (req, res) => {
 
 router.post(
   '/finance/withdrawals',
+  requireOwner(),
   [
     body('amount').isFloat({ gt: 0 }),
     body('method').optional({ nullable: true }).trim().isLength({ max: 40 }),
@@ -479,6 +480,7 @@ router.post(
 
 router.post(
   '/finance/withdrawals/:id/process',
+  requireOwner(),
   [
     body('status').isIn(['paid', 'cancelled', 'failed']),
     body('admin_note').optional({ nullable: true }).trim().isLength({ max: 1000 }),
@@ -504,6 +506,7 @@ router.post(
 
 router.post(
   '/finance/adjustments',
+  requireOwner(),
   [
     body('amount').isFloat({ gt: -1e12, lt: 1e12 }),
     body('description').trim().isLength({ min: 3, max: 500 }),

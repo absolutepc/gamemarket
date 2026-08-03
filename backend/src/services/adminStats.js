@@ -7,7 +7,7 @@ const ONLINE_WINDOW_MINUTES = 5;
 const SELLER_EXPR = `(
   account_type = 'seller'
   OR COALESCE(is_founding_seller, FALSE) = TRUE
-  OR role = 'admin'
+  OR role IN ('admin', 'owner')
 )`;
 
 const PURCHASER_EXPR = `COALESCE(purchases_count, 0) > 0`;

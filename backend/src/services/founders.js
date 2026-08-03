@@ -240,7 +240,7 @@ async function submitFoundersApplication(pool, user, { message, fingerprint, ip 
   // Notify admins so the queue is visible even without refreshing stats
   try {
     const admins = await pool.query(
-      `SELECT id FROM users WHERE role = 'admin' AND COALESCE(is_banned, FALSE) = FALSE`
+      `SELECT id FROM users WHERE role IN ('admin', 'owner') AND COALESCE(is_banned, FALSE) = FALSE`
     );
     for (const admin of admins.rows) {
       await pool.query(
@@ -608,7 +608,7 @@ async function getPlatformStats(pool) {
          COUNT(*) FILTER (
            WHERE account_type = 'seller'
               OR COALESCE(is_founding_seller, FALSE) = TRUE
-              OR role = 'admin'
+              OR role IN ('admin', 'owner')
          )::int AS sellers_count,
          COUNT(*) FILTER (WHERE is_founding_seller = TRUE)::int AS founders_joined,
          COUNT(*)::int AS users_total
@@ -644,7 +644,7 @@ async function getPlatformStats(pool) {
       const { rows } = await pool.query(
         `SELECT
            COUNT(*) FILTER (WHERE COALESCE(account_type, 'buyer') = 'buyer')::int AS buyers_count,
-           COUNT(*) FILTER (WHERE account_type = 'seller' OR role = 'admin')::int AS sellers_count,
+           COUNT(*) FILTER (WHERE account_type = 'seller' OR role IN ('admin', 'owner'))::int AS sellers_count,
            COUNT(*)::int AS users_total
          FROM users`
       );

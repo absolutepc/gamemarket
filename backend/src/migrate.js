@@ -325,18 +325,50 @@ function bootstrapAdminUsernames() {
   )];
 }
 
+/** Platform owners (finance). Default: same as Mercy, or PLATFORM_OWNER_USERNAMES. */
+function bootstrapOwnerUsernames() {
+  const raw = process.env.PLATFORM_OWNER_USERNAMES != null
+    && String(process.env.PLATFORM_OWNER_USERNAMES).trim() !== ''
+    ? process.env.PLATFORM_OWNER_USERNAMES
+    : (process.env.ADMIN_USERNAMES != null && String(process.env.ADMIN_USERNAMES).trim() !== ''
+      ? String(process.env.ADMIN_USERNAMES).split(',')[0]
+      : 'Mercy');
+  return [...new Set(
+    String(raw)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  )];
+}
+
 async function promoteBootstrapAdmins(client) {
   const usernames = bootstrapAdminUsernames();
   for (const username of usernames) {
     const { rowCount, rows } = await client.query(
       `UPDATE users
        SET role = 'admin', updated_at = NOW()
-       WHERE LOWER(username) = LOWER($1) AND role IS DISTINCT FROM 'admin'
+       WHERE LOWER(username) = LOWER($1)
+         AND role IS DISTINCT FROM 'admin'
+         AND role IS DISTINCT FROM 'owner'
        RETURNING username, role`,
       [username]
     );
     if (rowCount > 0) {
       console.log(`Promoted to admin: ${rows[0].username}`);
+    }
+  }
+
+  const owners = bootstrapOwnerUsernames();
+  for (const username of owners) {
+    const { rowCount, rows } = await client.query(
+      `UPDATE users
+       SET role = 'owner', updated_at = NOW()
+       WHERE LOWER(username) = LOWER($1) AND role IS DISTINCT FROM 'owner'
+       RETURNING username, role`,
+      [username]
+    );
+    if (rowCount > 0) {
+      console.log(`Promoted to owner: ${rows[0].username}`);
     }
   }
 }

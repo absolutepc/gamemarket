@@ -34,6 +34,7 @@ import AboutPage from './pages/AboutPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SellerRoute from './components/SellerRoute';
 import AdminRoute from './components/AdminRoute';
+import OwnerRoute from './components/OwnerRoute';
 import BecomeSellerPage from './pages/BecomeSellerPage';
 import CompleteAccountTypePage from './pages/CompleteAccountTypePage';
 import FoundersPage from './pages/FoundersPage';
@@ -91,7 +92,9 @@ export default function App() {
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="admin/stats" element={<AdminStatsPage />} />
-          <Route path="admin/finance" element={<AdminFinancePage />} />
+          <Route element={<OwnerRoute />}>
+            <Route path="admin/finance" element={<AdminFinancePage />} />
+          </Route>
           <Route path="admin/contest" element={<AdminContestPage />} />
           <Route path="admin/disputes" element={<AdminDisputesPage />} />
           <Route path="admin/assortment" element={<AdminAssortmentPage />} />
