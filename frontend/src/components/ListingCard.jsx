@@ -26,7 +26,11 @@ export default function ListingCard({
   onDelete,
   onReactivate,
 }) {
-  const image = listing.images?.[0] || PLACEHOLDER;
+  const image = (listing.images?.[0] && listing.images[0] !== PLACEHOLDER)
+    ? listing.images[0]
+    : (resolveAssortmentItem(listing.game || listing.title)?.icon
+      || resolveAssortmentIcon(listing.game || listing.title)
+      || PLACEHOLDER);
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
   const isAuto = listing.delivery_method === 'auto';
   const isInactive = listing.status === 'inactive';
@@ -37,6 +41,8 @@ export default function ListingCard({
   const typeLabel =
     LISTING_TYPE_OPTIONS.find((o) => o.value === listing.listing_type)?.label ||
     listing.category_name;
+  const imageIsIcon = !listing.images?.[0] || listing.images[0] === PLACEHOLDER
+    || String(listing.images[0]).startsWith('/assortment/');
 
   return (
     <div className={`rounded-2xl bg-dark-900 border flex flex-col overflow-hidden w-full min-w-0
@@ -73,10 +79,13 @@ export default function ListingCard({
           <img
             src={image}
             alt={listing.title}
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-              isInactive ? 'grayscale-[40%]' : ''
-            }`}
-            onError={(e) => { e.target.src = PLACEHOLDER; }}
+            className={`w-full h-full group-hover:scale-105 transition-transform duration-300 ${
+              imageIsIcon ? 'object-contain p-6 bg-gradient-to-br from-dark-800 to-dark-900' : 'object-cover'
+            } ${isInactive ? 'grayscale-[40%]' : ''}`}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = gameIcon || '/assortment/other-apps.png';
+            }}
             loading="lazy"
           />
           <div className="absolute top-2 left-2 flex flex-col gap-1">

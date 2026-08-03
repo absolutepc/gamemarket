@@ -49,6 +49,46 @@ function calcDiscount(price, originalPrice) {
   };
 }
 
+function fallbackAssortmentImage(game) {
+  const q = String(game || '')
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[^a-z0-9а-я]+/gi, ' ')
+    .trim();
+  const map = {
+    cursor: '/assortment/cursor.png',
+    'cursor ai': '/assortment/cursor.png',
+    'cursor pro': '/assortment/cursor.png',
+    chatgpt: '/assortment/chatgpt.png',
+    'чатгпт': '/assortment/chatgpt.png',
+    claude: '/assortment/claude.png',
+    steam: '/assortment/steam.png',
+    pubg: '/assortment/pubg.png',
+    telegram: '/assortment/telegram.png',
+  };
+  for (const [key, icon] of Object.entries(map)) {
+    if (q === key || q.includes(key)) return icon;
+  }
+  return '/assortment/other-apps.png';
+}
+
+function publicAttributes(rawAttrs, importMeta) {
+  const out = {};
+  if (rawAttrs && typeof rawAttrs === 'object' && !Array.isArray(rawAttrs)) {
+    for (const [key, value] of Object.entries(rawAttrs)) {
+      if (!key || key.startsWith('_')) continue;
+      if (['imported_from', 'source_seller', 'source_url', 'external_id'].includes(key)) continue;
+      const v = value == null ? '' : String(value).trim().slice(0, 80);
+      if (v) out[key] = v;
+    }
+  }
+  // Persist import provenance privately (hidden on storefront)
+  if (importMeta && typeof importMeta === 'object') {
+    out._import = importMeta;
+  }
+  return out;
+}
+
 function normalizeImages(raw) {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -119,14 +159,24 @@ router.post(
         if (!game) throw new Error('Укажите игру или сервис');
 
         const discount = calcDiscount(price, d.original_price);
-        const images = normalizeImages(d.images);
+        let images = normalizeImages(d.images);
+        if (!images.length) {
+          images = [fallbackAssortmentImage(game)];
+        }
         const categoryId = await categoryIdForType(listingType);
-        const attrs = {
-          imported_from: d.provider || 'manual',
-          ...(d.source_url ? { source_url: String(d.source_url).slice(0, 300) } : {}),
-          ...(d.external_id ? { external_id: String(d.external_id).slice(0, 80) } : {}),
-          ...(d.attributes && typeof d.attributes === 'object' ? d.attributes : {}),
+        const importMeta = {
+          provider: d.provider || d._import?.provider || 'manual',
+          ...(d.source_url || d._import?.source_url
+            ? { source_url: String(d.source_url || d._import.source_url).slice(0, 300) }
+            : {}),
+          ...(d.external_id || d._import?.external_id
+            ? { external_id: String(d.external_id || d._import.external_id).slice(0, 80) }
+            : {}),
+          ...(d._import?.source_seller
+            ? { source_seller: String(d._import.source_seller).slice(0, 80) }
+            : {}),
         };
+        const attrs = publicAttributes(d.attributes, importMeta);
 
         const { rows } = await pool.query(
           `INSERT INTO listings

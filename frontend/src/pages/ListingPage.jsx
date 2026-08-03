@@ -235,7 +235,6 @@ export default function ListingPage() {
     return <div className="text-center py-20 text-dark-400">Лот не найден</div>;
   }
 
-  const images = listing.images?.length ? listing.images : [PLACEHOLDER];
   const isOwner = user?.id === listing.seller_id;
   const canBuy = user && !isOwner && listing.status === 'active';
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
@@ -249,14 +248,34 @@ export default function ListingPage() {
   const plainDesc = (listing.description || '').replace(/<[^>]+>/g, '').trim();
   const descLong = plainDesc.length > 280;
   const descShown = descExpanded || !descLong ? plainDesc : `${plainDesc.slice(0, 280).trimEnd()}…`;
+  const HIDDEN_ATTR_KEYS = new Set([
+    'imported_from',
+    'source_seller',
+    'source_url',
+    'external_id',
+    '_import',
+  ]);
   const attrEntries = listing.attributes && typeof listing.attributes === 'object'
-    ? Object.entries(listing.attributes).filter(([, v]) => v != null && String(v).trim() !== '')
+    ? Object.entries(listing.attributes).filter(([key, v]) => {
+      if (HIDDEN_ATTR_KEYS.has(key) || String(key).startsWith('_')) return false;
+      return v != null && String(v).trim() !== '';
+    })
     : [];
   const sellerRating = parseFloat(listing.seller_rating || 0);
   const deliveryLabel = listing.delivery_method === 'auto' ? 'Автоматическая выдача' : 'Вручную через чат сделки';
   const deliveryHint = listing.delivery_method === 'auto'
     ? 'После оплаты товар придёт сразу по указанным данным.'
     : 'Продавец передаст товар в чате сделки после оплаты.';
+
+  const rawImages = Array.isArray(listing.images)
+    ? listing.images.filter((src) => {
+      const s = String(src || '').trim();
+      if (!s || s === PLACEHOLDER) return false;
+      return true;
+    })
+    : [];
+  const images = rawImages.length ? rawImages : [gameIcon || PLACEHOLDER];
+  const galleryIsIcon = rawImages.length === 0;
 
   const buyProps = {
     isOwner,
@@ -272,12 +291,19 @@ export default function ListingPage() {
 
   const gallery = (
     <div>
-      <div className="relative aspect-[4/3] lg:aspect-[5/4] rounded-2xl overflow-hidden bg-dark-800">
+      <div className={`relative aspect-[4/3] lg:aspect-[5/4] rounded-2xl overflow-hidden bg-dark-800 ${
+        galleryIsIcon ? 'flex items-center justify-center bg-gradient-to-br from-dark-800 to-dark-900' : ''
+      }`}>
         <img
           src={images[imgIdx]}
-          className="w-full h-full object-cover"
+          className={galleryIsIcon
+            ? 'w-[46%] max-w-[220px] h-auto object-contain drop-shadow-lg'
+            : 'w-full h-full object-cover'}
           alt={listing.title}
-          onError={(e) => { e.target.src = PLACEHOLDER; }}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/assortment/other-apps.png';
+          }}
         />
         {listing.delivery_method === 'auto' && (
           <span className="absolute top-3 left-3 badge bg-violet-500/95 text-white flex items-center gap-1">
