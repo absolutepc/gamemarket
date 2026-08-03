@@ -116,12 +116,16 @@ export default function FoundersPage() {
           <span className="text-amber-200 font-semibold">13%</span>
           , вывод через{' '}
           <span className="text-amber-200 font-semibold">24 ч</span>
-          {' '}после сделки (обычно 48 ч), золотая галочка и бейдж Founding Seller.
+          {' '}после сделки (обычно 48 ч), золотая галочка, приоритет в поиске и бейдж Founding Seller.
         </p>
         <ul className="space-y-1.5 text-sm text-dark-200">
           <li className="flex items-start gap-2">
             <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />
             Заявка → рассмотрение → решение. Автоматического входа нет.
+          </li>
+          <li className="flex items-start gap-2">
+            <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />
+            Выше в поиске и каталоге (тайбрейкер после платного ТОП)
           </li>
           <li className="flex items-start gap-2">
             <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />
