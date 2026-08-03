@@ -5,6 +5,7 @@ import { Scale, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { formatPrice, formatRelative } from '../utils/format';
+import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 
 const REASON_LABELS = {
   not_received: 'Товар не получен',
@@ -38,10 +39,11 @@ export default function AdminDisputesPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className={`${PAGE_WIDTH_CLASS} py-8`}>
       <div className="flex items-center gap-3 mb-6">
         <Scale className="text-brand-400" size={22} />
         <h1 className="text-2xl font-bold">Разбор споров</h1>
+        <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
       </div>
 
       <div className="flex gap-2 mb-6">

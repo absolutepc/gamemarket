@@ -1,6 +1,14 @@
-import { ASSORTMENT } from '../data/assortment';
+import { ASSORTMENT, ASSORTMENT_ICON_VERSION } from '../data/assortment';
 
-const FALLBACK_ICON = '/assortment/other-apps.png';
+const FALLBACK_ICON = `/assortment/other-apps.png?v=${ASSORTMENT_ICON_VERSION}`;
+
+/** Ensure assortment icon URLs carry the cache-bust query. */
+export function assortmentIconUrl(src) {
+  const raw = String(src || '').trim() || FALLBACK_ICON;
+  if (!raw.startsWith('/assortment/')) return raw;
+  const bare = raw.split('?')[0];
+  return `${bare}?v=${ASSORTMENT_ICON_VERSION}`;
+}
 
 /** Normalize for fuzzy game / service matching */
 export function normalizeAssortmentKey(value) {
@@ -10,6 +18,32 @@ export function normalizeAssortmentKey(value) {
     .replace(/[^a-z0-9а-я]+/gi, ' ')
     .trim()
     .replace(/\s+/g, ' ');
+}
+
+/** Map legacy / alternate listing.game values onto current catalog names */
+const NAME_ALIASES = {
+  chatgpt: 'чатгпт',
+  'chatgpt plus': 'чатгпт',
+  'chatgpt team': 'чатгпт',
+  'chatgpt api': 'чатгпт',
+  openai: 'чатгпт',
+  'claude ai': 'claude',
+  'claude pro': 'claude',
+  'claude team': 'claude',
+  'cursor ai': 'cursor',
+  'cursor pro': 'cursor',
+  'app store': 'apple',
+  itunes: 'apple',
+  'ea sports': 'ea play',
+  crunchyroll: 'кранчролл',
+  'amazon prime': 'prime video',
+  'character.ai': 'character ai',
+  'runway ml': 'runway',
+  'rockstar launcher': 'rockstar games',
+};
+
+function applyAlias(q) {
+  return NAME_ALIASES[q] || q;
 }
 
 const INDEX = ASSORTMENT.map((item) => ({
@@ -28,8 +62,9 @@ const INDEX_BY_LENGTH = [...INDEX].sort(
  * Exact name/search first, then longest partial match.
  */
 export function resolveAssortmentItem(gameOrSearch) {
-  const q = normalizeAssortmentKey(gameOrSearch);
-  if (!q) return null;
+  const raw = normalizeAssortmentKey(gameOrSearch);
+  if (!raw) return null;
+  const q = applyAlias(raw);
 
   const exact = INDEX.find((item) => item.key === q || item.searchKey === q);
   if (exact) return exact;
@@ -44,12 +79,16 @@ export function resolveAssortmentItem(gameOrSearch) {
 }
 
 export function resolveAssortmentIcon(gameOrSearch) {
-  return resolveAssortmentItem(gameOrSearch)?.icon || FALLBACK_ICON;
+  return assortmentIconUrl(resolveAssortmentItem(gameOrSearch)?.icon || FALLBACK_ICON);
 }
 
-/** True when value is an exact assortment name (required for new listings). */
-export function isExactAssortmentName(value) {
+/**
+ * True when value is an exact assortment name (required for new listings).
+ * Pass hiddenKeys (Set) to reject admin-hidden catalog entries.
+ */
+export function isExactAssortmentName(value, hiddenKeys) {
   const q = normalizeAssortmentKey(value);
   if (!q) return false;
+  if (hiddenKeys?.size && hiddenKeys.has(q)) return false;
   return INDEX.some((item) => item.key === q);
 }

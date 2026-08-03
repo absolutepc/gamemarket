@@ -26,32 +26,40 @@ ALLOWED_ORIGINS=https://lootz.ru,https://www.lootz.ru
 ### Frontend
 ```
 BACKEND_URL=<внутренний/публичный URL backend-сервиса в Railway>
+# Яндекс.Вебмастер — код из meta content=...
+YANDEX_VERIFICATION=
 ```
 `BACKEND_URL` обычно уже настроен — не меняйте без необходимости.
 
 После смены переменных сделайте **Redeploy** backend и frontend.
 
-## 4. VK ID и Apple ID
+Подробнее про Вебмастер: [YANDEX_WEBMASTER.md](./YANDEX_WEBMASTER.md)
+
+## 4. OAuth (Google / VK / Apple)
 
 Подробная инструкция: [OAUTH_SETUP.md](./OAUTH_SETUP.md)
 
-Кратко — в Variables **backend**:
+**Сейчас активен Google.** VK ID и Apple ID отложены — чтобы включить позже:
 
 ```
+VK_OAUTH_ENABLED=true
 VK_APP_ID=...
 VK_CLIENT_SECRET=...
+
+APPLE_OAUTH_ENABLED=true
 APPLE_CLIENT_ID=ru.lootz.web
 ```
 
 Trusted redirects:
 ```
-https://lootz.ru/auth/vk/callback
-https://lootz.ru/auth/apple/callback
+https://www.lootz.ru/auth/google/callback
+https://www.lootz.ru/auth/vk/callback
+https://www.lootz.ru/auth/apple/callback
 ```
 
 ## 5. Проверка
 
 - https://lootz.ru открывается без VPN
 - /api/health отвечает через тот же домен (прокси фронта)
-- Логин VK / Apple работает
+- Логин Google работает (VK / Apple — после `*_OAUTH_ENABLED=true`)
 - Cookies / сессия не ломаются

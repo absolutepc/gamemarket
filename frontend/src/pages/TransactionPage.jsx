@@ -7,6 +7,11 @@ import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import { formatPrice, formatRelative, formatDate, TX_STATUS } from '../utils/format';
+import {
+  REVIEW_CRITERIA,
+  ratingFromCriteria,
+  labelsForCriteria,
+} from '../utils/reviewCriteria';
 
 export default function TransactionPage() {
   const { id } = useParams();
@@ -16,14 +21,21 @@ export default function TransactionPage() {
   const [messages, setMessages] = useState([]);
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [dispute, setDispute] = useState({ reason: 'not_received', description: '' });
-  const [review, setReview] = useState({ rating: 5, comment: '' });
+  const [review, setReview] = useState({ criteria: [], comment: '' });
   const msgEndRef = useRef(null);
+  const chatScrollRef = useRef(null);
   const socketRef = useRef(null);
+
+  const reviewRating = ratingFromCriteria(review.criteria);
 
   const { data: tx, isLoading } = useQuery({
     queryKey: ['transaction', id],
     queryFn: () => api.get(`/transactions/${id}`).then((r) => r.data),
   });
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [id]);
 
   useEffect(() => {
     if (tx?.messages) setMessages(tx.messages);
@@ -44,7 +56,9 @@ export default function TransactionPage() {
   }, [id, accessToken]);
 
   useEffect(() => {
-    msgEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = chatScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   const sendMessage = (e) => {
@@ -85,7 +99,8 @@ export default function TransactionPage() {
   const reviewMutation = useMutation({
     mutationFn: () => api.post('/users/reviews', {
       transaction_id: id,
-      rating: review.rating,
+      criteria: review.criteria,
+      rating: ratingFromCriteria(review.criteria),
       comment: review.comment || undefined,
     }),
     onSuccess: () => {
@@ -95,6 +110,16 @@ export default function TransactionPage() {
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
   });
 
+  const toggleCriterion = (key) => {
+    setReview((r) => {
+      const has = r.criteria.includes(key);
+      const criteria = has
+        ? r.criteria.filter((k) => k !== key)
+        : [...r.criteria, key];
+      return { ...r, criteria };
+    });
+  };
+
   if (isLoading) return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="card h-96 animate-pulse" />
@@ -103,8 +128,10 @@ export default function TransactionPage() {
 
   if (!tx) return <div className="text-center py-20 text-dark-400">Сделка не найдена</div>;
 
-  const isBuyer = String(user?.id) === String(tx.buyer_id);
-  const isSeller = String(user?.id) === String(tx.seller_id);
+  // Prefer server-side role flags (JWT) — localStorage user.id can be missing/stale
+  const isBuyer = tx.is_buyer ?? String(user?.id) === String(tx.buyer_id);
+  const isSeller = tx.is_seller ?? String(user?.id) === String(tx.seller_id);
+  const canConfirm = tx.can_confirm ?? (isBuyer && tx.status === 'awaiting_confirmation');
   const status = TX_STATUS[tx.status] || { label: tx.status, color: 'badge-gray' };
 
   return (
@@ -171,7 +198,7 @@ export default function TransactionPage() {
             {tx.status === 'awaiting_confirmation' && tx.confirm_deadline_at && (
               <p>
                 Срок подтверждения: до <strong className="text-white">{formatDate(tx.confirm_deadline_at)}</strong>
-                {' '}(7 дней). Иначе средства уйдут продавцу автоматически.
+                {' '}({tx.buyer_confirm_hours || 48} ч с момента передачи продавцом). Иначе средства уйдут продавцу автоматически.
               </p>
             )}
             {tx.status === 'awaiting_delivery' && isBuyer && (
@@ -223,7 +250,7 @@ export default function TransactionPage() {
               {tx.confirm_deadline_at ? ` до ${formatDate(tx.confirm_deadline_at)}` : ''}.
             </p>
           )}
-          {isBuyer && tx.status === 'awaiting_confirmation' && (
+          {canConfirm && (
             <button
               onClick={() => confirmMutation.mutate()}
               disabled={confirmMutation.isPending}
@@ -301,19 +328,42 @@ export default function TransactionPage() {
 
       {isBuyer && tx.status === 'completed' && tx.escrow_released_at && !tx.has_review && (
         <div className="card p-5 mb-4">
-          <h3 className="font-semibold mb-3">Оставить отзыв продавцу</h3>
-          <p className="text-xs text-dark-400 mb-3">Отзыв доступен только после завершённой сделки</p>
-          <div className="flex gap-2 mb-3">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setReview((r) => ({ ...r, rating: n }))}
-                className={`text-2xl ${n <= review.rating ? 'text-yellow-400' : 'text-dark-600'}`}
-              >
-                ★
-              </button>
-            ))}
+          <h3 className="font-semibold mb-1">Оставить отзыв продавцу</h3>
+          <p className="text-xs text-dark-400 mb-4">
+            Отметьте, что понравилось — итоговая оценка = число выбранных пунктов (1–5)
+          </p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {REVIEW_CRITERIA.map((c) => {
+              const selected = review.criteria.includes(c.key);
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => toggleCriterion(c.key)}
+                  className={`px-3 py-2 rounded-xl text-sm border transition-colors ${
+                    selected
+                      ? 'bg-brand-500/20 border-brand-500/50 text-brand-300'
+                      : 'bg-dark-800/60 border-dark-700 text-dark-300 hover:border-dark-500'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm text-dark-400">Итого:</span>
+            <div className="flex gap-0.5" aria-label={`Оценка ${reviewRating} из 5`}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <span
+                  key={n}
+                  className={`text-xl leading-none ${n <= reviewRating ? 'text-yellow-400' : 'text-dark-600'}`}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+            <span className="text-sm text-dark-300">{reviewRating}/5</span>
           </div>
           <textarea
             className="input text-sm resize-none mb-3"
@@ -324,7 +374,7 @@ export default function TransactionPage() {
           />
           <button
             onClick={() => reviewMutation.mutate()}
-            disabled={reviewMutation.isPending}
+            disabled={reviewMutation.isPending || reviewRating < 1}
             className="btn-primary text-sm"
           >
             Отправить отзыв
@@ -333,15 +383,29 @@ export default function TransactionPage() {
       )}
       {isBuyer && tx.status === 'completed' && tx.has_review && (
         <div className="card p-5 mb-4 text-sm text-dark-300">
-          Вы уже оставили отзыв по этой сделке
-          {tx.review?.rating ? ` — ${tx.review.rating}/5` : ''}
+          <p>
+            Вы уже оставили отзыв по этой сделке
+            {tx.review?.rating ? ` — ${tx.review.rating}/5` : ''}
+          </p>
+          {labelsForCriteria(tx.review?.criteria).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {labelsForCriteria(tx.review.criteria).map((label) => (
+                <span
+                  key={label}
+                  className="px-2.5 py-1 rounded-lg text-xs bg-dark-800 border border-dark-700 text-dark-200"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {/* Chat */}
       <div className="card flex flex-col" style={{ height: '420px' }}>
         <div className="p-4 border-b border-dark-800 font-medium text-sm">Чат сделки</div>
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+        <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
           {messages.map((m) => {
             const isMe = m.sender_id === user?.id;
             if (m.is_system) {

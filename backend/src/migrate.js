@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS listings (
   is_featured BOOLEAN DEFAULT FALSE,
   delivery_method VARCHAR(50) DEFAULT 'manual',
   delivery_instructions TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -115,6 +116,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   reviewed_id UUID NOT NULL REFERENCES users(id),
   rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment TEXT,
+  criteria JSONB DEFAULT '[]',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -188,23 +190,248 @@ ON CONFLICT (slug) DO NOTHING;
 
 const alters = `
 ALTER TABLE users ADD COLUMN IF NOT EXISTS purchases_count INT DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) NOT NULL DEFAULT 'buyer';
+UPDATE users SET account_type = 'seller'
+WHERE account_type IS DISTINCT FROM 'seller'
+  AND (
+    COALESCE(sales_count, 0) > 0
+    OR EXISTS (SELECT 1 FROM listings l WHERE l.seller_id = users.id AND l.status != 'deleted')
+  );
+-- NULL first so existing rows can be marked "already chosen" once; new OAuth defaults to false
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type_chosen BOOLEAN;
+UPDATE users SET account_type_chosen = TRUE WHERE account_type_chosen IS NULL;
+ALTER TABLE users ALTER COLUMN account_type_chosen SET DEFAULT FALSE;
+ALTER TABLE users ALTER COLUMN account_type_chosen SET NOT NULL;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS original_price DECIMAL(12,2);
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_id BIGINT UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS apple_id TEXT UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id TEXT UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(20) DEFAULT 'email';
 ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_users_last_seen_at ON users (last_seen_at)
+  WHERE last_seen_at IS NOT NULL;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS buyer_fields JSONB DEFAULT '[]';
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '{}';
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS buyer_data JSONB DEFAULT '{}';
 ALTER TABLE users ALTER COLUMN avatar_url TYPE TEXT;
 UPDATE listings SET status='active' WHERE status='sold';
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
+UPDATE listings SET published_at = COALESCE(published_at, created_at) WHERE published_at IS NULL;
+ALTER TABLE listings ALTER COLUMN published_at SET DEFAULT NOW();
+CREATE INDEX IF NOT EXISTS idx_listings_expire
+  ON listings ((COALESCE(published_at, created_at)))
+  WHERE status = 'active';
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS criteria JSONB DEFAULT '[]';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_transaction_unique ON reviews(transaction_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_one_per_buyer_deal ON reviews(transaction_id, reviewer_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_auto_release ON transactions(auto_release_at) WHERE status='awaiting_confirmation';
 CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status);
+
+CREATE TABLE IF NOT EXISTS assortment_hidden (
+  item_key VARCHAR(200) PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  hidden_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_assortment_hidden_created ON assortment_hidden(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS listing_views (
+  listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+  viewer_key VARCHAR(80) NOT NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  ip_hash VARCHAR(64),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (listing_id, viewer_key)
+);
+ALTER TABLE listing_views ADD COLUMN IF NOT EXISTS ip_hash VARCHAR(64);
+CREATE INDEX IF NOT EXISTS idx_listing_views_user ON listing_views(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_listing_views_created ON listing_views(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_listing_views_listing_ip
+  ON listing_views (listing_id, ip_hash, created_at DESC)
+  WHERE ip_hash IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS contests (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug VARCHAR(20) NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  prize_sellers TEXT NOT NULL DEFAULT 'MacBook Air 15″ 256 ГБ',
+  prize_buyers TEXT NOT NULL DEFAULT 'MacBook Air 15″ 256 ГБ',
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  seller_winner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  buyer_winner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  seller_drawn_at TIMESTAMPTZ,
+  buyer_drawn_at TIMESTAMPTZ,
+  drawn_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  sellers_draw_snapshot JSONB,
+  buyers_draw_snapshot JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_contests_status_starts ON contests (status, starts_at DESC);
+
+CREATE TABLE IF NOT EXISTS platform_ledger (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entry_type VARCHAR(40) NOT NULL,
+  direction VARCHAR(10) NOT NULL CHECK (direction IN ('credit', 'debit')),
+  amount DECIMAL(14,2) NOT NULL CHECK (amount > 0),
+  description TEXT,
+  reference_id UUID,
+  reference_type VARCHAR(40),
+  meta JSONB,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_platform_ledger_created ON platform_ledger (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_platform_ledger_type_created
+  ON platform_ledger (entry_type, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_platform_ledger_idempotent
+  ON platform_ledger (entry_type, reference_id)
+  WHERE reference_id IS NOT NULL
+    AND entry_type IN ('sale_fee', 'listing_promote');
+
+CREATE TABLE IF NOT EXISTS platform_withdrawals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  amount DECIMAL(14,2) NOT NULL CHECK (amount > 0),
+  method VARCHAR(40) NOT NULL DEFAULT 'card',
+  destination TEXT,
+  note TEXT,
+  admin_note TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_platform_withdrawals_status_created
+  ON platform_withdrawals (status, created_at DESC);
+
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payout_available_at TIMESTAMPTZ;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payout_released_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_transactions_payout_available
+  ON transactions (payout_available_at)
+  WHERE status = 'completed'
+    AND payout_available_at IS NOT NULL
+    AND payout_released_at IS NULL;
 `;
+
+/** Usernames promoted to admin on each migrate (comma-separated). Default: Mercy */
+function bootstrapAdminUsernames() {
+  const raw = process.env.ADMIN_USERNAMES != null && String(process.env.ADMIN_USERNAMES).trim() !== ''
+    ? process.env.ADMIN_USERNAMES
+    : 'Mercy';
+  return [...new Set(
+    String(raw)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  )];
+}
+
+/** Platform owners (finance). Default: same as Mercy, or PLATFORM_OWNER_USERNAMES. */
+function bootstrapOwnerUsernames() {
+  const raw = process.env.PLATFORM_OWNER_USERNAMES != null
+    && String(process.env.PLATFORM_OWNER_USERNAMES).trim() !== ''
+    ? process.env.PLATFORM_OWNER_USERNAMES
+    : (process.env.ADMIN_USERNAMES != null && String(process.env.ADMIN_USERNAMES).trim() !== ''
+      ? String(process.env.ADMIN_USERNAMES).split(',')[0]
+      : 'Mercy');
+  return [...new Set(
+    String(raw)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  )];
+}
+
+async function promoteBootstrapAdmins(client) {
+  const usernames = bootstrapAdminUsernames();
+  for (const username of usernames) {
+    const { rowCount, rows } = await client.query(
+      `UPDATE users
+       SET role = 'admin', updated_at = NOW()
+       WHERE LOWER(username) = LOWER($1)
+         AND role IS DISTINCT FROM 'admin'
+         AND role IS DISTINCT FROM 'owner'
+       RETURNING username, role`,
+      [username]
+    );
+    if (rowCount > 0) {
+      console.log(`Promoted to admin: ${rows[0].username}`);
+    }
+  }
+
+  const owners = bootstrapOwnerUsernames();
+  for (const username of owners) {
+    const { rowCount, rows } = await client.query(
+      `UPDATE users
+       SET role = 'owner', updated_at = NOW()
+       WHERE LOWER(username) = LOWER($1) AND role IS DISTINCT FROM 'owner'
+       RETURNING username, role`,
+      [username]
+    );
+    if (rowCount > 0) {
+      console.log(`Promoted to owner: ${rows[0].username}`);
+    }
+  }
+}
+
+const foundersAlters = `
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_founding_seller BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founding_seller_number INT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founding_seller_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founders_email_norm TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founders_fingerprint TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS founders_ip TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founding_seller_number
+  ON users (founding_seller_number) WHERE founding_seller_number IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founders_email_norm
+  ON users (founders_email_norm) WHERE is_founding_seller = TRUE AND founders_email_norm IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founders_fingerprint
+  ON users (founders_fingerprint) WHERE is_founding_seller = TRUE AND founders_fingerprint IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_is_founding_seller
+  ON users (is_founding_seller) WHERE is_founding_seller = TRUE;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_listings_featured_until
+  ON listings (featured_until) WHERE featured_until IS NOT NULL;
+CREATE TABLE IF NOT EXISTS founders_applications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  message TEXT,
+  device_fingerprint TEXT,
+  ip TEXT,
+  email_norm TEXT,
+  admin_note TEXT,
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_founders_applications_status_created
+  ON founders_applications (status, created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_founders_applications_one_pending
+  ON founders_applications (user_id) WHERE status = 'pending';
+UPDATE users SET account_type = 'seller', account_type_chosen = TRUE, updated_at = NOW()
+  WHERE is_founding_seller = TRUE AND account_type IS DISTINCT FROM 'seller';
+`;
+
+async function migrateFounders(client) {
+  await client.query('BEGIN');
+  try {
+    await client.query('SET LOCAL statement_timeout = 15000');
+    await client.query(foundersAlters);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  }
+}
 
 async function migrate({ closePool = false } = {}) {
   const client = await pool.connect();
@@ -212,6 +439,12 @@ async function migrate({ closePool = false } = {}) {
     console.log('Running migrations...');
     await client.query(schema);
     await client.query(alters);
+    try {
+      await migrateFounders(client);
+    } catch (err) {
+      console.error('Founders migration skipped/failed:', err.message || err);
+    }
+    await promoteBootstrapAdmins(client);
     console.log('Migrations complete.');
   } catch (err) {
     console.error('Migration error:', err);

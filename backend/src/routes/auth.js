@@ -38,6 +38,11 @@ function envCredential(name) {
   return raw;
 }
 
+/** Explicit opt-in. VK / Apple are postponed until setup is ready. */
+function oauthFlagEnabled(name) {
+  return String(process.env[name] || '').trim().toLowerCase() === 'true';
+}
+
 function generateTokens(userId) {
   const accessToken = jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
   const refreshToken = crypto.randomBytes(48).toString('hex');
@@ -50,10 +55,20 @@ router.post('/register',
     body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 8 }).matches(/(?=.*[A-Za-z])(?=.*\d)/),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional().isBoolean(),
+    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
     const { username, email, password } = req.body;
+    const accountType = req.body.account_type === 'seller' ? 'seller' : 'buyer';
+    if (accountType === 'seller' && req.body.accept_seller_terms !== true) {
+      return res.status(400).json({
+        error: 'Для регистрации продавца нужно принять правила продажи',
+        code: 'SELLER_TERMS_REQUIRED',
+      });
+    }
     const client = await pool.connect();
     try {
       const exists = await client.query(
@@ -65,11 +80,13 @@ router.post('/register',
       }
       const hash = await bcrypt.hash(password, 12);
       const { rows } = await client.query(
-        `INSERT INTO users (username, email, password_hash) VALUES ($1,$2,$3)
-         RETURNING id, username, email, role, balance, avatar_url`,
-        [username, email, hash]
+        `INSERT INTO users (username, email, password_hash, account_type, account_type_chosen, auth_provider)
+         VALUES ($1,$2,$3,$4,TRUE,'email')
+         RETURNING id, username, email, role, balance, avatar_url, account_type, account_type_chosen,
+                   is_founding_seller, founding_seller_number, auth_provider, is_verified`,
+        [username, email, hash, accountType]
       );
-      const user = rows[0];
+      let user = rows[0];
       const { accessToken, refreshToken } = generateTokens(user.id);
       const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
       const expiresAt = new Date(Date.now() + REFRESH_EXPIRES_DAYS * 86400000);
@@ -84,7 +101,7 @@ router.post('/register',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: REFRESH_EXPIRES_DAYS * 86400000,
       });
-      res.status(201).json({ accessToken, user });
+      res.status(201).json({ accessToken, user: publicUser(user) });
     } finally {
       client.release();
     }
@@ -160,21 +177,53 @@ router.post('/logout', authenticate(false), async (req, res) => {
 });
 
 router.get('/me', authenticate(), (req, res) => {
-  res.json({ user: req.user });
+  res.json({ user: publicUser(req.user), needs_account_type: needsAccountType(req.user) });
 });
 
+function needsAccountType(user) {
+  return user?.account_type_chosen === false;
+}
+
 function publicUser(user) {
+  const accountType = user.account_type || 'buyer';
+  const chosen = user.account_type_chosen !== false;
   return {
     id: user.id,
     username: user.username,
     email: user.email,
     role: user.role,
+    account_type: accountType,
+    account_type_chosen: chosen,
+    needs_account_type: !chosen,
+    is_founding_seller: Boolean(user.is_founding_seller),
+    founding_seller_number: user.founding_seller_number || null,
     balance: user.balance,
     avatar_url: user.avatar_url,
     rating: user.rating,
     sales_count: user.sales_count,
     auth_provider: user.auth_provider || 'email',
+    is_verified: Boolean(user.is_verified),
   };
+}
+
+/** Optional buyer/seller choice from OAuth body (register flow). */
+function resolveOAuthAccountType(body = {}) {
+  const raw = body.account_type;
+  if (raw !== 'buyer' && raw !== 'seller') {
+    return { accountType: 'buyer', chosen: false };
+  }
+  if (raw === 'seller' && body.accept_seller_terms !== true && body.accept_seller_terms !== 'true') {
+    return {
+      error: {
+        status: 400,
+        body: {
+          error: 'Для регистрации продавца нужно принять правила продажи',
+          code: 'SELLER_TERMS_REQUIRED',
+        },
+      },
+    };
+  }
+  return { accountType: raw, chosen: true };
 }
 
 async function issueSession(res, req, user) {
@@ -195,20 +244,39 @@ async function issueSession(res, req, user) {
   return accessToken;
 }
 
+async function respondOAuth(res, req, user, { created = false } = {}) {
+  const accessToken = await issueSession(res, req, user);
+  res.json({
+    accessToken,
+    user: publicUser(user),
+    created,
+    needs_account_type: needsAccountType(user),
+  });
+}
+
 function oauthProviderConfig() {
   const base = frontendBaseUrl();
   const vkAppId = envCredential('VK_APP_ID');
   const appleClientId = envCredential('APPLE_CLIENT_ID');
+  const googleClientId = envCredential('GOOGLE_CLIENT_ID');
+  const googleClientSecret = envCredential('GOOGLE_CLIENT_SECRET');
   return {
     vk: {
-      enabled: Boolean(vkAppId),
+      // Postponed: set VK_OAUTH_ENABLED=true (+ VK_APP_ID) to show the button again
+      enabled: oauthFlagEnabled('VK_OAUTH_ENABLED') && Boolean(vkAppId),
       appId: vkAppId,
       redirectUri: `${base}/auth/vk/callback`,
     },
     apple: {
-      enabled: Boolean(appleClientId),
+      // Postponed: set APPLE_OAUTH_ENABLED=true (+ APPLE_CLIENT_ID) to show the button again
+      enabled: oauthFlagEnabled('APPLE_OAUTH_ENABLED') && Boolean(appleClientId),
       clientId: appleClientId,
       redirectUri: `${base}/auth/apple/callback`,
+    },
+    google: {
+      enabled: Boolean(googleClientId && googleClientSecret),
+      clientId: googleClientId,
+      redirectUri: `${base}/auth/google/callback`,
     },
   };
 }
@@ -227,6 +295,11 @@ router.get('/apple/config', (req, res) => {
   res.json(apple);
 });
 
+router.get('/google/config', (req, res) => {
+  const { google } = oauthProviderConfig();
+  res.json(google);
+});
+
 router.post('/vk',
   authLimiter,
   [
@@ -235,11 +308,21 @@ router.post('/vk',
     body('device_id').optional({ nullable: true }).trim(),
     body('redirect_uri').trim().isURL({ require_tld: false }),
     body('state').optional().trim(),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
+    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
     const appId = envCredential('VK_APP_ID');
-    if (!appId) return res.status(503).json({ error: 'VK ID не настроен (VK_APP_ID)' });
+    if (!oauthFlagEnabled('VK_OAUTH_ENABLED') || !appId) {
+      return res.status(503).json({ error: 'Вход через VK ID временно отключён' });
+    }
+
+    const accountChoice = resolveOAuthAccountType(req.body);
+    if (accountChoice.error) {
+      return res.status(accountChoice.error.status).json(accountChoice.error.body);
+    }
 
     const { code, code_verifier, redirect_uri, state } = req.body;
     const device_id = req.body.device_id || 'web';
@@ -289,6 +372,7 @@ router.post('/vk',
 
     let { rows } = await pool.query('SELECT * FROM users WHERE vk_id=$1', [vkId]);
     let user = rows[0];
+    let created = false;
 
     if (!user && vkUser.email) {
       const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [vkUser.email]);
@@ -311,12 +395,13 @@ router.post('/vk',
         username = `vk_${vkId}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
       }
       const inserted = await pool.query(
-        `INSERT INTO users (username, email, password_hash, avatar_url, vk_id, auth_provider, is_verified)
-         VALUES ($1,$2,NULL,$3,$4,'vk',TRUE)
+        `INSERT INTO users (username, email, password_hash, avatar_url, vk_id, auth_provider, is_verified, account_type, account_type_chosen)
+         VALUES ($1,$2,NULL,$3,$4,'vk',TRUE,$5,$6)
          RETURNING *`,
-        [username, email, vkUser.avatar || null, vkId]
+        [username, email, vkUser.avatar || null, vkId, accountChoice.accountType, accountChoice.chosen]
       );
       user = inserted.rows[0];
+      created = true;
     } else if (user.is_banned) {
       return res.status(403).json({ error: 'Account suspended' });
     } else if (vkUser.avatar && !user.avatar_url) {
@@ -327,8 +412,15 @@ router.post('/vk',
       user = updated.rows[0];
     }
 
-    const accessToken = await issueSession(res, req, user);
-    res.json({ accessToken, user: publicUser(user) });
+    if (created === false && accountChoice.chosen && user.account_type_chosen === false) {
+      const updated = await pool.query(
+        `UPDATE users SET account_type=$1, account_type_chosen=TRUE, updated_at=NOW() WHERE id=$2 RETURNING *`,
+        [accountChoice.accountType, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    await respondOAuth(res, req, user, { created });
   }
 );
 
@@ -337,11 +429,19 @@ router.post('/apple',
   [
     body('identityToken').trim().notEmpty(),
     body('user').optional({ nullable: true }),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
+    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
-    if (!envCredential('APPLE_CLIENT_ID')) {
-      return res.status(503).json({ error: 'Apple ID не настроен (APPLE_CLIENT_ID)' });
+    if (!oauthFlagEnabled('APPLE_OAUTH_ENABLED') || !envCredential('APPLE_CLIENT_ID')) {
+      return res.status(503).json({ error: 'Вход через Apple ID временно отключён' });
+    }
+
+    const accountChoice = resolveOAuthAccountType(req.body);
+    if (accountChoice.error) {
+      return res.status(accountChoice.error.status).json(accountChoice.error.body);
     }
 
     let claims;
@@ -372,6 +472,7 @@ router.post('/apple',
 
     let { rows } = await pool.query('SELECT * FROM users WHERE apple_id=$1', [appleId]);
     let user = rows[0];
+    let created = false;
 
     if (!user && appleEmail) {
       const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [appleEmail]);
@@ -393,12 +494,13 @@ router.post('/apple',
         username = `apple_${shortSub}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
       }
       const inserted = await pool.query(
-        `INSERT INTO users (username, email, password_hash, apple_id, auth_provider, is_verified)
-         VALUES ($1,$2,NULL,$3,'apple',TRUE)
+        `INSERT INTO users (username, email, password_hash, apple_id, auth_provider, is_verified, account_type, account_type_chosen)
+         VALUES ($1,$2,NULL,$3,'apple',TRUE,$4,$5)
          RETURNING *`,
-        [username, email, appleId]
+        [username, email, appleId, accountChoice.accountType, accountChoice.chosen]
       );
       user = inserted.rows[0];
+      created = true;
     } else if (user.is_banned) {
       return res.status(403).json({ error: 'Account suspended' });
     } else if (user.auth_provider !== 'apple') {
@@ -409,8 +511,145 @@ router.post('/apple',
       user = updated.rows[0];
     }
 
-    const accessToken = await issueSession(res, req, user);
-    res.json({ accessToken, user: publicUser(user) });
+    if (created === false && accountChoice.chosen && user.account_type_chosen === false) {
+      const updated = await pool.query(
+        `UPDATE users SET account_type=$1, account_type_chosen=TRUE, updated_at=NOW() WHERE id=$2 RETURNING *`,
+        [accountChoice.accountType, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    await respondOAuth(res, req, user, { created });
+  }
+);
+
+router.post('/google',
+  authLimiter,
+  [
+    body('code').trim().notEmpty(),
+    body('code_verifier').trim().isLength({ min: 43, max: 128 }),
+    body('redirect_uri').trim().isURL({ require_tld: false }),
+    body('state').optional().trim(),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
+    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
+  ],
+  validate,
+  async (req, res) => {
+    const clientId = envCredential('GOOGLE_CLIENT_ID');
+    const clientSecret = envCredential('GOOGLE_CLIENT_SECRET');
+    if (!clientId || !clientSecret) {
+      return res.status(503).json({ error: 'Google вход не настроен (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)' });
+    }
+
+    const accountChoice = resolveOAuthAccountType(req.body);
+    if (accountChoice.error) {
+      return res.status(accountChoice.error.status).json(accountChoice.error.body);
+    }
+
+    const { code, code_verifier, redirect_uri } = req.body;
+    const tokenBody = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      code_verifier,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri,
+    });
+
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenBody,
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || tokenData.error || !tokenData.access_token) {
+      return res.status(401).json({
+        error: tokenData.error_description || tokenData.error || 'Google token exchange failed',
+      });
+    }
+
+    const infoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const googleUser = await infoRes.json();
+    if (!infoRes.ok || !googleUser.sub) {
+      return res.status(401).json({
+        error: googleUser.error_description || googleUser.error || 'Google userinfo failed',
+      });
+    }
+
+    const googleId = String(googleUser.sub);
+    const email = (typeof googleUser.email === 'string' && googleUser.email.includes('@'))
+      ? googleUser.email
+      : `google_${googleId.slice(0, 24)}@google.users.local`;
+    const given = String(googleUser.given_name || googleUser.name || 'user')
+      .replace(/[^a-zA-Z0-9_]/g, '')
+      .slice(0, 20) || 'user';
+    let username = `g_${given}_${googleId.slice(-8)}`.slice(0, 50).toLowerCase();
+    const avatar = typeof googleUser.picture === 'string' ? googleUser.picture : null;
+
+    let { rows } = await pool.query('SELECT * FROM users WHERE google_id=$1', [googleId]);
+    let user = rows[0];
+    let created = false;
+
+    if (!user && googleUser.email) {
+      const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [googleUser.email]);
+      if (byEmail.rows[0]) {
+        const linked = await pool.query(
+          `UPDATE users SET google_id=$1, auth_provider='google',
+             avatar_url=COALESCE(avatar_url, $2),
+             is_verified=COALESCE($3, is_verified),
+             updated_at=NOW()
+           WHERE id=$4
+           RETURNING *`,
+          [googleId, avatar, googleUser.email_verified === true, byEmail.rows[0].id]
+        );
+        user = linked.rows[0];
+      }
+    }
+
+    if (!user) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const exists = await pool.query(
+          'SELECT id FROM users WHERE username=$1 OR email=$2',
+          [username, email]
+        );
+        if (!exists.rows.length) break;
+        username = `g_${googleId.slice(-10)}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
+      }
+      const inserted = await pool.query(
+        `INSERT INTO users (username, email, password_hash, avatar_url, google_id, auth_provider, is_verified, account_type, account_type_chosen)
+         VALUES ($1,$2,NULL,$3,$4,'google',$5,$6,$7)
+         RETURNING *`,
+        [username, email, avatar, googleId, googleUser.email_verified === true, accountChoice.accountType, accountChoice.chosen]
+      );
+      user = inserted.rows[0];
+      created = true;
+    } else if (user.is_banned) {
+      return res.status(403).json({ error: 'Account suspended' });
+    } else {
+      const updated = await pool.query(
+        `UPDATE users SET
+           auth_provider='google',
+           avatar_url=COALESCE(avatar_url, $1),
+           updated_at=NOW()
+         WHERE id=$2
+         RETURNING *`,
+        [avatar, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    if (created === false && accountChoice.chosen && user.account_type_chosen === false) {
+      const updated = await pool.query(
+        `UPDATE users SET account_type=$1, account_type_chosen=TRUE, updated_at=NOW() WHERE id=$2 RETURNING *`,
+        [accountChoice.accountType, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    await respondOAuth(res, req, user, { created });
   }
 );
 

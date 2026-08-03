@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, X, Bell, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock';
 
 const STORAGE_KEY = 'gm_notification_prefs';
 
@@ -59,10 +60,10 @@ export default function NotificationsModal({ open, onBack, onClose }) {
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      unlockBodyScroll();
     };
   }, [open, onClose]);
 

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
@@ -20,10 +20,34 @@ import ChatsPage from './pages/ChatsPage';
 import ChatPage from './pages/ChatPage';
 import VkCallbackPage from './pages/VkCallbackPage';
 import AppleCallbackPage from './pages/AppleCallbackPage';
+import GoogleCallbackPage from './pages/GoogleCallbackPage';
+import AdminHubPage from './pages/AdminHubPage';
 import AdminDisputesPage from './pages/AdminDisputesPage';
+import AdminAssortmentPage from './pages/AdminAssortmentPage';
+import AdminFoundersPage from './pages/AdminFoundersPage';
+import AdminStatsPage from './pages/AdminStatsPage';
+import AdminContestPage from './pages/AdminContestPage';
+import AdminFinancePage from './pages/AdminFinancePage';
+import ContestPage from './pages/ContestPage';
 import AppsPage from './pages/AppsPage';
+import GameLandingPage from './pages/GameLandingPage';
+import AboutPage from './pages/AboutPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import SellerRoute from './components/SellerRoute';
 import AdminRoute from './components/AdminRoute';
+import OwnerRoute from './components/OwnerRoute';
+import BecomeSellerPage from './pages/BecomeSellerPage';
+import CompleteAccountTypePage from './pages/CompleteAccountTypePage';
+import FoundersPage from './pages/FoundersPage';
+import ImportListingsPage from './pages/ImportListingsPage';
+import useAuthStore from './store/authStore';
+
+/** /users without username → own profile or login */
+function UsersIndexRedirect() {
+  const user = useAuthStore((s) => s.user);
+  if (user?.username) return <Navigate to={`/users/${user.username}`} replace />;
+  return <Navigate to="/login" replace />;
+}
 
 export default function App() {
   return (
@@ -31,31 +55,54 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="apps" element={<AppsPage />} />
+        <Route path="apps/:slug/:offerType" element={<GameLandingPage section="apps" />} />
+        <Route path="apps/:slug" element={<GameLandingPage section="apps" />} />
+        <Route path="games/:slug/:offerType" element={<GameLandingPage section="games" />} />
+        <Route path="games/:slug" element={<GameLandingPage section="games" />} />
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="listings/:id" element={<ListingPage />} />
+        <Route path="users" element={<UsersIndexRedirect />} />
         <Route path="users/:username" element={<ProfilePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="auth/vk/callback" element={<VkCallbackPage />} />
         <Route path="auth/apple/callback" element={<AppleCallbackPage />} />
+        <Route path="auth/google/callback" element={<GoogleCallbackPage />} />
         <Route path="rules" element={<RulesPage />} />
         <Route path="faq" element={<FaqPage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="founders" element={<FoundersPage />} />
+        <Route path="contest" element={<ContestPage />} />
         <Route path="support" element={<SupportPage />} />
         <Route path="terms-of-sale" element={<TermsOfSalePage />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="user-agreement" element={<UserAgreementPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="listings/create" element={<CreateListingPage />} />
-          <Route path="listings/:id/edit" element={<CreateListingPage />} />
+          <Route path="complete-account-type" element={<CompleteAccountTypePage />} />
+          <Route path="become-seller" element={<BecomeSellerPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="transactions/:id" element={<TransactionPage />} />
           <Route path="wallet" element={<WalletPage />} />
           <Route path="chats" element={<ChatsPage />} />
           <Route path="chats/:id" element={<ChatPage />} />
         </Route>
-        <Route element={<AdminRoute />}>
-          <Route path="admin/disputes" element={<AdminDisputesPage />} />
+        <Route element={<SellerRoute />}>
+          <Route path="listings/create" element={<CreateListingPage />} />
+          <Route path="listings/import" element={<ImportListingsPage />} />
+          <Route path="listings/:id/edit" element={<CreateListingPage />} />
         </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="admin" element={<AdminHubPage />} />
+          <Route path="admin/stats" element={<AdminStatsPage />} />
+          <Route element={<OwnerRoute />}>
+            <Route path="admin/finance" element={<AdminFinancePage />} />
+          </Route>
+          <Route path="admin/contest" element={<AdminContestPage />} />
+          <Route path="admin/disputes" element={<AdminDisputesPage />} />
+          <Route path="admin/assortment" element={<AdminAssortmentPage />} />
+          <Route path="admin/founders" element={<AdminFoundersPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );

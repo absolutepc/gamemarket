@@ -1,16 +1,20 @@
 /**
  * Lootz fees: Playerok-like tiers, ~2.5% lower.
  * Playerok ~10% / ~20%  →  Lootz 7.5% / 17.5%
+ * Founders: 5% / 13%
+ *
+ * 7.5% (5% founders): донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
+ * 17.5% (13% founders): всё остальное
  */
 
-const FEE_REDUCED = 0.075; // подписки, пополнения, карты, ИИ
-const FEE_STANDARD = 0.175; // аккаунты, предметы, валюта, бусты и пр.
+const { FEE_FOUNDERS_REDUCED, FEE_FOUNDERS_STANDARD } = require('./founders');
+
+const FEE_REDUCED = 0.075;
+const FEE_STANDARD = 0.175;
 
 const REDUCED_CATEGORY_SLUGS = new Set([
   'subscriptions',
   'topups',
-  'gift-cards',
-  'ai-services',
 ]);
 
 const REDUCED_LISTING_TYPES = new Set([
@@ -18,22 +22,63 @@ const REDUCED_LISTING_TYPES = new Set([
   'donate',
   'topup',
   'keys',
-  'giftcard', // legacy
+  'skins',
+  'games',
+  'item',
+  'giftcard',
+  'stars',
+  'nft_gifts',
+  'stickers',
+  'coins',
+  'promotion',
+  'boosting',
+  'game_account',
+  'packs',
+  'license',
+  'software',
+  'ps_plus',
+  'ea_play',
+  'premium',
+  'youtube_music',
+  'youtube_tv',
+  'game_pass',
+  'ubisoft_plus',
+  'voices',
+  'vk_music',
+  'vk_play',
+  'bits',
+  'tariff',
+  'tokens',
+  'diamonds',
+  'superlikes',
+  'beans',
+  'promocodes',
+  'plugins',
+  'zems',
+  'mochi',
+  'gold',
+  'elixir',
+  'trovo_ace',
+  'mana',
+  'addons',
+  'nitro',
+  'decorations',
+  'nintendo_switch_online',
 ]);
 
-function resolveFeePercent({ categorySlug, listingType } = {}) {
-  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) {
-    return FEE_REDUCED;
+function isReducedTier({ categorySlug, listingType } = {}) {
+  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return true;
+  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return true;
+  return false;
+}
+
+function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
+  const reduced = isReducedTier({ categorySlug, listingType });
+  const founding = isFoundingSeller === true || isFoundingSeller === 't' || isFoundingSeller === 1;
+  if (founding) {
+    return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
   }
-  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) {
-    return FEE_REDUCED;
-  }
-  // If category explicitly exists and is not reduced → standard
-  if (categorySlug) {
-    return FEE_STANDARD;
-  }
-  // No category: fall back to listing type (already checked reduced), else standard
-  return FEE_STANDARD;
+  return reduced ? FEE_REDUCED : FEE_STANDARD;
 }
 
 function calcPlatformFee(price, opts = {}) {
@@ -46,6 +91,7 @@ function calcPlatformFee(price, opts = {}) {
     feePercentLabel: `${(percent * 100).toFixed(1)}%`,
     fee,
     sellerReceives,
+    isFoundingSeller: Boolean(opts.isFoundingSeller),
   };
 }
 
@@ -56,9 +102,12 @@ function feePercentForCategorySlug(slug) {
 module.exports = {
   FEE_REDUCED,
   FEE_STANDARD,
+  FEE_FOUNDERS_REDUCED,
+  FEE_FOUNDERS_STANDARD,
   PLATFORM_FEE_PERCENT: FEE_REDUCED, // legacy default (reduced tier)
   REDUCED_CATEGORY_SLUGS,
   REDUCED_LISTING_TYPES,
+  isReducedTier,
   resolveFeePercent,
   calcPlatformFee,
   feePercentForCategorySlug,

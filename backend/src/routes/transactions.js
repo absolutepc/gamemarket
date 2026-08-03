@@ -4,7 +4,7 @@ const pool = require('../config/database');
 const { authenticate } = require('../middleware/auth');
 const { strictLimiter, validate } = require('../middleware/security');
 const {
-  BUYER_CONFIRM_DAYS,
+  BUYER_CONFIRM_HOURS,
   SELLER_OFFLINE_CANCEL_HOURS,
   releaseEscrow,
   refundEscrow,
@@ -30,9 +30,11 @@ router.post('/',
       await client.query('BEGIN');
 
       const { rows: listings } = await client.query(
-        `SELECT l.*, c.slug AS category_slug
+        `SELECT l.*, c.slug AS category_slug,
+                COALESCE(u.is_founding_seller, FALSE) AS seller_is_founding
          FROM listings l
          LEFT JOIN categories c ON c.id = l.category_id
+         JOIN users u ON u.id = l.seller_id
          WHERE l.id=$1 AND l.status='active'
          FOR UPDATE OF l`,
         [listing_id]
@@ -71,6 +73,7 @@ router.post('/',
       const { fee, sellerReceives } = calcPlatformFee(price, {
         categorySlug: listing.category_slug,
         listingType: listing.listing_type,
+        isFoundingSeller: Boolean(listing.seller_is_founding),
       });
 
       await client.query(
@@ -166,7 +169,7 @@ router.get('/:id', authenticate(), async (req, res) => {
   if (
     String(tx.buyer_id) !== String(req.user.id)
     && String(tx.seller_id) !== String(req.user.id)
-    && req.user.role !== 'admin'
+    && req.user.role !== 'admin' && req.user.role !== 'owner'
   ) {
     return res.status(403).json({ error: 'Forbidden' });
   }
@@ -180,7 +183,8 @@ router.get('/:id', authenticate(), async (req, res) => {
       [req.params.id]
     ),
     pool.query(
-      'SELECT id, rating, comment, created_at FROM reviews WHERE transaction_id=$1 LIMIT 1',
+      `SELECT id, rating, comment, COALESCE(criteria, '[]'::jsonb) AS criteria, created_at
+       FROM reviews WHERE transaction_id=$1 LIMIT 1`,
       [req.params.id]
     ),
     pool.query(
@@ -198,16 +202,19 @@ router.get('/:id', authenticate(), async (req, res) => {
     has_review: reviewRows.length > 0,
     review: reviewRows[0] || null,
     dispute: disputeRows[0] || null,
+    is_buyer: String(tx.buyer_id) === String(req.user.id),
+    is_seller: String(tx.seller_id) === String(req.user.id),
+    can_confirm: tx.status === 'awaiting_confirmation' && String(tx.buyer_id) === String(req.user.id),
     can_cancel: cancelInfo.allowed && String(tx.buyer_id) === String(req.user.id),
     can_seller_cancel: tx.status === 'awaiting_delivery' && String(tx.seller_id) === String(req.user.id),
     cancel_info: cancelInfo,
     confirm_deadline_at: tx.auto_release_at || null,
-    buyer_confirm_days: BUYER_CONFIRM_DAYS,
+    buyer_confirm_hours: BUYER_CONFIRM_HOURS,
     seller_offline_cancel_hours: SELLER_OFFLINE_CANCEL_HOURS,
   });
 });
 
-// Seller marks delivered → buyer has 7 days to confirm
+// Seller marks delivered → buyer has 48h to confirm (auto-release otherwise)
 router.post('/:id/deliver', authenticate(), async (req, res) => {
   const client = await pool.connect();
   try {
@@ -226,7 +233,7 @@ router.post('/:id/deliver', authenticate(), async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const autoRelease = new Date(Date.now() + BUYER_CONFIRM_DAYS * 86400000);
+    const autoRelease = new Date(Date.now() + BUYER_CONFIRM_HOURS * 3600 * 1000);
     const { delivery_data } = req.body;
     await client.query(
       `UPDATE transactions SET status='awaiting_confirmation', seller_delivered_at=NOW(),
@@ -239,7 +246,7 @@ router.post('/:id/deliver', authenticate(), async (req, res) => {
       [
         req.params.id,
         req.user.id,
-        `Продавец передал товар. Покупатель должен подтвердить получение в течение ${BUYER_CONFIRM_DAYS} дней, иначе средства уйдут продавцу автоматически.`,
+        `Продавец передал товар. Покупатель должен подтвердить получение в течение ${BUYER_CONFIRM_HOURS} ч с момента передачи, иначе средства уйдут продавцу автоматически.`,
       ]
     );
     await client.query(
@@ -247,7 +254,7 @@ router.post('/:id/deliver', authenticate(), async (req, res) => {
        VALUES ($1,'delivery','Товар отправлен',$2,$3)`,
       [
         tx.buyer_id,
-        `Подтвердите получение в течение ${BUYER_CONFIRM_DAYS} дней`,
+        `Подтвердите получение в течение ${BUYER_CONFIRM_HOURS} ч`,
         JSON.stringify({ transaction_id: req.params.id }),
       ]
     );
@@ -348,7 +355,7 @@ router.post('/:id/cancel', authenticate(), async (req, res) => {
     }
     const isBuyer = String(tx.buyer_id) === String(req.user.id);
     const isSeller = String(tx.seller_id) === String(req.user.id);
-    const isAdmin = req.user.role === 'admin';
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'owner';
     if (!isBuyer && !isSeller && !isAdmin) {
       await client.query('ROLLBACK');
       return res.status(403).json({ error: 'Forbidden' });

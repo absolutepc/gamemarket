@@ -8,11 +8,12 @@ import {
   Film, Clock, Puzzle, Palette, GraduationCap, ShoppingBag,
 } from 'lucide-react';
 import api from '../utils/api';
-import ListingCard, { LISTING_GRID_CLASS } from '../components/ListingCard';
+import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
+import { getAssortmentPath } from '../utils/gameSlug';
 import HomeHeroSlider from '../components/HomeHeroSlider';
-import { ASSORTMENT, ASSORTMENT_PREVIEW_COUNT, HOME_TOP_14 } from '../data/assortment';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
+import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 
 const LISTING_TYPE_ICONS = {
   subscription: Sparkles,
@@ -37,158 +38,294 @@ const LISTING_TYPE_ICONS = {
 
 
 
+const DESKTOP_VISIBLE = 16; // exact items per page — no partial peek
+const DESKTOP_ITEMS = 31; // + mosaic folder = 32
+const MOBILE_ITEMS = 22; // pinned carousel block
+const CAT_PAGE_SIZE = 10; // exact categories on first page — no 11th peek
+
 export default function HomePage() {
   const scrollRef = useRef(null);
-  const [itemWidth, setItemWidth] = useState(0);
-  const gapPx = 6;
-  const sidePad = 12;
-  const visibleCount = 5;
+  const catScrollRef = useRef(null);
+  const [tileWidth, setTileWidth] = useState(72);
+  const [gapPx, setGapPx] = useState(12);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canCatLeft, setCanCatLeft] = useState(false);
+  const [canCatRight, setCanCatRight] = useState(false);
+  const [catViewport, setCatViewport] = useState(0);
 
-  // Explicit top-14 list (not a slice of a reordered catalog)
-  const previewItems = HOME_TOP_14;
-  const moreCount = Math.max(0, ASSORTMENT.length - ASSORTMENT_PREVIEW_COUNT);
-  const mosaicIcons = useMemo(
-    () => ASSORTMENT.slice(ASSORTMENT_PREVIEW_COUNT, ASSORTMENT_PREVIEW_COUNT + 4).map((p) => p.icon),
-    []
+  const catPage1 = useMemo(() => LISTING_TYPE_OPTIONS.slice(0, CAT_PAGE_SIZE), []);
+  const catPage2 = useMemo(() => LISTING_TYPE_OPTIONS.slice(CAT_PAGE_SIZE), []);
+  const { items: visibleAssortment, homeCarousel } = useVisibleAssortment();
+
+  // Desktop: 31 items + mosaic; mobile: pinned 22 + mosaic
+  const previewItems = useMemo(
+    () => homeCarousel.slice(0, isDesktop ? DESKTOP_ITEMS : MOBILE_ITEMS),
+    [isDesktop, homeCarousel]
   );
+  const moreCount = Math.max(0, visibleAssortment.length - previewItems.length);
+  const mosaicIcons = useMemo(
+    () => homeCarousel.slice(previewItems.length, previewItems.length + 4).map((p) => p.icon),
+    [homeCarousel, previewItems.length]
+  );
+
+  const updateScrollEdges = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const left = el.scrollLeft;
+    setCanScrollLeft(left > 6);
+    setCanScrollRight(maxScroll > 6 && left < maxScroll - 6);
+  };
+
+  const updateCatScrollEdges = () => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    const left = el.scrollLeft;
+    setCanCatLeft(left > 6);
+    setCanCatRight(maxScroll > 6 && left < maxScroll - 6);
+  };
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return undefined;
+
     const update = () => {
-      const w = Math.max(0, el.clientWidth - sidePad * 2);
-      setItemWidth((w - gapPx * (visibleCount - 1)) / visibleCount);
+      const desktop = window.matchMedia('(min-width: 1024px)').matches;
+      setIsDesktop(desktop);
+      const gap = 12;
+      setGapPx(gap);
+
+      if (desktop) {
+        // Fit exactly 16 tiles into the container — next page never peeks
+        const w = el.clientWidth;
+        const size = (w - gap * (DESKTOP_VISIBLE - 1)) / DESKTOP_VISIBLE;
+        setTileWidth(Math.max(48, size));
+      } else {
+        setTileWidth(72);
+      }
+      requestAnimationFrame(updateScrollEdges);
     };
+
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    el.addEventListener('scroll', updateScrollEdges, { passive: true });
+    el.addEventListener('scrollend', updateScrollEdges);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener('scroll', updateScrollEdges);
+      el.removeEventListener('scrollend', updateScrollEdges);
+      window.removeEventListener('resize', update);
+    };
   }, []);
 
-  const { data: listings } = useQuery({
+  useEffect(() => {
+    requestAnimationFrame(updateScrollEdges);
+  }, [previewItems.length, tileWidth, gapPx]);
+
+  useEffect(() => {
+    const el = catScrollRef.current;
+    if (!el) return undefined;
+    const onScroll = () => updateCatScrollEdges();
+    const onResize = () => {
+      setCatViewport(el.clientWidth);
+      requestAnimationFrame(updateCatScrollEdges);
+    };
+    setCatViewport(el.clientWidth);
+    updateCatScrollEdges();
+    const ro = new ResizeObserver(onResize);
+    ro.observe(el);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    el.addEventListener('scrollend', onScroll);
+    window.addEventListener('resize', onResize);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('scrollend', onScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  const { data: listings, isLoading: listingsLoading, isError: listingsError } = useQuery({
     queryKey: ['listings', 'featured'],
     queryFn: () => api.get('/listings?limit=12&sort=popular').then((r) => r.data),
+    retry: 1,
+    staleTime: 30_000,
   });
 
   const scrollAssortment = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
-    // Move by exactly one "page" of 5 items
-    const amount = itemWidth
-      ? (itemWidth + gapPx) * visibleCount
-      : el.clientWidth - sidePad * 2;
-    el.scrollBy({ left: dir * amount, behavior: 'smooth' });
+    if (isDesktop) {
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      // Step = one full page including the gap after the 16th item
+      // so page 2 lands exactly at maxScroll (fixes stuck right arrow)
+      const step = DESKTOP_VISIBLE * (tileWidth + gapPx);
+      let target = el.scrollLeft + dir * step;
+      if (dir > 0) target = Math.min(maxScroll, target);
+      else target = Math.max(0, target);
+      if (dir > 0 && target >= maxScroll - 2) target = maxScroll;
+      if (dir < 0 && target <= 2) target = 0;
+      el.scrollTo({ left: target, behavior: 'smooth' });
+      window.setTimeout(updateScrollEdges, 400);
+    } else {
+      const step = tileWidth + gapPx;
+      const page = Math.max(1, Math.floor(el.clientWidth / step));
+      el.scrollBy({ left: dir * step * page, behavior: 'smooth' });
+      window.setTimeout(updateScrollEdges, 400);
+    }
   };
+
+  const scrollCategories = (dir) => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    const pageWidth = catViewport || el.clientWidth;
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+    let target = dir > 0 ? pageWidth : 0;
+    target = Math.max(0, Math.min(maxScroll, target));
+    el.scrollTo({ left: target, behavior: 'smooth' });
+    window.setTimeout(updateCatScrollEdges, 400);
+  };
+
+  const renderCatChip = (opt) => {
+    const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
+    return (
+      <Link
+        key={opt.value}
+        to={`/catalog?type=${encodeURIComponent(opt.value)}`}
+        className="min-w-0 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
+                   hover:border-[#2B71F3]/40 text-sm transition-colors"
+      >
+        <Icon size={14} className="text-[#2B71F3] shrink-0" />
+        <span className="truncate">{opt.label}</span>
+      </Link>
+    );
+  };
+
+  const glassArrowClass =
+    'hidden lg:flex absolute z-20 w-11 h-11 rounded-full items-center justify-center ' +
+    'bg-white/10 hover:bg-white/20 text-white border border-white/20 ' +
+    'backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition-colors';
 
   return (
     <div>
       <Seo
-        title="Торговая площадка цифровых товаров"
-        description="Lootz — маркетплейс цифровых товаров и услуг с безопасными сделками через эскроу."
+        title="Lootz — маркетплейс игровых товаров и услуг"
+        absoluteTitle
+        description="Покупайте и продавайте аккаунты, игровую валюту, предметы и бусты. Безопасные сделки между игроками с гарантией эскроу."
         path="/"
       />
 
       <HomeHeroSlider />
 
-      {/* Assortment of games & services — Playerok-style: 5 per page, 14 + "all" */}
-      <section className="pt-8 pb-2">
-        <div className="px-3 sm:px-4 flex items-center justify-between mb-3">
-          <h2 className="text-lg sm:text-xl font-bold">Игры и сервисы</h2>
-          <div className="hidden lg:flex items-center gap-2">
+      {/* Assortment: 16 exact per desktop page, side glass arrows */}
+      <section className={`${PAGE_WIDTH_CLASS} pt-5 lg:pt-6 pb-1`}>
+        <div className="flex items-center justify-between mb-2.5 lg:mb-3">
+          <h2 className="text-base lg:text-lg font-bold">Игры и сервисы</h2>
+        </div>
+
+        <div className="relative">
+          {canScrollLeft && (
             <button
               type="button"
               onClick={() => scrollAssortment(-1)}
-              className="w-9 h-9 rounded-full bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
+              className={`${glassArrowClass} left-0 -translate-x-1/2 -translate-y-1/2`}
+              style={{ top: Math.max(24, tileWidth / 2 + 4) }}
               aria-label="Назад"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={22} />
             </button>
+          )}
+          {canScrollRight && (
             <button
               type="button"
               onClick={() => scrollAssortment(1)}
-              className="w-9 h-9 rounded-full bg-dark-800 border border-dark-700 flex items-center justify-center text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
+              className={`${glassArrowClass} right-0 translate-x-1/2 -translate-y-1/2`}
+              style={{ top: Math.max(24, tileWidth / 2 + 4) }}
               aria-label="Вперёд"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={22} />
             </button>
-          </div>
-        </div>
+          )}
 
-        <div
-          ref={scrollRef}
-          className="flex overflow-x-auto pt-2 pb-4 scroll-smooth snap-x snap-mandatory
-                     [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          style={{ gap: `${gapPx}px`, paddingLeft: sidePad, paddingRight: sidePad }}
-        >
-          {previewItems.map((item, index) => (
+          <div
+            ref={scrollRef}
+            className="flex overflow-x-auto lg:overflow-x-hidden pt-1 pb-3 scroll-smooth
+                       [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ gap: `${gapPx}px` }}
+          >
+            {previewItems.map((item) => (
+              <Link
+                key={item.catalog || item.search + item.name}
+                to={getAssortmentPath(item)}
+                className="shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10"
+                style={{ width: tileWidth }}
+              >
+                <div
+                  className="w-full aspect-square rounded-[18%] overflow-hidden
+                              bg-dark-800 ring-1 ring-white/10
+                              group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200"
+                >
+                  <img
+                    src={item.icon}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/assortment/other-apps.png';
+                    }}
+                  />
+                </div>
+                <span className="text-[11px] lg:text-[12px] text-dark-300 group-hover:text-white text-center leading-tight truncate w-full px-0.5 transition-colors">
+                  {item.name}
+                </span>
+              </Link>
+            ))}
+
+            {/* End tile: mosaic folder → all games & services */}
             <Link
-              key={item.search + item.name}
-              to={`/catalog?search=${encodeURIComponent(item.search)}`}
-              className={`shrink-0 group flex flex-col items-center gap-1.5 relative z-0 hover:z-10 ${
-                index % visibleCount === 0 ? 'snap-start' : ''
-              }`}
-              style={itemWidth ? { width: itemWidth } : { width: `calc((100% - ${sidePad * 2}px - ${gapPx * 4}px) / 5)` }}
+              to="/apps?tab=games"
+              className="shrink-0 group flex flex-col items-center gap-1.5"
+              style={{ width: tileWidth }}
+              aria-label="Все игры и сервисы"
             >
               <div
-                className="w-full aspect-square rounded-[22%] overflow-hidden
-                            bg-dark-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-1 ring-white/10
-                            group-hover:scale-105 group-hover:ring-[#2B71F3]/50 transition-all duration-200"
+                className="w-full aspect-square rounded-[18%] overflow-hidden
+                            bg-dark-800 ring-1 ring-white/10
+                            group-hover:scale-[1.04] group-hover:ring-[#2B71F3]/45 transition-all duration-200
+                            grid grid-cols-2 grid-rows-2 gap-[2px] p-[2px]"
               >
-                <img
-                  src={item.icon}
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assortment/other-apps.png';
-                  }}
-                />
+                {mosaicIcons.map((src, i) => (
+                  <img
+                    key={`${src}-${i}`}
+                    src={src}
+                    alt=""
+                    className="w-full h-full object-cover rounded-[28%]"
+                    loading="lazy"
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/assortment/other-apps.png';
+                    }}
+                  />
+                ))}
               </div>
-              <span className="text-[10px] sm:text-[11px] text-dark-300 group-hover:text-white text-center leading-tight line-clamp-2 w-full px-0.5 transition-colors">
-                {item.name}
+              <span className="text-[11px] lg:text-[12px] text-[#2B71F3] font-semibold text-center leading-tight">
+                +{moreCount.toLocaleString('ru-RU')}
               </span>
             </Link>
-          ))}
-
-          {/* 15th tile: mosaic → all games & services (Playerok-style) */}
-          <Link
-            to="/apps?tab=games"
-            className="shrink-0 group flex flex-col items-center gap-1.5"
-            style={itemWidth ? { width: itemWidth } : { width: `calc((100% - ${sidePad * 2}px - ${gapPx * 4}px) / 5)` }}
-            aria-label="Все игры и сервисы"
-          >
-            <div
-              className="w-full aspect-square rounded-[22%] overflow-hidden
-                          bg-dark-800 shadow-[0_8px_24px_rgba(0,0,0,0.35)] ring-1 ring-white/10
-                          group-hover:scale-105 group-hover:ring-[#2B71F3]/50 transition-all duration-200
-                          grid grid-cols-2 grid-rows-2 gap-[3px] p-[3px]"
-            >
-              {mosaicIcons.map((src, i) => (
-                <img
-                  key={`${src}-${i}`}
-                  src={src}
-                  alt=""
-                  className="w-full h-full object-cover rounded-[28%]"
-                  loading="lazy"
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/assortment/other-apps.png';
-                  }}
-                />
-              ))}
-            </div>
-            <span className="text-[10px] sm:text-[11px] text-[#2B71F3] font-semibold text-center leading-tight">
-              +{moreCount.toLocaleString('ru-RU')}
-            </span>
-          </Link>
+          </div>
         </div>
       </section>
 
       {/* Steam top-up promo — Playerok-style featured block */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2">
+      <section className={`${PAGE_WIDTH_CLASS} pt-4 pb-2`}>
         <Link
           to="/catalog?search=Steam"
           className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 rounded-2xl bg-dark-900 border border-dark-800
@@ -218,8 +355,12 @@ export default function HomePage() {
         </Link>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2">
-        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+      <section className={`${PAGE_WIDTH_CLASS} pt-5 pb-2`}>
+        {/* Mobile: simple horizontal chips (pre-arrow layout) */}
+        <div
+          className="flex gap-2 overflow-x-auto pb-2 lg:hidden"
+          style={{ scrollbarWidth: 'none' }}
+        >
           {LISTING_TYPE_OPTIONS.map((opt) => {
             const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
             return (
@@ -235,10 +376,71 @@ export default function HomePage() {
             );
           })}
         </div>
+
+        {/* Desktop: glass-arrow carousel, 10 per page */}
+        <div className="relative hidden lg:block">
+          {canCatLeft && (
+            <button
+              type="button"
+              onClick={() => scrollCategories(-1)}
+              className={`${glassArrowClass} left-0 -translate-x-1/2 top-1/2 -translate-y-1/2`}
+              aria-label="Категории назад"
+            >
+              <ChevronLeft size={22} />
+            </button>
+          )}
+          {canCatRight && (
+            <button
+              type="button"
+              onClick={() => scrollCategories(1)}
+              className={`${glassArrowClass} right-0 translate-x-1/2 top-1/2 -translate-y-1/2`}
+              aria-label="Категории вперёд"
+            >
+              <ChevronRight size={22} />
+            </button>
+          )}
+
+          <div
+            ref={catScrollRef}
+            className="flex overflow-x-hidden scroll-smooth
+                       [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div
+              className="shrink-0 grid gap-2"
+              style={{
+                width: catViewport ? `${catViewport}px` : '100%',
+                gridTemplateColumns: `repeat(${CAT_PAGE_SIZE}, minmax(0, 1fr))`,
+              }}
+            >
+              {catPage1.map(renderCatChip)}
+            </div>
+            {catPage2.length > 0 && (
+              <div
+                className="shrink-0 flex gap-2"
+                style={{ minWidth: catViewport ? `${catViewport}px` : '100%' }}
+              >
+                {catPage2.map((opt) => {
+                  const Icon = LISTING_TYPE_ICONS[opt.value] || Package;
+                  return (
+                    <Link
+                      key={opt.value}
+                      to={`/catalog?type=${encodeURIComponent(opt.value)}`}
+                      className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-900 border border-dark-800
+                                 hover:border-[#2B71F3]/40 text-sm transition-colors"
+                    >
+                      <Icon size={14} className="text-[#2B71F3] shrink-0" />
+                      {opt.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="py-6 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className={PAGE_WIDTH_CLASS}>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl font-bold">Ассортимент</h2>
             <Link to="/catalog" className="flex items-center gap-1 text-[#2B71F3] hover:text-blue-400 text-sm font-medium transition-colors">
@@ -246,14 +448,40 @@ export default function HomePage() {
             </Link>
           </div>
           <div className={LISTING_GRID_CLASS}>
-            {listings?.listings?.map((l) => <ListingCard key={l.id} listing={l} />)}
-            {(!listings?.listings || listings.listings.length === 0) && (
+            {listingsLoading && (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="rounded-2xl bg-dark-900 border border-dark-800 aspect-[3/4] animate-pulse" />
+              ))
+            )}
+            {!listingsLoading && listings?.listings?.map((l) => <ListingCard key={l.id} listing={l} />)}
+            {!listingsLoading && listingsError && (
+              <div className="col-span-full text-center text-dark-400 py-12 text-sm">
+                Не удалось загрузить лоты. Обновите страницу.
+              </div>
+            )}
+            {!listingsLoading && !listingsError && (!listings?.listings || listings.listings.length === 0) && (
               <div className="col-span-full text-center text-dark-400 py-12 text-sm">
                 Пока нет активных лотов —{' '}
                 <Link to="/listings/create" className="text-[#2B71F3] hover:underline">создайте первый</Link>
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      <section className={`${PAGE_WIDTH_CLASS} pb-16`}>
+        <div className="rounded-2xl border border-dark-800 bg-gradient-to-br from-[#2B71F3]/10 via-dark-900/40 to-transparent px-6 py-8 sm:px-8 sm:py-10">
+          <p className="text-[#5B8CFF] font-bold text-sm tracking-wide mb-2">Lootz</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 max-w-xl">
+            Ищите в Google «Lootz» — так быстрее найти нашу площадку
+          </h2>
+          <p className="text-dark-300 text-sm sm:text-[15px] leading-relaxed max-w-2xl mb-5">
+            Lootz — отдельный бренд маркетплейса игровых товаров и услуг с эскроу.
+            Запомните имя: меньше путаницы с другими биржами, проще вернуться к сделкам и поддержке.
+          </p>
+          <Link to="/about" className="inline-flex items-center gap-1.5 text-[#2B71F3] hover:text-blue-400 text-sm font-medium">
+            Подробнее о Lootz <ArrowRight size={14} />
+          </Link>
         </div>
       </section>
     </div>

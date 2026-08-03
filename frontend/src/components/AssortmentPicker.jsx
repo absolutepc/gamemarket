@@ -1,32 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X, Check } from 'lucide-react';
-import { ASSORTMENT, ASSORTMENT_TABS, assortmentByTab } from '../data/assortment';
-import { resolveAssortmentItem } from '../utils/assortmentIcons';
+import { ASSORTMENT_TABS } from '../data/assortment';
+import { resolveAssortmentItem, assortmentIconUrl } from '../utils/assortmentIcons';
+import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 
 /**
  * Required picker: user must select a concrete game / app / service from assortment.
  * Stores the exact assortment `name` so listing cards can resolve the logo.
+ * Respects admin-hidden catalog entries.
  */
 export default function AssortmentPicker({ value, onChange, required = true }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
-  const [tab, setTab] = useState('games');
+  const [tab, setTab] = useState('pc');
   const rootRef = useRef(null);
   const inputRef = useRef(null);
+  const { items: visibleAssortment, byTab } = useVisibleAssortment();
 
   const selected = useMemo(() => resolveAssortmentItem(value), [value]);
 
-  const tabItems = useMemo(() => assortmentByTab(tab), [tab]);
+  const tabItems = useMemo(() => byTab(tab), [byTab, tab]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
-    const source = query ? ASSORTMENT : tabItems;
+    const source = query ? visibleAssortment : tabItems;
     if (!query) return source;
     return source.filter(
       (item) =>
         item.name.toLowerCase().includes(query) || item.search.toLowerCase().includes(query)
     );
-  }, [q, tabItems]);
+  }, [q, tabItems, visibleAssortment]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -77,7 +80,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
               className="w-8 h-8 rounded-lg object-cover shrink-0 ring-1 ring-white/10"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = '/assortment/other-apps.png';
+                e.currentTarget.src = assortmentIconUrl('/assortment/other-apps.png');
               }}
             />
             <span className="flex-1 truncate text-white font-medium">{selected.name}</span>
@@ -144,7 +147,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
               <div className="text-center text-dark-400 text-sm py-8">Ничего не найдено</div>
             ) : (
               <ul className="space-y-0.5">
-                {filtered.slice(0, 80).map((item) => {
+                {filtered.map((item) => {
                   const active = selected?.name === item.name;
                   return (
                     <li key={`${item.kind}-${item.name}`}>
@@ -164,7 +167,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
                           loading="lazy"
                           onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = '/assortment/other-apps.png';
+                            e.currentTarget.src = assortmentIconUrl('/assortment/other-apps.png');
                           }}
                         />
                         <span className="flex-1 min-w-0">
@@ -174,7 +177,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
                               ? 'Приложение'
                               : item.kind === 'mobile'
                                 ? 'Мобильная игра'
-                                : 'Игра'}
+                                : 'PC'}
                           </span>
                         </span>
                         {active && <Check size={16} className="text-[#2B71F3] shrink-0" />}
@@ -183,11 +186,6 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
                   );
                 })}
               </ul>
-            )}
-            {filtered.length > 80 && (
-              <p className="text-[11px] text-dark-500 text-center py-2">
-                Показаны первые 80 · уточните поиск
-              </p>
             )}
           </div>
         </div>

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { SlidersHorizontal, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
 import api from '../utils/api';
-import ListingCard, { LISTING_GRID_CLASS } from '../components/ListingCard';
+import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
@@ -23,13 +23,14 @@ export default function CatalogPage() {
     page: parseInt(params.get('page') || '1', 10) || 1,
   }), [params]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['listings', filters],
     queryFn: () => {
       const p = new URLSearchParams();
       Object.entries(filters).forEach(([k, v]) => { if (v) p.set(k, String(v)); });
       return api.get(`/listings?${p}`).then((r) => r.data);
     },
+    retry: 1,
   });
 
   const setFilter = (key, val) => {
@@ -49,14 +50,14 @@ export default function CatalogPage() {
   const activeTypeLabel = LISTING_TYPE_OPTIONS.find((o) => o.value === filters.type)?.label;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className={`${PAGE_WIDTH_CLASS} py-8`}>
       <Seo
         title={
           filters.search
             ? `Поиск: ${filters.search}`
             : activeTypeLabel || 'Каталог'
         }
-        description="Каталог цифровых товаров Lootz: игры, подписки ИИ, Telegram, TikTok, Steam, App Store и другое."
+        description="Каталог Lootz — маркетплейс игровых товаров и услуг: аккаунты, валюта, бусты, ключи и предметы с эскроу."
         path="/catalog"
       />
       <div className="flex flex-col lg:flex-row gap-6">
@@ -181,6 +182,11 @@ export default function CatalogPage() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="card aspect-[3/4] animate-pulse bg-dark-800 min-w-0" />
               ))}
+            </div>
+          ) : isError ? (
+            <div className="card p-16 text-center text-dark-400">
+              <p className="text-lg font-medium">Не удалось загрузить лоты</p>
+              <p className="text-sm mt-1">Обновите страницу или попробуйте позже</p>
             </div>
           ) : data?.listings?.length === 0 ? (
             <div className="card p-16 text-center text-dark-400">

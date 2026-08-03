@@ -1,205 +1,263 @@
-/** Fixed home carousel order (first 14) — do not reorder without product request */
-export const HOME_TOP_14 = [
-  { name: 'Claude AI', search: 'Claude', icon: '/assortment/claude.png', kind: 'app' },
-  { name: 'Cursor AI', search: 'Cursor', icon: '/assortment/cursor.png', kind: 'app' },
-  { name: 'Arena Breakout', search: 'Arena Breakout', icon: '/assortment/arena-breakout.png', kind: 'mobile' },
-  { name: 'PUBG', search: 'PUBG', icon: '/assortment/pubg.png', kind: 'pc' },
-  { name: 'PUBG Mobile', search: 'PUBG Mobile', icon: '/assortment/pubg-mobile.png', kind: 'mobile' },
-  { name: 'Telegram', search: 'Telegram', icon: '/assortment/telegram.png', kind: 'app' },
-  { name: 'ChatGPT', search: 'ChatGPT', icon: '/assortment/chatgpt.png', kind: 'app' },
-  { name: 'App Store', search: 'App Store', icon: '/assortment/app-store.png', kind: 'app' },
-  { name: 'PlayStation', search: 'PlayStation', icon: '/assortment/playstation.png', kind: 'app' },
-  { name: 'EA Sports', search: 'EA Sports', icon: '/assortment/ea-play.png', kind: 'app' },
-  { name: 'Steam', search: 'Steam', icon: '/assortment/steam.png', kind: 'app' },
-  { name: 'Valorant', search: 'Valorant', icon: '/assortment/valorant.png', kind: 'pc' },
-  { name: 'Escape From Tarkov', search: 'Tarkov', icon: '/assortment/escape-from-tarkov.png', kind: 'pc' },
-  { name: 'CS2', search: 'Counter-Strike', icon: '/assortment/cs2.png', kind: 'pc' },
+/** Pinned home carousel order — do not reorder without product request */
+export const HOME_CAROUSEL_PINNED = [
+  { catalog: 'Claude', name: 'Claude AI' },
+  { catalog: 'Cursor', name: 'Cursor AI' },
+  { catalog: 'Arena Breakout', name: 'Arena Breakout' },
+  { catalog: 'PUBG', name: 'PUBG' },
+  { catalog: 'Kimi', name: 'Kimi' },
+  { catalog: 'Steam', name: 'Steam' },
+  { catalog: 'PUBG Mobile', name: 'PUBG Mobile' },
+  { catalog: 'Telegram', name: 'Telegram' },
+  { catalog: 'Apple', name: 'Apple' },
+  { catalog: 'CoD Mobile', name: 'CoD Mobile' },
+  { catalog: 'Standoff 2', name: 'Standoff 2' },
+  { catalog: 'ЧатГПТ', name: 'ChatGPT' },
+  { catalog: 'Suno', name: 'Suno' },
+  { catalog: 'Escape From Tarkov', name: 'Escape From Tarkov' },
+  { catalog: 'Xbox', name: 'Xbox' },
+  { catalog: 'Netflix', name: 'Netflix' },
+  { catalog: 'CS2', name: 'CS2' },
+  { catalog: 'Grok', name: 'Grok' },
+  { catalog: 'Kling', name: 'Kling' },
+  { catalog: 'Clash of Clans', name: 'Clash of Clans' },
+  { catalog: 'Clash Royale', name: 'Clash Royale' },
+  { catalog: 'Midjourney', name: 'Midjourney' },
 ];
 
-/** Playerok-style assortment: home top-14 first, then apps → mobile → PC */
+/**
+ * Fallback “popular” tail when live sales stats are empty.
+ * Live order from /api/assortment/popular overrides this.
+ */
+export const HOME_CAROUSEL_FALLBACK_TAIL = [
+  'Discord', 'TikTok', 'Valorant', 'Dota 2', 'GTA 5', 'Roblox', 'Brawl Stars',
+  'Free Fire', 'Mobile Legends', 'Genshin', 'Faceit', 'Spotify', 'YouTube',
+  'PlayStation', 'Battle.net', 'Epic Games', 'Adobe', 'CapCut', 'Perplexity',
+  'DeepSeek', 'Leonardo AI', 'Twitch', 'GeForce NOW', 'EA Play',
+];
+
+/** @deprecated use HOME_CAROUSEL_PINNED — kept for imports */
+export const HOME_TOP_14 = HOME_CAROUSEL_PINNED.map((p) => ({
+  name: p.name,
+  search: p.catalog,
+  icon: '',
+  kind: 'app',
+  catalog: p.catalog,
+}));
+
+/** Build home carousel: pinned → popular (sales/listings) → fallback → rest */
+export function buildHomeCarousel(items, popularNames = []) {
+  const byCatalog = new Map(items.map((i) => [i.name, i]));
+  const byKey = new Map();
+  const norm = (v) =>
+    String(v || '')
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[^a-z0-9а-я]+/gi, ' ')
+      .trim()
+      .replace(/\s+/g, ' ');
+
+  const aliases = {
+    chatgpt: 'ЧатГПТ',
+    'claude ai': 'Claude',
+    'cursor ai': 'Cursor',
+    'cs 2': 'CS2',
+    'counter strike 2': 'CS2',
+    'counter-strike 2': 'CS2',
+    'standoff2': 'Standoff 2',
+    'cod mobile': 'CoD Mobile',
+    'call of duty mobile': 'CoD Mobile',
+  };
+
+  for (const item of items) {
+    byKey.set(norm(item.name), item.name);
+    byKey.set(norm(item.search), item.name);
+  }
+  for (const [alias, catalog] of Object.entries(aliases)) {
+    if (byCatalog.has(catalog)) byKey.set(alias, catalog);
+  }
+
+  const resolveCatalogName = (raw) => {
+    if (!raw) return null;
+    if (byCatalog.has(raw)) return raw;
+    return byKey.get(norm(raw)) || null;
+  };
+
+  const used = new Set();
+  const out = [];
+
+  const pushCatalog = (catalogName, displayName) => {
+    if (!catalogName || used.has(catalogName)) return;
+    const item = byCatalog.get(catalogName);
+    if (!item) return;
+    used.add(catalogName);
+    out.push({
+      ...item,
+      name: displayName || item.name,
+      catalog: catalogName,
+      search: item.search || catalogName,
+    });
+  };
+
+  for (const p of HOME_CAROUSEL_PINNED) {
+    pushCatalog(p.catalog, p.name);
+  }
+
+  for (const name of popularNames) {
+    const catalog = resolveCatalogName(name);
+    if (catalog) pushCatalog(catalog, byCatalog.get(catalog)?.name || catalog);
+  }
+
+  for (const name of HOME_CAROUSEL_FALLBACK_TAIL) {
+    pushCatalog(name, name);
+  }
+
+  for (const item of items) {
+    pushCatalog(item.name, item.name);
+  }
+
+  return out;
+}
+
+/** Playerok-style assortment: curated apps → mobile → PC */
 export const ASSORTMENT = [
-  ...HOME_TOP_14,
-  // Expanded catalog (723+ items beyond home preview)
+  // Apps (curated order)
+  { name: 'Steam', search: 'Steam', icon: '/assortment/steam.png', kind: 'app' },
+  { name: 'Telegram', search: 'Telegram', icon: '/assortment/telegram.png', kind: 'app' },
+  { name: 'Cursor', search: 'Cursor', icon: '/assortment/cursor.png', kind: 'app' },
+  { name: 'TradingView', search: 'TradingView', icon: '/assortment/tradingview.png', kind: 'app' },
+  { name: 'Apple', search: 'Apple', icon: '/assortment/apple.png', kind: 'app' },
+  { name: 'PlayStation', search: 'PlayStation', icon: '/assortment/playstation.png', kind: 'app' },
+  { name: 'ЧатГПТ', search: 'ChatGPT', icon: '/assortment/chatgpt.png', kind: 'app' },
+  { name: 'Claude', search: 'Claude', icon: '/assortment/claude.png', kind: 'app' },
   { name: 'TikTok', search: 'TikTok', icon: '/assortment/tiktok.png', kind: 'app' },
   { name: 'Discord', search: 'Discord', icon: '/assortment/discord.png', kind: 'app' },
-  { name: 'Xbox', search: 'Xbox', icon: '/assortment/xbox.png', kind: 'app' },
   { name: 'Spotify', search: 'Spotify', icon: '/assortment/spotify.png', kind: 'app' },
-  { name: 'ВКонтакте', search: 'ВКонтакте', icon: '/assortment/vk.png', kind: 'app' },
-  { name: 'Нейросети', search: 'Нейросети', icon: '/assortment/ai.png', kind: 'app' },
-  { name: 'Windows', search: 'Windows', icon: '/assortment/windows.png', kind: 'app' },
-  { name: 'Battle.net', search: 'Battle.net', icon: '/assortment/battlenet.png', kind: 'app' },
-  { name: 'Nintendo', search: 'Nintendo', icon: '/assortment/nintendo.png', kind: 'app' },
-  { name: 'Faceit', search: 'Faceit', icon: '/assortment/faceit.png', kind: 'app' },
-  { name: 'Google Play', search: 'Google Play', icon: '/assortment/google-play.png', kind: 'app' },
   { name: 'YouTube', search: 'YouTube', icon: '/assortment/youtube.png', kind: 'app' },
+  { name: 'Google Play', search: 'Google Play', icon: '/assortment/google-play.png', kind: 'app' },
+  { name: 'Xbox', search: 'Xbox', icon: '/assortment/xbox.png', kind: 'app' },
+  { name: 'Gemini (Nano Banana)', search: 'Gemini', icon: '/assortment/gemini-nano-banana.png', kind: 'app' },
+  { name: 'Faceit', search: 'FACEIT', icon: '/assortment/faceit.png', kind: 'app' },
   { name: 'Adobe', search: 'Adobe', icon: '/assortment/adobe.png', kind: 'app' },
-  { name: 'FL Studio', search: 'FL Studio', icon: '/assortment/fl-studio.png', kind: 'app' },
-  { name: 'Дизайн', search: 'Дизайн', icon: '/assortment/design.png', kind: 'app' },
-  { name: 'Likee', search: 'Likee', icon: '/assortment/likee.png', kind: 'app' },
+  { name: 'Battle.net', search: 'Battle.net', icon: '/assortment/battlenet.png', kind: 'app' },
+  { name: 'Grok', search: 'Grok', icon: '/assortment/grok.png', kind: 'app' },
+  { name: 'Nintendo', search: 'Nintendo', icon: '/assortment/nintendo.png', kind: 'app' },
+  { name: 'Suno', search: 'Suno', icon: '/assortment/suno.png', kind: 'app' },
+  { name: 'CapCut', search: 'CapCut', icon: '/assortment/capcut.png', kind: 'app' },
+  { name: 'Windows', search: 'Windows', icon: '/assortment/windows.png', kind: 'app' },
+  { name: 'Rockstar Games', search: 'Rockstar', icon: '/assortment/rockstar-games.png', kind: 'app' },
+  { name: 'Другие приложения', search: 'Другие приложения', icon: '/assortment/other-apps.png', kind: 'app' },
+  { name: 'Kimi', search: 'Kimi', icon: '/assortment/kimi.png', kind: 'app' },
+  { name: 'ВКонтакте', search: 'ВКонтакте', icon: '/assortment/vk.png', kind: 'app' },
+  { name: 'Perplexity', search: 'Perplexity', icon: '/assortment/perplexity.png', kind: 'app' },
+  { name: 'Нейросети', search: 'Нейросети', icon: '/assortment/ai.png', kind: 'app' },
+  { name: 'eSIM', search: 'eSIM', icon: '/assortment/esim.png', kind: 'app' },
+  { name: 'Soundcloud', search: 'SoundCloud', icon: '/assortment/soundcloud.png', kind: 'app' },
   { name: 'EA Play', search: 'EA Play', icon: '/assortment/ea-play.png', kind: 'app' },
+  { name: 'Likee', search: 'Likee', icon: '/assortment/likee.png', kind: 'app' },
   { name: 'ExitLag', search: 'ExitLag', icon: '/assortment/exitlag.png', kind: 'app' },
-  { name: 'Epic Games', search: 'Epic Games', icon: '/assortment/epic-games.png', kind: 'app' },
-  { name: 'Netflix', search: 'Netflix', icon: '/assortment/netflix.png', kind: 'app' },
-  { name: 'Ubisoft', search: 'Ubisoft', icon: '/assortment/ubisoft.png', kind: 'app' },
-  { name: 'iTunes', search: 'iTunes', icon: '/assortment/itunes.png', kind: 'app' },
-  { name: 'Wallpaper Engine', search: 'Wallpaper Engine', icon: '/assortment/wallpaper-engine.png', kind: 'app' },
-  { name: 'Дзен', search: 'Дзен', icon: '/assortment/dzen.png', kind: 'app' },
-  { name: 'GeForce NOW', search: 'GeForce NOW', icon: '/assortment/geforce-now.png', kind: 'app' },
-  { name: 'TeamSpeak', search: 'TeamSpeak', icon: '/assortment/teamspeak.png', kind: 'app' },
-  { name: 'Skype', search: 'Skype', icon: '/assortment/skype.png', kind: 'app' },
-  { name: 'Yappy', search: 'Yappy', icon: '/assortment/yappy.png', kind: 'app' },
-  { name: 'SoundCloud', search: 'SoundCloud', icon: '/assortment/soundcloud.png', kind: 'app' },
-  { name: 'Хостинг', search: 'Хостинг', icon: '/assortment/hosting.png', kind: 'app' },
-  { name: 'Trovo', search: 'Trovo', icon: '/assortment/trovo.png', kind: 'app' },
-  { name: 'Kick', search: 'Kick', icon: '/assortment/kick.png', kind: 'app' },
-  { name: 'Snapchat', search: 'Snapchat', icon: '/assortment/snapchat.png', kind: 'app' },
-  { name: 'Zoom', search: 'Zoom', icon: '/assortment/zoom.png', kind: 'app' },
-  { name: 'WhatsApp', search: 'WhatsApp', icon: '/assortment/whatsapp.png', kind: 'app' },
+  { name: 'ZEPETO', search: 'ZEPETO', icon: '/assortment/zepeto.png', kind: 'app' },
+  { name: 'Pax Historia', search: 'Pax Historia', icon: '/assortment/pax-historia.png', kind: 'app' },
+  { name: 'Razer Gold', search: 'Razer Gold', icon: '/assortment/razer-gold.png', kind: 'app' },
+  { name: 'Runway', search: 'Runway', icon: '/assortment/runway.png', kind: 'app' },
+  { name: 'FL Studio', search: 'FL Studio', icon: '/assortment/fl-studio.png', kind: 'app' },
   { name: 'Twitch', search: 'Twitch', icon: '/assortment/twitch.png', kind: 'app' },
   { name: 'Microsoft Store', search: 'Microsoft Store', icon: '/assortment/microsoft-store.png', kind: 'app' },
-  { name: 'Midjourney', search: 'Midjourney', icon: '/assortment/midjourney.png', kind: 'app' },
-  { name: 'Perplexity', search: 'Perplexity', icon: '/assortment/perplexity.png', kind: 'app' },
-  { name: 'Gemini', search: 'Gemini', icon: '/assortment/gemini.png', kind: 'app' },
-  { name: 'Copilot', search: 'Copilot', icon: '/assortment/copilot.png', kind: 'app' },
-  { name: 'Grok', search: 'Grok', icon: '/assortment/grok.png', kind: 'app' },
-  { name: 'Notion', search: 'Notion', icon: '/assortment/notion.png', kind: 'app' },
-  { name: 'Canva', search: 'Canva', icon: '/assortment/canva.png', kind: 'app' },
-  { name: 'Figma', search: 'Figma', icon: '/assortment/figma.png', kind: 'app' },
-  { name: 'CapCut', search: 'CapCut', icon: '/assortment/capcut.png', kind: 'app' },
-  { name: 'Photoshop', search: 'Photoshop', icon: '/assortment/photoshop.png', kind: 'app' },
-  { name: 'Lightroom', search: 'Lightroom', icon: '/assortment/lightroom.png', kind: 'app' },
-  { name: 'Premiere Pro', search: 'Premiere', icon: '/assortment/premiere-pro.png', kind: 'app' },
-  { name: 'After Effects', search: 'After Effects', icon: '/assortment/after-effects.png', kind: 'app' },
-  { name: 'Illustrator', search: 'Illustrator', icon: '/assortment/illustrator.png', kind: 'app' },
-  { name: 'DaVinci Resolve', search: 'DaVinci', icon: '/assortment/davinci-resolve.png', kind: 'app' },
-  { name: 'Crunchyroll', search: 'Crunchyroll', icon: '/assortment/crunchyroll.png', kind: 'app' },
-  { name: 'Disney+', search: 'Disney', icon: '/assortment/disney.png', kind: 'app' },
-  { name: 'HBO Max', search: 'HBO', icon: '/assortment/hbo-max.png', kind: 'app' },
-  { name: 'Amazon Prime', search: 'Prime Video', icon: '/assortment/amazon-prime.png', kind: 'app' },
-  { name: 'YouTube Premium', search: 'YouTube Premium', icon: '/assortment/youtube-premium.png', kind: 'app' },
-  { name: 'Apple Music', search: 'Apple Music', icon: '/assortment/apple-music.png', kind: 'app' },
-  { name: 'Apple TV+', search: 'Apple TV', icon: '/assortment/apple-tv.png', kind: 'app' },
-  { name: 'Apple Arcade', search: 'Apple Arcade', icon: '/assortment/apple-arcade.png', kind: 'app' },
-  { name: 'iCloud', search: 'iCloud', icon: '/assortment/icloud.png', kind: 'app' },
-  { name: 'Google One', search: 'Google One', icon: '/assortment/google-one.png', kind: 'app' },
-  { name: 'Yandex Plus', search: 'Яндекс Плюс', icon: '/assortment/yandex-plus.png', kind: 'app' },
-  { name: 'Яндекс Музыка', search: 'Яндекс Музыка', icon: '/assortment/яндекс-музыка.png', kind: 'app' },
-  { name: 'Okko', search: 'Okko', icon: '/assortment/okko.png', kind: 'app' },
-  { name: 'KinoPoisk', search: 'Кинопоиск', icon: '/assortment/kinopoisk.png', kind: 'app' },
-  { name: 'IVI', search: 'IVI', icon: '/assortment/ivi.png', kind: 'app' },
-  { name: 'Wink', search: 'Wink', icon: '/assortment/wink.png', kind: 'app' },
-  { name: 'START', search: 'START', icon: '/assortment/start.png', kind: 'app' },
-  { name: 'Premier', search: 'Premier', icon: '/assortment/premier.png', kind: 'app' },
-  { name: 'Telegram Premium', search: 'Telegram Premium', icon: '/assortment/telegram-premium.png', kind: 'app' },
-  { name: 'Discord Nitro', search: 'Discord Nitro', icon: '/assortment/discord-nitro.png', kind: 'app' },
-  { name: 'Boosty', search: 'Boosty', icon: '/assortment/boosty.png', kind: 'app' },
-  { name: 'Patreon', search: 'Patreon', icon: '/assortment/patreon.png', kind: 'app' },
-  { name: 'OnlyFans', search: 'OnlyFans', icon: '/assortment/onlyfans.png', kind: 'app' },
-  { name: 'Chaturbate', search: 'Chaturbate', icon: '/assortment/chaturbate.png', kind: 'app' },
-  { name: 'Xbox Game Pass', search: 'Game Pass', icon: '/assortment/xbox-game-pass.png', kind: 'app' },
-  { name: 'PlayStation Plus', search: 'PS Plus', icon: '/assortment/playstation-plus.png', kind: 'app' },
-  { name: 'Nintendo Online', search: 'Nintendo Switch Online', icon: '/assortment/nintendo-online.png', kind: 'app' },
-  { name: 'Origin', search: 'Origin', icon: '/assortment/origin.png', kind: 'app' },
-  { name: 'Rockstar Launcher', search: 'Rockstar', icon: '/assortment/rockstar-launcher.png', kind: 'app' },
-  { name: 'Riot Client', search: 'Riot', icon: '/assortment/riot-client.png', kind: 'app' },
-  { name: 'Garena', search: 'Garena', icon: '/assortment/garena.png', kind: 'app' },
-  { name: 'HoYoverse', search: 'HoYoverse', icon: '/assortment/hoyoverse.png', kind: 'app' },
-  { name: 'miHoYo', search: 'miHoYo', icon: '/assortment/mihoyo.png', kind: 'app' },
-  { name: 'VPN', search: 'VPN', icon: '/assortment/vpn.png', kind: 'app' },
-  { name: 'ExpressVPN', search: 'ExpressVPN', icon: '/assortment/expressvpn.png', kind: 'app' },
-  { name: 'NordVPN', search: 'NordVPN', icon: '/assortment/nordvpn.png', kind: 'app' },
-  { name: 'Surfshark', search: 'Surfshark', icon: '/assortment/surfshark.png', kind: 'app' },
-  { name: 'Proton VPN', search: 'Proton VPN', icon: '/assortment/proton-vpn.png', kind: 'app' },
-  { name: 'ChatGPT Plus', search: 'ChatGPT Plus', icon: '/assortment/chatgpt-plus.png', kind: 'app' },
-  { name: 'OpenAI', search: 'OpenAI', icon: '/assortment/openai.png', kind: 'app' },
-  { name: 'Anthropic', search: 'Anthropic', icon: '/assortment/anthropic.png', kind: 'app' },
-  { name: 'Grammarly', search: 'Grammarly', icon: '/assortment/grammarly.png', kind: 'app' },
+  { name: 'PolyBuzz', search: 'PolyBuzz', icon: '/assortment/polybuzz.png', kind: 'app' },
+  { name: 'Oculus Quest', search: 'Oculus Quest', icon: '/assortment/oculus-quest.png', kind: 'app' },
+  { name: 'Voicemod', search: 'Voicemod', icon: '/assortment/voicemod.png', kind: 'app' },
+  { name: 'Kling', search: 'Kling AI', icon: '/assortment/kling.png', kind: 'app' },
   { name: 'Duolingo', search: 'Duolingo', icon: '/assortment/duolingo.png', kind: 'app' },
-  { name: 'LinkedIn', search: 'LinkedIn', icon: '/assortment/linkedin.png', kind: 'app' },
-  { name: 'Tinder', search: 'Tinder', icon: '/assortment/tinder.png', kind: 'app' },
-  { name: 'Badoo', search: 'Badoo', icon: '/assortment/badoo.png', kind: 'app' },
-  { name: 'OK.ru', search: 'Одноклассники', icon: '/assortment/ok-ru.png', kind: 'app' },
-  { name: 'Mail.ru', search: 'Mail.ru', icon: '/assortment/mail-ru.png', kind: 'app' },
-  { name: 'Yandex', search: 'Яндекс', icon: '/assortment/yandex.png', kind: 'app' },
-  { name: 'Kaspi.kz', search: 'Kaspi', icon: '/assortment/kaspi-kz.png', kind: 'app' },
-  { name: 'SberPrime', search: 'СберПрайм', icon: '/assortment/sberprime.png', kind: 'app' },
-  { name: 'Tinkoff Pro', search: 'Тинькофф', icon: '/assortment/tinkoff-pro.png', kind: 'app' },
-  { name: 'PSN', search: 'PSN', icon: '/assortment/psn.png', kind: 'app' },
-  { name: 'Xbox Live', search: 'Xbox Live', icon: '/assortment/xbox-live.png', kind: 'app' },
-  { name: 'Nintendo eShop', search: 'Nintendo eShop', icon: '/assortment/nintendo-eshop.png', kind: 'app' },
-  { name: 'Roblox Premium', search: 'Roblox Premium', icon: '/assortment/roblox-premium.png', kind: 'app' },
-  { name: 'Minecraft Realms', search: 'Minecraft Realms', icon: '/assortment/minecraft-realms.png', kind: 'app' },
-  { name: 'Cursor Pro', search: 'Cursor Pro', icon: '/assortment/cursor-pro.png', kind: 'app' },
-  { name: 'GitHub Copilot', search: 'GitHub Copilot', icon: '/assortment/github-copilot.png', kind: 'app' },
-  { name: 'JetBrains', search: 'JetBrains', icon: '/assortment/jetbrains.png', kind: 'app' },
-  { name: 'Adobe Creative Cloud', search: 'Creative Cloud', icon: '/assortment/adobe-creative-cloud.png', kind: 'app' },
+  { name: 'Figma', search: 'Figma', icon: '/assortment/figma.png', kind: 'app' },
+  { name: 'Netflix', search: 'Netflix', icon: '/assortment/netflix.png', kind: 'app' },
+  { name: 'Новое', search: 'Новое', icon: '/assortment/new-apps.png', kind: 'app' },
+  { name: 'Chai', search: 'Chai AI', icon: '/assortment/chai.png', kind: 'app' },
+  { name: 'Ubisoft', search: 'Ubisoft', icon: '/assortment/ubisoft.png', kind: 'app' },
   { name: 'Autodesk', search: 'Autodesk', icon: '/assortment/autodesk.png', kind: 'app' },
-  { name: 'Office 365', search: 'Office 365', icon: '/assortment/office-365.png', kind: 'app' },
-  { name: 'Windows 11', search: 'Windows 11', icon: '/assortment/windows-11.png', kind: 'app' },
-  { name: 'Windows 10', search: 'Windows 10', icon: '/assortment/windows-10.png', kind: 'app' },
-  { name: 'Antivirus', search: 'Антивирус', icon: '/assortment/antivirus.png', kind: 'app' },
-  { name: 'Kaspersky', search: 'Kaspersky', icon: '/assortment/kaspersky.png', kind: 'app' },
-  { name: 'ChatGPT Team', search: 'ChatGPT Team', icon: '/assortment/chatgpt-team.png', kind: 'app' },
-  { name: 'Claude Pro', search: 'Claude Pro', icon: '/assortment/claude-pro.png', kind: 'app' },
-  { name: 'Claude Team', search: 'Claude Team', icon: '/assortment/claude-team.png', kind: 'app' },
-  { name: 'Midjourney Plan', search: 'Midjourney Plan', icon: '/assortment/midjourney-plan.png', kind: 'app' },
-  { name: 'Runway ML', search: 'Runway', icon: '/assortment/runway-ml.png', kind: 'app' },
+  { name: 'Higgsfield', search: 'Higgsfield', icon: '/assortment/higgsfield.png', kind: 'app' },
+  { name: 'Zoom', search: 'Zoom', icon: '/assortment/zoom.png', kind: 'app' },
+  { name: 'z.ai', search: 'z.ai', icon: '/assortment/z-ai.png', kind: 'app' },
   { name: 'ElevenLabs', search: 'ElevenLabs', icon: '/assortment/elevenlabs.png', kind: 'app' },
-  { name: 'Suno', search: 'Suno', icon: '/assortment/suno.png', kind: 'app' },
-  { name: 'Udio', search: 'Udio', icon: '/assortment/udio.png', kind: 'app' },
-  { name: 'Leonardo AI', search: 'Leonardo', icon: '/assortment/leonardo-ai.png', kind: 'app' },
-  { name: 'Stable Diffusion', search: 'Stable Diffusion', icon: '/assortment/stable-diffusion.png', kind: 'app' },
-  { name: 'Character.AI', search: 'Character.AI', icon: '/assortment/character-ai.png', kind: 'app' },
-  { name: 'Poe', search: 'Poe', icon: '/assortment/poe.png', kind: 'app' },
-  { name: 'Groq', search: 'Groq', icon: '/assortment/groq.png', kind: 'app' },
   { name: 'DeepSeek', search: 'DeepSeek', icon: '/assortment/deepseek.png', kind: 'app' },
-  { name: 'Qwen', search: 'Qwen', icon: '/assortment/qwen.png', kind: 'app' },
-  { name: 'GigaChat', search: 'GigaChat', icon: '/assortment/gigachat.png', kind: 'app' },
-  { name: 'YandexGPT', search: 'YandexGPT', icon: '/assortment/yandexgpt.png', kind: 'app' },
-  { name: 'Instagram', search: 'Instagram', icon: '/assortment/instagram.png', kind: 'app' },
-  { name: 'Facebook', search: 'Facebook', icon: '/assortment/facebook.png', kind: 'app' },
-  { name: 'X Twitter', search: 'Twitter', icon: '/assortment/x-twitter.png', kind: 'app' },
-  { name: 'Reddit', search: 'Reddit', icon: '/assortment/reddit.png', kind: 'app' },
-  { name: 'Pinterest', search: 'Pinterest', icon: '/assortment/pinterest.png', kind: 'app' },
-  { name: 'Threads', search: 'Threads', icon: '/assortment/threads.png', kind: 'app' },
-  { name: 'BeReal', search: 'BeReal', icon: '/assortment/bereal.png', kind: 'app' },
-  { name: 'Clubhouse', search: 'Clubhouse', icon: '/assortment/clubhouse.png', kind: 'app' },
-  { name: 'Signal', search: 'Signal', icon: '/assortment/signal.png', kind: 'app' },
-  { name: 'Viber', search: 'Viber', icon: '/assortment/viber.png', kind: 'app' },
-  { name: 'WeChat', search: 'WeChat', icon: '/assortment/wechat.png', kind: 'app' },
-  { name: 'Line', search: 'LINE', icon: '/assortment/line.png', kind: 'app' },
-  { name: 'QQ', search: 'QQ', icon: '/assortment/qq.png', kind: 'app' },
-  { name: 'Bilibili', search: 'Bilibili', icon: '/assortment/bilibili.png', kind: 'app' },
-  { name: 'Douyin', search: 'Douyin', icon: '/assortment/douyin.png', kind: 'app' },
-  { name: 'Xbox Cloud', search: 'Xbox Cloud Gaming', icon: '/assortment/xbox-cloud.png', kind: 'app' },
-  { name: 'Amazon Luna', search: 'Amazon Luna', icon: '/assortment/amazon-luna.png', kind: 'app' },
-  { name: 'Boosteroid', search: 'Boosteroid', icon: '/assortment/boosteroid.png', kind: 'app' },
-  { name: 'Shadow PC', search: 'Shadow', icon: '/assortment/shadow-pc.png', kind: 'app' },
-  { name: 'Parsec', search: 'Parsec', icon: '/assortment/parsec.png', kind: 'app' },
-  { name: 'AnyDesk', search: 'AnyDesk', icon: '/assortment/anydesk.png', kind: 'app' },
-  { name: 'TeamViewer', search: 'TeamViewer', icon: '/assortment/teamviewer.png', kind: 'app' },
-  { name: 'Remote Desktop', search: 'Remote Desktop', icon: '/assortment/remote-desktop.png', kind: 'app' },
-  { name: 'ChatGPT API', search: 'OpenAI API', icon: '/assortment/chatgpt-api.png', kind: 'app' },
-  { name: 'Cloudflare', search: 'Cloudflare', icon: '/assortment/cloudflare.png', kind: 'app' },
-  { name: 'AWS', search: 'AWS', icon: '/assortment/aws.png', kind: 'app' },
-  { name: 'Google Cloud', search: 'Google Cloud', icon: '/assortment/google-cloud.png', kind: 'app' },
-  { name: 'DigitalOcean', search: 'DigitalOcean', icon: '/assortment/digitalocean.png', kind: 'app' },
-  { name: 'VPS', search: 'VPS', icon: '/assortment/vps.png', kind: 'app' },
-  { name: 'Domain', search: 'Домен', icon: '/assortment/domain.png', kind: 'app' },
-  { name: 'SSL', search: 'SSL', icon: '/assortment/ssl.png', kind: 'app' },
-  { name: '1Password', search: '1Password', icon: '/assortment/1password.png', kind: 'app' },
-  { name: 'LastPass', search: 'LastPass', icon: '/assortment/lastpass.png', kind: 'app' },
-  { name: 'Bitwarden', search: 'Bitwarden', icon: '/assortment/bitwarden.png', kind: 'app' },
+  { name: 'GearUP', search: 'GearUP Booster', icon: '/assortment/gearup.png', kind: 'app' },
+  { name: 'HeyGen', search: 'HeyGen', icon: '/assortment/heygen.png', kind: 'app' },
+  { name: 'Busuu', search: 'Busuu', icon: '/assortment/busuu.png', kind: 'app' },
+  { name: 'Midjourney', search: 'Midjourney', icon: '/assortment/midjourney-sailboat.png', kind: 'app' },
+  { name: 'Дизайн', search: 'Дизайн', icon: '/assortment/design.png', kind: 'app' },
+  { name: 'OpenRouter', search: 'OpenRouter', icon: '/assortment/openrouter.png', kind: 'app' },
+  { name: 'Character ai', search: 'Character.AI', icon: '/assortment/character-ai.png', kind: 'app' },
+  { name: 'Replit', search: 'Replit', icon: '/assortment/replit.png', kind: 'app' },
+  { name: 'Emochi', search: 'Emochi', icon: '/assortment/emochi.png', kind: 'app' },
+  { name: 'Gamma', search: 'Gamma AI', icon: '/assortment/gamma.png', kind: 'app' },
+  { name: 'iMazing', search: 'iMazing', icon: '/assortment/imazing.png', kind: 'app' },
+  { name: 'Copilot', search: 'Copilot', icon: '/assortment/copilot.png', kind: 'app' },
+  { name: 'GeoGuessr', search: 'GeoGuessr', icon: '/assortment/geoguessr.png', kind: 'app' },
+  { name: 'JetBrains', search: 'JetBrains', icon: '/assortment/jetbrains.png', kind: 'app' },
+  { name: 'Quizlet', search: 'Quizlet', icon: '/assortment/quizlet.png', kind: 'app' },
+  { name: 'Meshy', search: 'Meshy', icon: '/assortment/meshy.png', kind: 'app' },
+  { name: 'Tripo', search: 'Tripo AI', icon: '/assortment/tripo.png', kind: 'app' },
+  { name: 'Wallpaper Engine', search: 'Wallpaper Engine', icon: '/assortment/wallpaper-engine.png', kind: 'app' },
+  { name: 'Epic Games', search: 'Epic Games', icon: '/assortment/epic-games.png', kind: 'app' },
+  { name: 'Canva', search: 'Canva', icon: '/assortment/canva.png', kind: 'app' },
+  { name: 'Picsart', search: 'Picsart', icon: '/assortment/picsart.png', kind: 'app' },
+  { name: 'PICO', search: 'PICO', icon: '/assortment/pico.png', kind: 'app' },
+  { name: 'TeamSpeak', search: 'TeamSpeak', icon: '/assortment/teamspeak.png', kind: 'app' },
+  { name: 'Snapchat', search: 'Snapchat', icon: '/assortment/snapchat.png', kind: 'app' },
+  { name: 'Coursera', search: 'Coursera', icon: '/assortment/coursera.png', kind: 'app' },
+  { name: 'Ableton', search: 'Ableton', icon: '/assortment/ableton.png', kind: 'app' },
+  { name: 'Recraft', search: 'Recraft', icon: '/assortment/recraft.png', kind: 'app' },
+  { name: 'LagoFast', search: 'LagoFast', icon: '/assortment/lagofast.png', kind: 'app' },
+  { name: 'Splice', search: 'Splice', icon: '/assortment/splice.png', kind: 'app' },
+  { name: 'Manus', search: 'Manus AI', icon: '/assortment/manus.png', kind: 'app' },
+  { name: 'Notion', search: 'Notion', icon: '/assortment/notion.png', kind: 'app' },
+  { name: 'Bandicam', search: 'Bandicam', icon: '/assortment/bandicam.png', kind: 'app' },
   { name: 'Dropbox', search: 'Dropbox', icon: '/assortment/dropbox.png', kind: 'app' },
-  { name: 'Google Drive', search: 'Google Drive', icon: '/assortment/google-drive.png', kind: 'app' },
-  { name: 'OneDrive', search: 'OneDrive', icon: '/assortment/onedrive.png', kind: 'app' },
-  { name: 'Mega', search: 'MEGA', icon: '/assortment/mega.png', kind: 'app' },
-  { name: 'Trello', search: 'Trello', icon: '/assortment/trello.png', kind: 'app' },
-  { name: 'Asana', search: 'Asana', icon: '/assortment/asana.png', kind: 'app' },
+  { name: 'Bigo Live', search: 'Bigo Live', icon: '/assortment/bigo-live.png', kind: 'app' },
+  { name: 'Soundpad', search: 'Soundpad', icon: '/assortment/soundpad.png', kind: 'app' },
+  { name: 'Lovable', search: 'Lovable', icon: '/assortment/lovable.png', kind: 'app' },
+  { name: 'OBS Studio', search: 'OBS Studio', icon: '/assortment/obs-studio.png', kind: 'app' },
+  { name: 'Krea', search: 'Krea', icon: '/assortment/krea.png', kind: 'app' },
+  { name: 'Clip Studio Paint', search: 'Clip Studio Paint', icon: '/assortment/clip-studio-paint.png', kind: 'app' },
+  { name: 'Envato Elements', search: 'Envato', icon: '/assortment/envato-elements.png', kind: 'app' },
+  { name: 'Хостинг', search: 'Хостинг', icon: '/assortment/hosting.png', kind: 'app' },
+  { name: 'Prime Video', search: 'Prime Video', icon: '/assortment/prime-video.png', kind: 'app' },
+  { name: 'Дзен', search: 'Дзен', icon: '/assortment/dzen.png', kind: 'app' },
+  { name: 'Photoroom', search: 'Photoroom', icon: '/assortment/photoroom.png', kind: 'app' },
+  { name: 'Leonardo AI', search: 'Leonardo', icon: '/assortment/leonardo-ai.png', kind: 'app' },
+  { name: 'Kick', search: 'Kick', icon: '/assortment/kick.png', kind: 'app' },
+  { name: 'Element', search: 'Element', icon: '/assortment/element.png', kind: 'app' },
+  { name: 'Magnific', search: 'Magnific AI', icon: '/assortment/magnific.png', kind: 'app' },
+  { name: 'Tidal', search: 'Tidal', icon: '/assortment/tidal.png', kind: 'app' },
+  { name: 'Deezer', search: 'Deezer', icon: '/assortment/deezer.png', kind: 'app' },
+  { name: 'Miro', search: 'Miro', icon: '/assortment/miro.png', kind: 'app' },
+  { name: 'PixVerse', search: 'PixVerse', icon: '/assortment/pixverse.png', kind: 'app' },
+  { name: 'GeForce NOW', search: 'GeForce NOW', icon: '/assortment/geforce-now.png', kind: 'app' },
+  { name: 'КранчРолл', search: 'Crunchyroll', icon: '/assortment/crunchyroll.png', kind: 'app' },
+  { name: 'Udio', search: 'Udio', icon: '/assortment/udio.png', kind: 'app' },
+  { name: 'Yappy', search: 'Yappy', icon: '/assortment/yappy.png', kind: 'app' },
+  { name: 'Trovo', search: 'Trovo', icon: '/assortment/trovo.png', kind: 'app' },
+  { name: 'Crosshair X', search: 'Crosshair X', icon: '/assortment/crosshair-x.png', kind: 'app' },
+  { name: 'Аудиоредакторы', search: 'Аудиоредакторы', icon: '/assortment/fl-studio.png', kind: 'app' },
   { name: 'Slack', search: 'Slack', icon: '/assortment/slack.png', kind: 'app' },
-  { name: 'Microsoft Teams', search: 'Teams', icon: '/assortment/microsoft-teams.png', kind: 'app' },
-  { name: 'Webex', search: 'Webex', icon: '/assortment/webex.png', kind: 'app' },
-  { name: 'Chatwork', search: 'Chatwork', icon: '/assortment/chatwork.png', kind: 'app' },
+  { name: 'Hailuo', search: 'Hailuo', icon: '/assortment/hailuo.png', kind: 'app' },
+  { name: 'Luma', search: 'Luma AI', icon: '/assortment/luma.png', kind: 'app' },
+  { name: 'Windsurf', search: 'Windsurf', icon: '/assortment/windsurf.png', kind: 'app' },
+  { name: 'YoloMouse - Cursor Changer', search: 'YoloMouse', icon: '/assortment/yolomouse-cursor-changer.png', kind: 'app' },
+  { name: 'Quillbot', search: 'Quillbot', icon: '/assortment/quillbot.png', kind: 'app' },
+  { name: 'ArtList', search: 'Artlist', icon: '/assortment/artlist.png', kind: 'app' },
+  { name: 'OpenArt', search: 'OpenArt', icon: '/assortment/openart.png', kind: 'app' },
+  { name: 'Chutes AI', search: 'Chutes', icon: '/assortment/chutes-ai.png', kind: 'app' },
+  { name: 'Mimo', search: 'Mimo', icon: '/assortment/mimo.png', kind: 'app' },
+  { name: 'Tango Live', search: 'Tango Live', icon: '/assortment/tango-live.png', kind: 'app' },
+  { name: 'Ideogram', search: 'Ideogram', icon: '/assortment/ideogram.png', kind: 'app' },
+  { name: 'Qobuz', search: 'Qobuz', icon: '/assortment/qobuz.png', kind: 'app' },
+  { name: 'n8n', search: 'n8n', icon: '/assortment/n8n.png', kind: 'app' },
+  { name: 'Ahrefs', search: 'Ahrefs', icon: '/assortment/ahrefs.png', kind: 'app' },
+  { name: 'Hugging Face', search: 'Hugging Face', icon: '/assortment/hugging-face.png', kind: 'app' },
+  { name: 'GOG', search: 'GOG', icon: '/assortment/gog.png', kind: 'app' },
+  { name: 'NoPing', search: 'NoPing', icon: '/assortment/noping.png', kind: 'app' },
+  // Mobile games
+  { name: 'Arena Breakout', search: 'Arena Breakout', icon: '/assortment/arena-breakout.png', kind: 'mobile' },
+  { name: 'PUBG Mobile', search: 'PUBG Mobile', icon: '/assortment/pubg-mobile.png', kind: 'mobile' },
   { name: 'Brawl Stars', search: 'Brawl Stars', icon: '/assortment/brawl-stars.png', kind: 'mobile' },
   { name: 'Clash of Clans', search: 'Clash of Clans', icon: '/assortment/clash-of-clans.png', kind: 'mobile' },
   { name: 'Standoff 2', search: 'Standoff 2', icon: '/assortment/standoff-2.png', kind: 'mobile' },
@@ -220,11 +278,9 @@ export const ASSORTMENT = [
   { name: 'Oxide', search: 'Oxide', icon: '/assortment/oxide.png', kind: 'mobile' },
   { name: 'Grand Mobile', search: 'Grand Mobile', icon: '/assortment/grand-mobile.png', kind: 'mobile' },
   { name: 'Avakin Life', search: 'Avakin Life', icon: '/assortment/avakin-life.png', kind: 'mobile' },
-  { name: 'RAID', search: 'RAID Shadow Legends', icon: '/assortment/raid-shadow.png', kind: 'mobile' },
   { name: 'Bullet Echo', search: 'Bullet Echo', icon: '/assortment/bullet-echo.png', kind: 'mobile' },
   { name: 'Car Parking', search: 'Car Parking Multiplayer', icon: '/assortment/car-parking.png', kind: 'mobile' },
   { name: 'Car Parking 2', search: 'Car Parking Multiplayer 2', icon: '/assortment/car-parking-2.png', kind: 'mobile' },
-  { name: 'WoT Blitz', search: 'World of Tanks Blitz', icon: '/assortment/wot-blitz.png', kind: 'mobile' },
   { name: 'My Singing Monsters', search: 'My Singing Monsters', icon: '/assortment/my-singing-monsters.png', kind: 'mobile' },
   { name: 'Super Sus', search: 'Super Sus', icon: '/assortment/super-sus.png', kind: 'mobile' },
   { name: 'Rush Royale', search: 'Rush Royale', icon: '/assortment/rush-royale.png', kind: 'mobile' },
@@ -360,16 +416,15 @@ export const ASSORTMENT = [
   { name: 'Five Nights at Freddy\'s', search: 'FNAF', icon: '/assortment/five-nights-at-freddy-s.png', kind: 'mobile' },
   { name: 'Granny', search: 'Granny', icon: '/assortment/granny.png', kind: 'mobile' },
   { name: 'Horror Tale', search: 'Horror', icon: '/assortment/horror-tale.png', kind: 'mobile' },
-  { name: 'SimCity BuildIt', search: 'SimCity', icon: '/assortment/simcity-buildit.png', kind: 'mobile' },
+  { name: 'SimCity BuildIt', search: 'SimCity BuildIt', icon: '/assortment/simcity-buildit.png', kind: 'mobile' },
   { name: 'The Sims Mobile', search: 'The Sims Mobile', icon: '/assortment/the-sims-mobile.png', kind: 'mobile' },
   { name: 'Animal Crossing Pocket', search: 'Animal Crossing', icon: '/assortment/animal-crossing-pocket.png', kind: 'mobile' },
-  { name: 'Stardew Valley Mobile', search: 'Stardew Valley', icon: '/assortment/stardew-valley-mobile.png', kind: 'mobile' },
-  { name: 'Terraria Mobile', search: 'Terraria', icon: '/assortment/terraria-mobile.png', kind: 'mobile' },
+  { name: 'Stardew Valley Mobile', search: 'Stardew Valley Mobile', icon: '/assortment/stardew-valley-mobile.png', kind: 'mobile' },
+  { name: 'Terraria Mobile', search: 'Terraria Mobile', icon: '/assortment/terraria-mobile.png', kind: 'mobile' },
   { name: 'Don\'t Starve', search: 'Don\'t Starve', icon: '/assortment/don-t-starve.png', kind: 'mobile' },
   { name: 'Alto\'s Odyssey', search: 'Alto', icon: '/assortment/alto-s-odyssey.png', kind: 'mobile' },
   { name: 'Monument Valley', search: 'Monument Valley', icon: '/assortment/monument-valley.png', kind: 'mobile' },
   { name: 'Genshin Impact', search: 'Genshin Impact', icon: '/assortment/genshin-impact.png', kind: 'mobile' },
-  { name: 'Arena Breakout Infinite Mobile', search: 'Arena Breakout', icon: '/assortment/arena-breakout-infinite-mobile.png', kind: 'mobile' },
   { name: 'Delta Force Hawk Ops', search: 'Delta Force Mobile', icon: '/assortment/delta-force-hawk-ops.png', kind: 'mobile' },
   { name: 'War Thunder Mobile', search: 'War Thunder Mobile', icon: '/assortment/war-thunder-mobile.png', kind: 'mobile' },
   { name: 'World of Tanks Blitz', search: 'World of Tanks Blitz', icon: '/assortment/world-of-tanks-blitz.png', kind: 'mobile' },
@@ -398,15 +453,16 @@ export const ASSORTMENT = [
   { name: 'Block Craft 3D', search: 'Block Craft', icon: '/assortment/block-craft-3d.png', kind: 'mobile' },
   { name: 'The Sandbox', search: 'The Sandbox', icon: '/assortment/the-sandbox.png', kind: 'mobile' },
   { name: 'Decentraland', search: 'Decentraland', icon: '/assortment/decentraland.png', kind: 'mobile' },
-  { name: 'Hamster Kombat', search: 'Hamster Kombat', icon: '/assortment/hamster-kombat.png', kind: 'mobile' },
-  { name: 'TapSwap', search: 'TapSwap', icon: '/assortment/tapswap.png', kind: 'mobile' },
-  { name: 'Notcoin', search: 'Notcoin', icon: '/assortment/notcoin.png', kind: 'mobile' },
-  { name: 'Blum', search: 'Blum', icon: '/assortment/blum.png', kind: 'mobile' },
   { name: 'Cats Gang', search: 'Cats', icon: '/assortment/cats-gang.png', kind: 'mobile' },
   { name: 'X Empire', search: 'X Empire', icon: '/assortment/x-empire.png', kind: 'mobile' },
   { name: 'Major', search: 'Major', icon: '/assortment/major.png', kind: 'mobile' },
   { name: 'City Holder', search: 'City Holder', icon: '/assortment/city-holder.png', kind: 'mobile' },
   { name: 'Soft Hamster', search: 'Hamster', icon: '/assortment/soft-hamster.png', kind: 'mobile' },
+  // PC games
+  { name: 'PUBG', search: 'PUBG', icon: '/assortment/pubg.png', kind: 'pc' },
+  { name: 'Valorant', search: 'Valorant', icon: '/assortment/valorant.png', kind: 'pc' },
+  { name: 'Escape From Tarkov', search: 'Tarkov', icon: '/assortment/escape-from-tarkov.png', kind: 'pc' },
+  { name: 'CS2', search: 'Counter-Strike', icon: '/assortment/cs2.png', kind: 'pc' },
   { name: 'Fortnite', search: 'Fortnite', icon: '/assortment/fortnite.png', kind: 'pc' },
   { name: 'Minecraft', search: 'Minecraft', icon: '/assortment/minecraft.png', kind: 'pc' },
   { name: 'Dota 2', search: 'Dota 2', icon: '/assortment/dota-2.png', kind: 'pc' },
@@ -434,7 +490,7 @@ export const ASSORTMENT = [
   { name: 'New World', search: 'New World', icon: '/assortment/new-world.png', kind: 'pc' },
   { name: 'Once Human', search: 'Once Human', icon: '/assortment/once-human.png', kind: 'pc' },
   { name: 'Palworld', search: 'Palworld', icon: '/assortment/palworld.png', kind: 'pc' },
-  { name: 'Helldivers 2', search: 'Helldivers', icon: '/assortment/helldivers-2.png', kind: 'pc' },
+  { name: 'Helldivers 2', search: 'Helldivers 2', icon: '/assortment/helldivers-2.png', kind: 'pc' },
   { name: 'Counter-Strike 2', search: 'CS2', icon: '/assortment/counter-strike-2.png', kind: 'pc' },
   { name: 'Teamfight Tactics', search: 'TFT', icon: '/assortment/teamfight-tactics.png', kind: 'pc' },
   { name: 'Legends of Runeterra', search: 'Runeterra', icon: '/assortment/legends-of-runeterra.png', kind: 'pc' },
@@ -515,7 +571,6 @@ export const ASSORTMENT = [
   { name: 'Deep Rock Galactic', search: 'Deep Rock', icon: '/assortment/deep-rock-galactic.png', kind: 'pc' },
   { name: 'Vermintide 2', search: 'Vermintide', icon: '/assortment/vermintide-2.png', kind: 'pc' },
   { name: 'Darktide', search: 'Darktide', icon: '/assortment/darktide.png', kind: 'pc' },
-  { name: 'Helldivers', search: 'Helldivers', icon: '/assortment/helldivers.png', kind: 'pc' },
   { name: 'Space Marine 2', search: 'Space Marine 2', icon: '/assortment/space-marine-2.png', kind: 'pc' },
   { name: 'Warhammer 40K', search: 'Warhammer 40K', icon: '/assortment/warhammer-40k.png', kind: 'pc' },
   { name: 'Phasmophobia', search: 'Phasmophobia', icon: '/assortment/phasmophobia.png', kind: 'pc' },
@@ -568,7 +623,6 @@ export const ASSORTMENT = [
   { name: 'Gray Zone Warfare', search: 'Gray Zone', icon: '/assortment/gray-zone-warfare.png', kind: 'pc' },
   { name: 'Marauders', search: 'Marauders', icon: '/assortment/marauders.png', kind: 'pc' },
   { name: 'Cycle Frontier', search: 'Cycle Frontier', icon: '/assortment/cycle-frontier.png', kind: 'pc' },
-  { name: 'Hunt Showdown 1896', search: 'Hunt Showdown', icon: '/assortment/hunt-showdown-1896.png', kind: 'pc' },
   { name: 'Dark and Darker', search: 'Dark and Darker', icon: '/assortment/dark-and-darker.png', kind: 'pc' },
   { name: 'Dungeonborne', search: 'Dungeonborne', icon: '/assortment/dungeonborne.png', kind: 'pc' },
   { name: 'Wo Long', search: 'Wo Long', icon: '/assortment/wo-long.png', kind: 'pc' },
@@ -620,7 +674,6 @@ export const ASSORTMENT = [
   { name: 'Monster Hunter World', search: 'MHW', icon: '/assortment/monster-hunter-world.png', kind: 'pc' },
   { name: 'Monster Hunter Wilds', search: 'MH Wilds', icon: '/assortment/monster-hunter-wilds.png', kind: 'pc' },
   { name: 'Monster Hunter Rise', search: 'MH Rise', icon: '/assortment/monster-hunter-rise.png', kind: 'pc' },
-  { name: 'New World Aeternum', search: 'New World', icon: '/assortment/new-world-aeternum.png', kind: 'pc' },
   { name: 'Throne and Liberty', search: 'Throne and Liberty', icon: '/assortment/throne-and-liberty.png', kind: 'pc' },
   { name: 'Black Desert Online', search: 'BDO', icon: '/assortment/black-desert-online.png', kind: 'pc' },
   { name: 'Guild Wars 2', search: 'Guild Wars 2', icon: '/assortment/guild-wars-2.png', kind: 'pc' },
@@ -644,7 +697,6 @@ export const ASSORTMENT = [
   { name: 'Go-Karting', search: 'Karting', icon: '/assortment/go-karting.png', kind: 'pc' },
   { name: 'Trackmania', search: 'Trackmania', icon: '/assortment/trackmania.png', kind: 'pc' },
   { name: 'Rocket League Sideswipe', search: 'Sideswipe', icon: '/assortment/rocket-league-sideswipe.png', kind: 'pc' },
-  { name: 'PUBG: BATTLEGROUNDS', search: 'PUBG: BATTLEGROUNDS', icon: '/assortment/pubg-battlegrounds.png', kind: 'pc' },
   { name: 'TBH: Task Bar Hero', search: 'TBH: Task Bar Hero', icon: '/assortment/tbh-task-bar-hero.png', kind: 'pc' },
   { name: 'Bongo Cat', search: 'Bongo Cat', icon: '/assortment/bongo-cat.png', kind: 'pc' },
   { name: 'FiveM', search: 'FiveM', icon: '/assortment/fivem.png', kind: 'pc' },
@@ -672,7 +724,7 @@ export const ASSORTMENT = [
   { name: 'NBA 2K26', search: 'NBA 2K26', icon: '/assortment/nba-2k26.png', kind: 'pc' },
   { name: 'OBS Studio', search: 'OBS Studio', icon: '/assortment/obs-studio.png', kind: 'pc' },
   { name: 'Garry\'s Mod', search: 'Garry\'s Mod', icon: '/assortment/garry-s-mod.png', kind: 'pc' },
-  { name: 'Arena Breakout: Infinite', search: 'Arena Breakout: Infinite', icon: '/assortment/arena-breakout-infinite.png', kind: 'pc' },
+  { name: 'Arena Breakout: Infinite', search: 'Arena Breakout Infinite', icon: '/assortment/arena-breakout-infinite.png', kind: 'pc' },
   { name: 'Call of Duty®', search: 'Call of Duty®', icon: '/assortment/call-of-duty.png', kind: 'pc' },
   { name: 'Total War: WARHAMMER III', search: 'Total War: WARHAMMER III', icon: '/assortment/total-war-warhammer-iii.png', kind: 'pc' },
   { name: 'Mistfall Hunter', search: 'Mistfall Hunter', icon: '/assortment/mistfall-hunter.png', kind: 'pc' },
@@ -745,18 +797,151 @@ export const ASSORTMENT = [
   { name: 'AAR Labs', search: 'AAR Labs', icon: '/assortment/aar-labs.png', kind: 'pc' },
 ];
 
-export const ASSORTMENT_PREVIEW_COUNT = HOME_TOP_14.length;
+/**
+ * Bust browser/CDN caches for /assortment/*.png.
+ * Static hosting used max-age=1y + immutable, so letter-tile PNGs stuck after we replaced art.
+ * Bump this when mass-updating assortment icons.
+ */
+export const ASSORTMENT_ICON_VERSION = '20260803c';
+
+for (const item of ASSORTMENT) {
+  if (item.icon && item.icon.startsWith('/assortment/') && !item.icon.includes('?')) {
+    item.icon = `${item.icon}?v=${ASSORTMENT_ICON_VERSION}`;
+  }
+}
+
+export const ASSORTMENT_PREVIEW_COUNT = HOME_CAROUSEL_PINNED.length;
 
 export const ASSORTMENT_TABS = [
-  { id: 'games', label: 'Игры' },
+  { id: 'pc', label: 'PC' },
+  { id: 'xbox', label: 'Xbox' },
+  { id: 'playstation', label: 'PlayStation' },
   { id: 'mobile', label: 'Мобильные игры' },
   { id: 'apps', label: 'Приложения' },
 ];
 
-/** All games = mobile + PC (not apps/services) */
+/** Platform hubs shown in dedicated console tabs (not in «Приложения») */
+const XBOX_HUB_APPS = new Set(['Xbox', 'Microsoft Store']);
+const PLAYSTATION_HUB_APPS = new Set(['PlayStation']);
+const CONSOLE_HUB_APPS = new Set([...XBOX_HUB_APPS, ...PLAYSTATION_HUB_APPS]);
+
+/** Cross-gen titles from the PC catalog that also sell on Xbox / PlayStation */
+const MULTI_CONSOLE_NAMES = new Set([
+  'GTA 5',
+  'GTA Online',
+  'GTA Trilogy',
+  'GTA 4',
+  'FIFA 23',
+  'EA FC 24',
+  'EA FC 25',
+  'Minecraft',
+  'Fortnite',
+  'Rocket League',
+  'Red Dead Online',
+  'Red Dead Redemption 2',
+  'Call of Duty®',
+  'NBA 2K24',
+  'NBA 2K25',
+  'NBA 2K26',
+  'Mortal Kombat 1',
+  'Tekken 8',
+  'Elden Ring',
+  'Elden Ring Nightreign',
+  'Cyberpunk 2077',
+  'Cyberpunk 2077: Phantom Liberty',
+  'The Witcher 3: Wild Hunt',
+  'Destiny 2',
+  'Apex Legends',
+  'Overwatch 2',
+  'Overwatch®',
+  'Rainbow Six Siege',
+  "Tom Clancy's Rainbow Six Siege",
+  "Assassin's Creed Black Flag",
+  'Watch Dogs 2',
+  'Final Fantasy XIV',
+  'FINAL FANTASY XIV Online',
+  'Final Fantasy XVI',
+  'Final Fantasy VII Remake',
+]);
+
+const XBOX_NAME_RE = /^(forza|halo|sea of thieves|gears)/i;
+const PLAYSTATION_NAME_RE =
+  /spider-?man|god of war|horizon forbidden|last of us|uncharted|bloodborne|gran turismo|demon's souls|ghost of tsushima|marvel.?s spider/i;
+
+function isXboxCatalogItem(item) {
+  if (item.kind === 'app') return XBOX_HUB_APPS.has(item.name);
+  if (item.kind !== 'pc') return false;
+  if (MULTI_CONSOLE_NAMES.has(item.name)) return true;
+  return XBOX_NAME_RE.test(item.name);
+}
+
+function isPlayStationCatalogItem(item) {
+  if (item.kind === 'app') return PLAYSTATION_HUB_APPS.has(item.name);
+  if (item.kind !== 'pc') return false;
+  if (MULTI_CONSOLE_NAMES.has(item.name)) return true;
+  return PLAYSTATION_NAME_RE.test(item.name);
+}
+
+function withHubsFirst(items, hubNames) {
+  const hubs = [];
+  const rest = [];
+  for (const item of items) {
+    if (hubNames.has(item.name)) hubs.push(item);
+    else rest.push(item);
+  }
+  return [...hubs, ...rest];
+}
+
+/**
+ * Mix two lists by current remaining ratio into rows of `rowSize`.
+ * Kept for legacy callers / optional combined views.
+ */
+export function interleaveByRatio(primary, secondary, rowSize = 5) {
+  const out = [];
+  let i = 0;
+  let j = 0;
+  while (i < primary.length || j < secondary.length) {
+    const remA = primary.length - i;
+    const remB = secondary.length - j;
+    const rem = remA + remB;
+    if (rem <= 0) break;
+
+    let aSlots = Math.round((remA / rem) * rowSize);
+    aSlots = Math.max(0, Math.min(aSlots, remA, rowSize));
+    let bSlots = Math.min(rowSize - aSlots, remB);
+    if (aSlots + bSlots < Math.min(rowSize, rem) && remA > aSlots) {
+      aSlots = Math.min(remA, rowSize - bSlots);
+    }
+    if (aSlots === 0 && remA > 0 && bSlots < rowSize) {
+      aSlots = Math.min(remA, rowSize - bSlots);
+      bSlots = Math.min(remB, rowSize - aSlots);
+    }
+    if (bSlots === 0 && remB > 0 && aSlots < rowSize) {
+      bSlots = Math.min(remB, rowSize - aSlots);
+    }
+
+    for (let k = 0; k < aSlots && i < primary.length; k += 1) out.push(primary[i++]);
+    for (let k = 0; k < bSlots && j < secondary.length; k += 1) out.push(secondary[j++]);
+  }
+  return out;
+}
+
+/** Resolve tab contents for sell / apps catalog. Legacy `games` → PC. */
 export function assortmentByTab(tabId) {
-  if (tabId === 'apps') return ASSORTMENT.filter((i) => i.kind === 'app');
-  if (tabId === 'mobile') return ASSORTMENT.filter((i) => i.kind === 'mobile');
-  // games: absolutely all games
-  return ASSORTMENT.filter((i) => i.kind === 'mobile' || i.kind === 'pc');
+  const id = tabId === 'games' ? 'pc' : tabId;
+
+  if (id === 'pc') return ASSORTMENT.filter((i) => i.kind === 'pc');
+  if (id === 'mobile') return ASSORTMENT.filter((i) => i.kind === 'mobile');
+  if (id === 'apps') {
+    return ASSORTMENT.filter((i) => i.kind === 'app' && !CONSOLE_HUB_APPS.has(i.name));
+  }
+  if (id === 'xbox') {
+    return withHubsFirst(ASSORTMENT.filter(isXboxCatalogItem), XBOX_HUB_APPS);
+  }
+  if (id === 'playstation') {
+    return withHubsFirst(ASSORTMENT.filter(isPlayStationCatalogItem), PLAYSTATION_HUB_APPS);
+  }
+
+  // Fallback: everything game-like
+  return ASSORTMENT.filter((i) => i.kind === 'pc' || i.kind === 'mobile');
 }

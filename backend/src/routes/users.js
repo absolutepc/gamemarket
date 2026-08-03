@@ -3,6 +3,28 @@ const { body } = require('express-validator');
 const pool = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
+const { normalizeCriteria, ratingFromCriteria } = require('../utils/reviewCriteria');
+const { LISTING_SHOWCASE_DAYS } = require('../services/listingExpiry');
+
+function publicSellerUser(u) {
+  return {
+    id: u.id,
+    username: u.username,
+    email: u.email,
+    role: u.role,
+    account_type: u.account_type || 'buyer',
+    account_type_chosen: u.account_type_chosen !== false,
+    needs_account_type: u.account_type_chosen === false,
+    is_founding_seller: Boolean(u.is_founding_seller),
+    founding_seller_number: u.founding_seller_number || null,
+    balance: u.balance,
+    avatar_url: u.avatar_url,
+    rating: u.rating,
+    sales_count: u.sales_count,
+    auth_provider: u.auth_provider,
+    is_verified: Boolean(u.is_verified),
+  };
+}
 
 router.get('/me/wallet-history', authenticate(), async (req, res) => {
   const { rows } = await pool.query(
@@ -19,15 +41,111 @@ router.get('/me/listings', authenticate(), async (req, res) => {
      FROM listings l
      LEFT JOIN categories c ON c.id = l.category_id
      WHERE l.seller_id=$1 AND l.status != 'deleted'
-     ORDER BY l.created_at DESC`,
+     ORDER BY
+       CASE l.status WHEN 'inactive' THEN 0 WHEN 'active' THEN 1 ELSE 2 END,
+       l.updated_at DESC`,
     [req.user.id]
   );
-  res.json(rows);
+  res.json(rows.map((l) => {
+    const published = l.published_at || l.created_at;
+    const end = published ? new Date(published).getTime() + LISTING_SHOWCASE_DAYS * 86400000 : Date.now();
+    const daysLeft = l.status === 'active'
+      ? Math.max(0, Math.ceil((end - Date.now()) / 86400000))
+      : 0;
+    const featuredUntil = l.featured_until ? new Date(l.featured_until) : null;
+    const isPromoted = Boolean(featuredUntil && featuredUntil.getTime() > Date.now());
+    return {
+      ...l,
+      is_featured: isPromoted,
+      featured_until: isPromoted ? l.featured_until : null,
+      showcase_days: LISTING_SHOWCASE_DAYS,
+      showcase_days_left: daysLeft,
+    };
+  }));
 });
+
+/** Upgrade buyer → seller after accepting seller criteria/terms */
+router.post('/me/become-seller',
+  authenticate(),
+  strictLimiter,
+  [
+    body('accept_seller_terms').custom((v) => v === true || v === 'true'),
+  ],
+  validate,
+  async (req, res) => {
+    let userRow = req.user;
+    if (req.user.account_type !== 'seller') {
+      const { rows } = await pool.query(
+        `UPDATE users SET account_type = 'seller', account_type_chosen = TRUE, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
+                   rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number`,
+        [req.user.id]
+      );
+      userRow = rows[0];
+    } else {
+      const { rows } = await pool.query(
+        `SELECT id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
+                rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number
+         FROM users WHERE id = $1`,
+        [req.user.id]
+      );
+      userRow = rows[0];
+    }
+
+    res.json({ user: publicSellerUser(userRow) });
+  }
+);
+
+/** First-time buyer/seller choice after OAuth (Google / VK / Apple) */
+router.post('/me/account-type',
+  authenticate(),
+  strictLimiter,
+  [
+    body('account_type').isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
+  ],
+  validate,
+  async (req, res) => {
+    const accountType = req.body.account_type === 'seller' ? 'seller' : 'buyer';
+    if (accountType === 'seller' && req.body.accept_seller_terms !== true && req.body.accept_seller_terms !== 'true') {
+      return res.status(400).json({
+        error: 'Для регистрации продавца нужно принять правила продажи',
+        code: 'SELLER_TERMS_REQUIRED',
+      });
+    }
+    if (req.user.account_type_chosen !== false && req.user.account_type === accountType) {
+      return res.json({
+        user: publicSellerUser({ ...req.user, account_type: accountType }),
+      });
+    }
+    if (req.user.account_type === 'seller' && accountType === 'buyer') {
+      return res.status(400).json({ error: 'Нельзя сменить тип с продавца на покупателя здесь' });
+    }
+    const { rows } = await pool.query(
+      `UPDATE users SET account_type = $1, account_type_chosen = TRUE, updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
+                 rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number`,
+      [accountType, req.user.id]
+    );
+    res.json({ user: publicSellerUser(rows[0]) });
+  }
+);
+
+const RESERVED_USERNAMES = new Set([
+  'admin', 'administrator', 'api', 'auth', 'login', 'register', 'logout',
+  'me', 'settings', 'support', 'help', 'faq', 'wallet', 'chats', 'chat',
+  'listings', 'listing', 'catalog', 'apps', 'users', 'user', 'null',
+  'undefined', 'root', 'system', 'moderator', 'mod', 'lootz', 'official',
+]);
 
 router.put('/me/profile',
   authenticate(),
   [
+    body('username').optional().trim().isLength({ min: 3, max: 30 })
+      .matches(/^[a-zA-Z0-9_]+$/)
+      .withMessage('Имя: 3–30 символов, латиница, цифры и _'),
     body('bio').optional({ nullable: true }).trim().isLength({ max: 500 }),
     body('avatar_url').optional({ nullable: true }).custom((v) => {
       if (v === null || v === '' || v === undefined) return true;
@@ -50,10 +168,30 @@ router.put('/me/profile',
     const avatarUrl = req.body.avatar_url !== undefined
       ? (req.body.avatar_url || null)
       : undefined;
+    let username;
+    if (req.body.username !== undefined) {
+      username = String(req.body.username).trim();
+      if (RESERVED_USERNAMES.has(username.toLowerCase())) {
+        return res.status(400).json({ error: 'Это имя занято системой' });
+      }
+      if (username.toLowerCase() !== String(req.user.username || '').toLowerCase()) {
+        const taken = await pool.query(
+          'SELECT id FROM users WHERE LOWER(username)=LOWER($1) AND id<>$2',
+          [username, req.user.id]
+        );
+        if (taken.rows[0]) {
+          return res.status(409).json({ error: 'Это имя уже занято' });
+        }
+      }
+    }
 
     const fields = [];
     const values = [];
     let i = 1;
+    if (username !== undefined) {
+      fields.push(`username=$${i++}`);
+      values.push(username);
+    }
     if (bio !== undefined) {
       fields.push(`bio=$${i++}`);
       values.push(bio);
@@ -169,12 +307,23 @@ router.post('/reviews',
   strictLimiter,
   [
     body('transaction_id').isUUID(),
-    body('rating').isInt({ min: 1, max: 5 }),
+    body('rating').optional().isInt({ min: 1, max: 5 }),
+    body('criteria').isArray({ min: 1, max: 5 }),
+    body('criteria.*').isString().isLength({ min: 1, max: 40 }),
     body('comment').optional({ nullable: true }).trim().isLength({ max: 1000 }),
   ],
   validate,
   async (req, res) => {
-    const { transaction_id, rating, comment } = req.body;
+    const { transaction_id, comment } = req.body;
+    const criteria = normalizeCriteria(req.body.criteria);
+    if (!criteria || criteria.length < 1) {
+      return res.status(400).json({ error: 'Выберите хотя бы один пункт оценки' });
+    }
+    const rating = ratingFromCriteria(criteria);
+    // If client also sent rating, it must match criteria count
+    if (req.body.rating != null && Number(req.body.rating) !== rating) {
+      return res.status(400).json({ error: 'Оценка должна соответствовать числу выбранных пунктов' });
+    }
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -219,9 +368,9 @@ router.post('/reviews',
       }
 
       await client.query(
-        `INSERT INTO reviews (transaction_id, reviewer_id, reviewed_id, rating, comment)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [transaction_id, req.user.id, tx.seller_id, rating, comment || null]
+        `INSERT INTO reviews (transaction_id, reviewer_id, reviewed_id, rating, comment, criteria)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [transaction_id, req.user.id, tx.seller_id, rating, comment || null, JSON.stringify(criteria)]
       );
       await client.query(
         `UPDATE users SET
@@ -245,12 +394,30 @@ router.post('/reviews',
 );
 
 router.get('/:username', apiLimiter, async (req, res) => {
-  const { rows } = await pool.query(
-    `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
-            COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified
-     FROM users WHERE username=$1 AND is_banned=FALSE`,
-    [req.params.username]
-  );
+  let rows;
+  try {
+    ({ rows } = await pool.query(
+      `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
+              COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified,
+              COALESCE(is_founding_seller, FALSE) AS is_founding_seller,
+              founding_seller_number
+       FROM users WHERE LOWER(username)=LOWER($1) AND is_banned=FALSE`,
+      [req.params.username]
+    ));
+  } catch (err) {
+    // Fallback if founders columns are not migrated yet
+    if (err.code === '42703') {
+      ({ rows } = await pool.query(
+        `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
+                COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified,
+                FALSE AS is_founding_seller, NULL::int AS founding_seller_number
+         FROM users WHERE LOWER(username)=LOWER($1) AND is_banned=FALSE`,
+        [req.params.username]
+      ));
+    } else {
+      throw err;
+    }
+  }
   if (!rows[0]) return res.status(404).json({ error: 'User not found' });
   const user = rows[0];
 
@@ -263,8 +430,23 @@ router.get('/:username', apiLimiter, async (req, res) => {
       [user.id]
     ),
     pool.query(
-      `SELECT r.rating, r.comment, r.created_at, u.username AS reviewer_username, u.avatar_url AS reviewer_avatar
-       FROM reviews r JOIN users u ON u.id = r.reviewer_id
+      `SELECT r.rating, r.comment, COALESCE(r.criteria, '[]'::jsonb) AS criteria, r.created_at,
+              u.username AS reviewer_username, u.avatar_url AS reviewer_avatar,
+              l.id AS listing_id,
+              l.title AS listing_title,
+              l.price AS listing_price,
+              l.original_price AS listing_original_price,
+              l.discount_percent AS listing_discount_percent,
+              l.status AS listing_status,
+              CASE
+                WHEN l.images IS NULL THEN NULL
+                WHEN jsonb_typeof(l.images) = 'array' THEN l.images->>0
+                ELSE NULL
+              END AS listing_image
+       FROM reviews r
+       JOIN users u ON u.id = r.reviewer_id
+       LEFT JOIN transactions t ON t.id = r.transaction_id
+       LEFT JOIN listings l ON l.id = t.listing_id
        WHERE r.reviewed_id=$1
        ORDER BY r.created_at DESC LIMIT 20`,
       [user.id]
@@ -284,6 +466,8 @@ router.get('/:username', apiLimiter, async (req, res) => {
     sales_count: user.sales_count || 0,
     purchases_count: user.purchases_count || 0,
     deals_count: dealsRes.rows[0].deals_count || 0,
+    is_founding_seller: Boolean(user.is_founding_seller),
+    founding_seller_number: user.founding_seller_number || null,
     listings: listingsRes.rows,
     reviews: reviewsRes.rows,
   });

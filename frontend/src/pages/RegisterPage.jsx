@@ -1,27 +1,58 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Shield, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ShoppingBag, Store } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import SocialLoginButtons from '../components/SocialLoginButtons';
+import { ACCOUNT_TYPE_OPTIONS, ACCOUNT_TYPES } from '../utils/accountTypes';
+import { getDeviceFingerprint } from '../utils/deviceFingerprint';
+
+const TYPE_ICONS = {
+  buyer: ShoppingBag,
+  seller: Store,
+};
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: {
+      account_type: ACCOUNT_TYPES.buyer,
+      accept_seller_terms: false,
+    },
+  });
   const password = watch('password');
+  const accountType = watch('account_type');
 
   const onSubmit = async (data) => {
     try {
-      const res = await api.post('/auth/register', {
+      const payload = {
         username: data.username,
         email: data.email,
         password: data.password,
-      });
+        account_type: data.account_type,
+      };
+      if (data.account_type === ACCOUNT_TYPES.seller) {
+        payload.accept_seller_terms = true;
+        payload.device_fingerprint = (await getDeviceFingerprint()) || undefined;
+      }
+      const res = await api.post('/auth/register', payload);
       setAuth(res.data.user, res.data.accessToken);
-      toast.success('Аккаунт создан!');
-      navigate('/');
+      toast.success(
+        data.account_type === ACCOUNT_TYPES.seller
+          ? 'Аккаунт продавца создан!'
+          : 'Аккаунт покупателя создан!'
+      );
+      navigate(
+        data.account_type === ACCOUNT_TYPES.seller ? '/founders' : '/'
+      );
     } catch (err) {
       toast.error(err.response?.data?.error || 'Ошибка регистрации');
     }
@@ -29,18 +60,80 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Shield size={22} className="text-white" />
-          </div>
           <h1 className="text-2xl font-bold">Регистрация</h1>
-          <p className="text-dark-400 text-sm mt-1">Создайте аккаунт на Lootz</p>
+          <p className="text-dark-400 text-sm mt-1">Выберите тип аккаунта и создайте профиль на Lootz</p>
         </div>
 
         <div className="card p-6">
-          <SocialLoginButtons dividerLabel="или создать аккаунт" />
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Тип аккаунта</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {ACCOUNT_TYPE_OPTIONS.map((opt) => {
+                  const active = accountType === opt.value;
+                  const Icon = TYPE_ICONS[opt.value] || ShoppingBag;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setValue('account_type', opt.value, { shouldValidate: true })}
+                      className={`text-left rounded-2xl border p-3.5 transition-colors ${
+                        active
+                          ? 'border-[#2B71F3] bg-[#2B71F3]/10'
+                          : 'border-dark-700 bg-dark-900/60 hover:border-dark-500'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Icon size={18} className={active ? 'text-[#5B8CFF]' : 'text-dark-300'} />
+                        <span className="font-semibold text-white">{opt.label}</span>
+                      </div>
+                      <p className="text-xs text-dark-400 mb-2.5">{opt.description}</p>
+                      <ul className="space-y-1">
+                        {opt.criteria.map((c) => (
+                          <li key={c} className="flex items-start gap-1.5 text-[11px] text-dark-300 leading-snug">
+                            <CheckCircle2 size={12} className="text-emerald-400 mt-0.5 shrink-0" />
+                            <span>{c}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </button>
+                  );
+                })}
+              </div>
+              <input type="hidden" {...register('account_type', { required: true })} />
+            </div>
+
+            {accountType === ACCOUNT_TYPES.seller && (
+              <label className="flex items-start gap-2.5 text-sm text-dark-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-1 rounded border-dark-600"
+                  {...register('accept_seller_terms', {
+                    validate: (v) => accountType !== ACCOUNT_TYPES.seller || v === true
+                      || 'Нужно принять правила продавца',
+                  })}
+                />
+                <span>
+                  Принимаю критерии продавца: выставление лотов, комиссия Lootz 7.5%/17.5%
+                  и правила споров.{' '}
+                  <Link to="/rules" className="text-[#5B8CFF] hover:underline">Правила</Link>
+                </span>
+              </label>
+            )}
+            {errors.accept_seller_terms && (
+              <p className="text-red-400 text-xs -mt-2">{errors.accept_seller_terms.message}</p>
+            )}
+
+            <SocialLoginButtons
+              className="mb-0"
+              dividerLabel="или создать через email"
+              passAccountType
+              accountType={accountType}
+              acceptSellerTerms={Boolean(watch('accept_seller_terms'))}
+            />
+
             <div>
               <label className="text-sm font-medium mb-1.5 block">Никнейм</label>
               <input
@@ -105,7 +198,11 @@ export default function RegisterPage() {
             </div>
 
             <button type="submit" disabled={isSubmitting} className="btn-primary h-11">
-              {isSubmitting ? 'Создание...' : 'Создать аккаунт'}
+              {isSubmitting
+                ? 'Создание...'
+                : accountType === ACCOUNT_TYPES.seller
+                  ? 'Создать аккаунт продавца'
+                  : 'Создать аккаунт покупателя'}
             </button>
           </form>
 

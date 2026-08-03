@@ -28,10 +28,10 @@ export default function TermsOfSalePage() {
           </p>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>
-              <strong className="text-white">7.5%</strong> — подписки, донат, пополнения, ключи, подарочные карты, AI и сервисы
+              <strong className="text-white">7.5%</strong> — донат, подписки, пополнение баланса, ключи, скины, игры
             </li>
             <li>
-              <strong className="text-white">17.5%</strong> — аккаунты, предметы, игровая валюта, бусты, услуги и прочее
+              <strong className="text-white">17.5%</strong> — аккаунты, предметы, игровая валюта, бусты, подарочные карты, AI, услуги и прочее
             </li>
           </ul>
           <p className="mt-3">
@@ -43,7 +43,8 @@ export default function TermsOfSalePage() {
           <h2 className="text-xl font-semibold text-white mb-2">3. Эскроу</h2>
           <p>
             После оплаты сумма блокируется до передачи товара. Автоматическое освобождение эскроу
-            возможно через 72 часа после передачи, если покупатель не открыл спор.
+            возможно через 48 часов после подтверждения передачи продавцом, если покупатель не
+            подтвердил получение и не открыл спор.
           </p>
         </section>
 

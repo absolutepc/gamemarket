@@ -4,6 +4,7 @@ import {
   X, ArrowLeft, Package, Lock, Info, MessageCircle, Check, Wallet, CreditCard, Globe, Bitcoin,
 } from 'lucide-react';
 import { formatPrice } from '../utils/format';
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock';
 
 const PAYMENT_METHODS = [
   {
@@ -70,11 +71,11 @@ export default function BuyCheckoutModal({
     setComment('');
     setPaymentMethod('balance');
     setFieldError('');
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => {
-      document.body.style.overflow = '';
+      unlockBodyScroll();
       document.removeEventListener('keydown', onKey);
     };
   }, [open, onClose]);

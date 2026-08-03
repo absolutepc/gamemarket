@@ -1,15 +1,20 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera } from 'lucide-react';
+import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera, Crown, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
-import ListingCard, { LISTING_GRID_CLASS } from '../components/ListingCard';
+import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import ProfileMenuModal from '../components/ProfileMenuModal';
+import PromoteListingModal from '../components/PromoteListingModal';
+import ReviewListingChip from '../components/ReviewListingChip';
 import useAuthStore from '../store/authStore';
 import { formatDate, formatPrice } from '../utils/format';
 import { compressImageFile } from '../utils/imageCompress';
+import { labelsForCriteria } from '../utils/reviewCriteria';
+import { sellPathForUser } from '../utils/sellPath';
+import { isStaffAdmin } from '../utils/roles';
 
 function StarRow({ rating }) {
   return (
@@ -26,20 +31,52 @@ function StarRow({ rating }) {
   );
 }
 
+function CriteriaTags({ criteria }) {
+  const labels = labelsForCriteria(criteria);
+  if (!labels.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {labels.map((label) => (
+        <span
+          key={label}
+          className="px-2 py-0.5 rounded-lg text-[11px] bg-dark-800 border border-dark-700 text-dark-300"
+        >
+          {label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
-  const isOwn = currentUser?.username === username;
+  const isOwn = Boolean(
+    currentUser?.username
+    && username
+    && currentUser.username.toLowerCase() === String(username).toLowerCase()
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [promoteListing, setPromoteListing] = useState(null);
   const fileRef = useRef(null);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['profile', username],
-    queryFn: () => api.get(`/users/${username}`).then((r) => r.data),
+    queryFn: () => api.get(`/users/${encodeURIComponent(username)}`).then((r) => r.data),
+    enabled: Boolean(username),
+    retry: 1,
+    staleTime: 15_000,
+  });
+
+  const { data: myListings, isLoading: myListingsLoading } = useQuery({
+    queryKey: ['my-listings'],
+    queryFn: () => api.get('/users/me/listings').then((r) => r.data),
+    enabled: isOwn,
+    retry: 1,
   });
 
   const deleteMutation = useMutation({
@@ -47,9 +84,28 @@ export default function ProfilePage() {
     onSuccess: () => {
       toast.success('Лот удалён');
       qc.invalidateQueries(['profile', username]);
+      qc.invalidateQueries(['my-listings']);
     },
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка удаления'),
   });
+
+  const reactivateMutation = useMutation({
+    mutationFn: (id) => api.post(`/listings/${id}/reactivate`),
+    onSuccess: (res) => {
+      toast.success(res.data?.message || 'Лот активирован на 30 дней');
+      qc.invalidateQueries(['profile', username]);
+      qc.invalidateQueries(['my-listings']);
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Не удалось активировать'),
+  });
+
+  const ownListings = isOwn && !myListingsLoading ? (myListings || []) : null;
+  const activeListings = ownListings
+    ? ownListings.filter((l) => l.status === 'active')
+    : (profile?.listings || []);
+  const inactiveListings = ownListings
+    ? ownListings.filter((l) => l.status === 'inactive')
+    : [];
 
   const startChat = async () => {
     if (!currentUser) return navigate('/login');
@@ -79,8 +135,12 @@ export default function ProfilePage() {
     }
   };
 
+  if (!username) {
+    return <Navigate to="/users" replace />;
+  }
+
   if (isLoading) return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 animate-pulse">
+    <div className={`${PAGE_WIDTH_CLASS} py-8 animate-pulse`}>
       <div className="flex gap-5 mb-8">
         <div className="w-24 h-24 rounded-2xl bg-dark-800" />
         <div className="flex flex-col gap-3 pt-2">
@@ -91,13 +151,27 @@ export default function ProfilePage() {
     </div>
   );
 
-  if (!profile) return <div className="text-center py-20 text-dark-400">Пользователь не найден</div>;
+  if (isError || !profile) {
+    return (
+      <div className={`${PAGE_WIDTH_CLASS} py-20 text-center`}>
+        <p className="text-dark-400 mb-4">Не удалось загрузить профиль</p>
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={isFetching}
+          onClick={() => refetch()}
+        >
+          {isFetching ? 'Загрузка...' : 'Повторить'}
+        </button>
+      </div>
+    );
+  }
 
   const rating = parseFloat(profile.rating) || 0;
   const avatarUrl = isOwn ? (currentUser?.avatar_url || profile.avatar_url) : profile.avatar_url;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className={`${PAGE_WIDTH_CLASS} py-8`}>
       <Seo title={profile.username} description={`Профиль продавца ${profile.username} на Lootz`} path={`/users/${profile.username}`} />
 
       <div className="card p-6 mb-6">
@@ -108,7 +182,7 @@ export default function ProfilePage() {
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-3xl font-bold">
-                  {profile.username[0].toUpperCase()}
+                  {(profile.username?.[0] || '?').toUpperCase()}
                 </div>
               )}
             </div>
@@ -138,7 +212,18 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{profile.username}</h1>
-              {profile.is_verified && <BadgeCheck size={18} className="text-brand-400" />}
+              {profile.is_founding_seller ? (
+                <BadgeCheck size={18} className="text-amber-300" title="Founding Seller" />
+              ) : profile.is_verified ? (
+                <BadgeCheck size={18} className="text-brand-400" />
+              ) : null}
+              {profile.is_founding_seller && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-200 text-[11px] font-semibold px-2 py-0.5">
+                  <Crown size={11} />
+                  Founding Seller
+                  {profile.founding_seller_number ? ` #${profile.founding_seller_number}` : ''}
+                </span>
+              )}
               {isOwn && (
                 <button
                   type="button"
@@ -178,6 +263,15 @@ export default function ProfilePage() {
                 {formatPrice(currentUser.balance)}
               </Link>
             )}
+            {isOwn && isStaffAdmin(currentUser) && (
+              <Link
+                to="/admin"
+                className="lg:hidden rounded-xl bg-dark-800 border border-dark-700 px-4 py-3 text-white font-semibold text-sm hover:border-[#2B71F3]/50 transition-colors inline-flex items-center gap-2"
+              >
+                <Shield size={16} className="text-[#5B8CFF]" />
+                Админ-панель
+              </Link>
+            )}
             {!isOwn && currentUser && (
               <button onClick={startChat} className="btn-secondary flex items-center gap-2">
                 <MessageCircle size={16} /> Написать
@@ -188,10 +282,27 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="font-bold text-lg mb-4">Активные лоты ({profile.listings?.length || 0})</h2>
-        {profile.listings?.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="font-bold text-lg">Активные лоты ({activeListings.length})</h2>
+          {isOwn && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to={sellPathForUser(currentUser)} className="btn-primary text-sm h-9 px-3 inline-flex items-center">
+                Создать лот
+              </Link>
+              <Link to="/listings/import" className="btn-secondary text-sm h-9 px-3 inline-flex items-center">
+                Импорт
+              </Link>
+            </div>
+          )}
+        </div>
+        {isOwn && (
+          <p className="text-xs text-dark-400 mb-3">
+            Лоты висят на витрине 30 дней, затем их нужно снова активировать.
+          </p>
+        )}
+        {activeListings.length > 0 ? (
           <div className={LISTING_GRID_CLASS}>
-            {profile.listings.map((l) => (
+            {activeListings.map((l) => (
               <ListingCard
                 key={l.id}
                 listing={{
@@ -205,20 +316,47 @@ export default function ProfilePage() {
                 onDelete={(listing) => {
                   if (window.confirm('Удалить лот?')) deleteMutation.mutate(listing.id);
                 }}
+                onReactivate={(listing) => reactivateMutation.mutate(listing.id)}
+                onPromote={(listing) => setPromoteListing(listing)}
               />
             ))}
           </div>
         ) : (
           <div className="card p-8 text-center text-dark-400 text-sm">
             Нет активных лотов
-            {isOwn && (
-              <div className="mt-3">
-                <Link to="/listings/create" className="btn-primary text-sm">Создать лот</Link>
-              </div>
-            )}
           </div>
         )}
       </div>
+
+      {isOwn && inactiveListings.length > 0 && (
+        <div className="mb-8">
+          <h2 className="font-bold text-lg mb-4">
+            Сняты с витрины ({inactiveListings.length})
+          </h2>
+          <p className="text-xs text-dark-400 mb-3">
+            Срок 30 дней истёк — нажмите «Активировать», чтобы снова показать лот в каталоге.
+          </p>
+          <div className={LISTING_GRID_CLASS}>
+            {inactiveListings.map((l) => (
+              <ListingCard
+                key={l.id}
+                listing={{
+                  ...l,
+                  seller_username: profile.username,
+                  seller_rating: profile.rating,
+                  seller_reviews: profile.reviews_count,
+                }}
+                showOwnerActions
+                onEdit={(listing) => navigate(`/listings/${listing.id}/edit`)}
+                onDelete={(listing) => {
+                  if (window.confirm('Удалить лот?')) deleteMutation.mutate(listing.id);
+                }}
+                onReactivate={(listing) => reactivateMutation.mutate(listing.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 className="font-bold text-lg mb-4">Отзывы ({profile.reviews_count || 0})</h2>
@@ -228,7 +366,7 @@ export default function ProfilePage() {
               <div key={i} className="card p-4">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-sm font-semibold">
-                    {r.reviewer_username[0].toUpperCase()}
+                    {(r.reviewer_username?.[0] || '?').toUpperCase()}
                   </div>
                   <div>
                     <p className="font-medium text-sm">{r.reviewer_username}</p>
@@ -237,6 +375,8 @@ export default function ProfilePage() {
                   <span className="ml-auto text-xs text-dark-400">{formatDate(r.created_at)}</span>
                 </div>
                 {r.comment && <p className="text-dark-300 text-sm">{r.comment}</p>}
+                <CriteriaTags criteria={r.criteria} />
+                <ReviewListingChip review={r} />
               </div>
             ))}
           </div>
@@ -248,6 +388,15 @@ export default function ProfilePage() {
       {isOwn && (
         <ProfileMenuModal open={menuOpen} onClose={() => setMenuOpen(false)} />
       )}
+      <PromoteListingModal
+        open={Boolean(promoteListing)}
+        onClose={() => setPromoteListing(null)}
+        listing={promoteListing}
+        onPromoted={() => {
+          qc.invalidateQueries({ queryKey: ['my-listings'] });
+          qc.invalidateQueries({ queryKey: ['profile', username] });
+        }}
+      />
     </div>
   );
 }

@@ -1,30 +1,98 @@
 /**
  * Lootz fees: like Playerok, but 2.5% lower.
- * Reduced 7.5% / Standard 17.5%
+ * 7.5% / 17.5% standard; Founders: 5% / 13%.
  */
 
 export const FEE_REDUCED = 0.075;
 export const FEE_STANDARD = 0.175;
+export const FEE_FOUNDERS_REDUCED = 0.05;
+export const FEE_FOUNDERS_STANDARD = 0.13;
 
 const REDUCED_CATEGORY_SLUGS = new Set([
   'subscriptions',
   'topups',
-  'gift-cards',
-  'ai-services',
 ]);
 
-const REDUCED_LISTING_TYPES = new Set([
+export const REDUCED_LISTING_TYPES = new Set([
   'subscription',
   'donate',
   'topup',
   'keys',
+  'skins',
+  'games',
+  'item',
   'giftcard',
+  'stars',
+  'nft_gifts',
+  'stickers',
+  'coins',
+  'promotion',
+  'boosting',
+  'game_account',
+  'packs',
+  'license',
+  'software',
+  'ps_plus',
+  'ea_play',
+  'premium',
+  'youtube_music',
+  'youtube_tv',
+  'game_pass',
+  'ubisoft_plus',
+  'voices',
+  'vk_music',
+  'vk_play',
+  'bits',
+  'tariff',
+  'tokens',
+  'diamonds',
+  'superlikes',
+  'beans',
+  'promocodes',
+  'plugins',
+  'zems',
+  'mochi',
+  'gold',
+  'elixir',
+  'trovo_ace',
+  'mana',
+  'addons',
+  'nitro',
+  'decorations',
+  'nintendo_switch_online',
 ]);
 
-export function resolveFeePercent({ categorySlug, listingType } = {}) {
-  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return FEE_REDUCED;
-  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return FEE_REDUCED;
-  return FEE_STANDARD;
+export function isReducedFeeListingType(listingType) {
+  return REDUCED_LISTING_TYPES.has(listingType);
+}
+
+function isReducedTier({ categorySlug, listingType } = {}) {
+  if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return true;
+  if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return true;
+  return false;
+}
+
+function isFoundingFlag(isFoundingSeller) {
+  return isFoundingSeller === true || isFoundingSeller === 't' || isFoundingSeller === 1;
+}
+
+/** Reduced-tier rate only (7.5% or Founders 5%) — for badges / «Платёж» filter. */
+export function resolveReducedFeePercent(isFoundingSeller) {
+  return isFoundingFlag(isFoundingSeller) ? FEE_FOUNDERS_REDUCED : FEE_REDUCED;
+}
+
+/** Standard-tier rate (17.5% or Founders 13%). */
+export function resolveStandardFeePercent(isFoundingSeller) {
+  return isFoundingFlag(isFoundingSeller) ? FEE_FOUNDERS_STANDARD : FEE_STANDARD;
+}
+
+export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
+  const reduced = isReducedTier({ categorySlug, listingType });
+  const founding = isFoundingFlag(isFoundingSeller);
+  if (founding) {
+    return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
+  }
+  return reduced ? FEE_REDUCED : FEE_STANDARD;
 }
 
 export function formatFeePercent(percent) {

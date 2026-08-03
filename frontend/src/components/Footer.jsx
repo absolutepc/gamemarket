@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
+import { PAGE_WIDTH_CLASS } from './ListingCard';
 
 const SOCIALS = [
   {
     label: 'Telegram',
-    href: 'https://t.me/',
+    href: 'https://t.me/lootz_io',
     icon: (
       <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="currentColor" aria-hidden>
         <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
@@ -51,6 +52,7 @@ const SOCIALS = [
 const PAYMENTS = ['Visa', 'Mastercard', 'Мир', 'СБП', 'Сбер', 'Тинькофф', 'ВТБ', 'Альфа'];
 
 const INFO_LINKS = [
+  { to: '/about', label: 'О Lootz' },
   { to: '/privacy', label: 'Политика конфиденциальности' },
   { to: '/user-agreement', label: 'Пользовательское соглашение' },
   { to: '/terms-of-sale', label: 'Условия продажи' },
@@ -60,10 +62,17 @@ const INFO_LINKS = [
 export default function Footer() {
   return (
     <footer className="mt-16 border-t border-dark-800 bg-dark-900/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
+      <div className={`${PAGE_WIDTH_CLASS} py-10 sm:py-12`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
           {/* Left: socials (swapped with payments vs Playerok) — gran-pc style */}
           <div>
+            <Link to="/about" className="inline-block mb-3 no-underline">
+              <span className="font-bold text-xl tracking-tight text-[#5B8CFF]">Lootz</span>
+            </Link>
+            <p className="text-sm text-dark-400 leading-relaxed mb-5 max-w-xs">
+              Lootz — маркетплейс игровых товаров и услуг. Безопасные сделки с эскроу
+              между покупателями и продавцами.
+            </p>
             <h3 className="text-base font-semibold text-white mb-4">Социальные сети</h3>
             <div className="flex flex-wrap gap-3 mb-5">
               {SOCIALS.map((s) => (

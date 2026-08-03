@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
@@ -26,9 +25,6 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Shield size={22} className="text-white" />
-          </div>
           <h1 className="text-2xl font-bold">Вход в Lootz</h1>
           <p className="text-dark-400 text-sm mt-1">Безопасная торговая площадка</p>
         </div>

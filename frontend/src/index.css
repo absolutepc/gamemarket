@@ -6,6 +6,10 @@
   * {
     box-sizing: border-box;
   }
+  html {
+    /* Reserve scrollbar space so modals don't shift centered layout */
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-dark-950 text-white font-sans antialiased;
     min-height: 100vh;
@@ -164,4 +168,52 @@ html.light ::-webkit-scrollbar-track {
 }
 html.light ::-webkit-scrollbar-thumb {
   background: #c4c7ce;
+}
+
+/* Sell wizard — listing type rows */
+.sell-type-row {
+  background-color: transparent;
+  border: 1px solid transparent;
+}
+.sell-type-row .sell-type-label {
+  color: #ffffff;
+}
+.sell-type-row .sell-type-radio {
+  border-color: #737385;
+  background-color: transparent;
+}
+.sell-type-row:hover {
+  background-color: rgba(43, 113, 243, 0.35);
+  border-color: rgba(43, 113, 243, 0.7);
+}
+.sell-type-row:hover .sell-type-label {
+  color: #9ec0ff;
+}
+.sell-type-row:hover .sell-type-radio {
+  border-color: #2B71F3;
+}
+.sell-type-row.is-active {
+  background-color: rgba(43, 113, 243, 0.22);
+  border-color: #2B71F3;
+}
+.sell-type-row.is-active .sell-type-label {
+  color: #ffffff;
+}
+.sell-type-row.is-active .sell-type-radio,
+.sell-type-row .sell-type-radio.is-active {
+  border-color: #2B71F3;
+  background-color: #2B71F3;
+}
+
+html.light .sell-type-row .sell-type-label {
+  color: #12141a;
+}
+html.light .sell-type-row:hover {
+  background-color: rgba(43, 113, 243, 0.14);
+}
+html.light .sell-type-row:hover .sell-type-label {
+  color: #1a4bb8;
+}
+html.light .sell-type-row.is-active {
+  background-color: rgba(43, 113, 243, 0.12);
 }

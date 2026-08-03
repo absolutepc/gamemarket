@@ -59,12 +59,17 @@ app.set('trust proxy', 1);
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/listings/import', require('./routes/listingsImport'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/chats', require('./routes/chats'));
+app.use('/api/assortment', require('./routes/assortment'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/stats', require('./routes/stats'));
+app.use('/api/founders', require('./routes/founders'));
+app.use('/api/contest', require('./routes/contest'));
 app.use('/api', require('./routes/seo'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
@@ -162,8 +167,15 @@ const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
 const { migrate } = require('./migrate');
 const { startAutoReleaseJob } = require('./services/escrow');
+const { startListingExpiryJob } = require('./services/listingExpiry');
+const { startContestRolloverJob } = require('./services/contest');
 
 async function start() {
+  // Bind port first so deploys/healthchecks are not blocked by DDL locks
+  server.listen(PORT, HOST, () => {
+    logger.info(`Server running on http://${HOST}:${PORT}`);
+  });
+
   try {
     await migrate();
   } catch (err) {
@@ -173,10 +185,8 @@ async function start() {
   }
 
   startAutoReleaseJob(60_000);
-
-  server.listen(PORT, HOST, () => {
-    logger.info(`Server running on http://${HOST}:${PORT}`);
-  });
+  startListingExpiryJob(300_000);
+  startContestRolloverJob(3_600_000);
 }
 
 start();
