@@ -21,7 +21,7 @@ const STATUS_UI = {
     icon: CheckCircle2,
     label: 'Одобрена',
     className: 'text-emerald-400',
-    hint: 'Вы Founding Seller — льготная комиссия 5%/10% активна.',
+    hint: 'Вы Founding Seller — льготная комиссия 5%/13% активна.',
   },
   rejected: {
     icon: XCircle,
@@ -113,8 +113,8 @@ export default function FoundersPage() {
           <span className="text-amber-200 font-semibold">5%</span>
           {' / '}
           <span className="line-through text-dark-500">17.5%</span>{' '}
-          <span className="text-amber-200 font-semibold">10%</span>
-          , золотая галочка, приоритет в поиске и бейдж Founding Seller.
+          <span className="text-amber-200 font-semibold">13%</span>
+          , золотая галочка и бейдж Founding Seller. В каталоге выше поднимает платное ТОП-продвижение.
         </p>
         <ul className="space-y-1.5 text-sm text-dark-200">
           <li className="flex items-start gap-2">

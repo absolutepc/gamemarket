@@ -8,6 +8,21 @@ async function processExpiredListings() {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Clear paid TOP when featured_until passes
+    try {
+      const { rowCount: cleared } = await client.query(
+        `UPDATE listings
+         SET is_featured = FALSE, updated_at = NOW()
+         WHERE is_featured = TRUE
+           AND featured_until IS NOT NULL
+           AND featured_until <= NOW()`
+      );
+      if (cleared) logger.info(`Cleared ${cleared} expired listing promotion(s)`);
+    } catch (err) {
+      if (err.code !== '42703') throw err;
+    }
+
     const { rows } = await client.query(
       `UPDATE listings
        SET status = 'inactive', updated_at = NOW()

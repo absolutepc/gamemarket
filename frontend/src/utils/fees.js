@@ -1,12 +1,12 @@
 /**
  * Lootz fees: like Playerok, but 2.5% lower.
- * 7.5% / 17.5% standard; Founders: 5% / 10%.
+ * 7.5% / 17.5% standard; Founders: 5% / 13%.
  */
 
 export const FEE_REDUCED = 0.075;
 export const FEE_STANDARD = 0.175;
 export const FEE_FOUNDERS_REDUCED = 0.05;
-export const FEE_FOUNDERS_STANDARD = 0.10;
+export const FEE_FOUNDERS_STANDARD = 0.13;
 
 const REDUCED_CATEGORY_SLUGS = new Set([
   'subscriptions',

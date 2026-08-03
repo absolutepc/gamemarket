@@ -1,10 +1,10 @@
 /**
  * Lootz fees: Playerok-like tiers, ~2.5% lower.
  * Playerok ~10% / ~20%  →  Lootz 7.5% / 17.5%
- * Founders: 5% / 10%
+ * Founders: 5% / 13%
  *
  * 7.5% (5% founders): донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
- * 17.5% (10% founders): всё остальное
+ * 17.5% (13% founders): всё остальное
  */
 
 const { FEE_FOUNDERS_REDUCED, FEE_FOUNDERS_STANDARD } = require('./founders');

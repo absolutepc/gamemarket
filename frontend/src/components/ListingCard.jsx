@@ -25,6 +25,7 @@ export default function ListingCard({
   onEdit,
   onDelete,
   onReactivate,
+  onPromote,
 }) {
   const image = listing.images?.[0] || PLACEHOLDER;
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
@@ -167,6 +168,18 @@ export default function ListingCard({
                          px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
             >
               Активировать на 30 дней
+            </button>
+          )}
+          {!isInactive && onPromote && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); onPromote(listing); }}
+              className="w-full inline-flex items-center justify-center gap-1 rounded-xl border border-[#2B71F3]/40
+                         bg-[#2B71F3]/15 hover:bg-[#2B71F3]/25 text-[#8EB6FF] text-[11px] sm:text-xs font-medium
+                         px-1.5 sm:px-2 py-1.5 transition-colors active:scale-95"
+            >
+              <Zap size={12} />
+              {listing.is_featured ? 'Продлить ТОП' : 'В ТОП'}
             </button>
           )}
           <div className="grid grid-cols-2 gap-1.5 sm:gap-2">

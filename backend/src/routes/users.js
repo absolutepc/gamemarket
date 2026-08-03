@@ -52,8 +52,12 @@ router.get('/me/listings', authenticate(), async (req, res) => {
     const daysLeft = l.status === 'active'
       ? Math.max(0, Math.ceil((end - Date.now()) / 86400000))
       : 0;
+    const featuredUntil = l.featured_until ? new Date(l.featured_until) : null;
+    const isPromoted = Boolean(featuredUntil && featuredUntil.getTime() > Date.now());
     return {
       ...l,
+      is_featured: isPromoted,
+      featured_until: isPromoted ? l.featured_until : null,
       showcase_days: LISTING_SHOWCASE_DAYS,
       showcase_days_left: daysLeft,
     };

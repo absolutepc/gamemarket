@@ -8,6 +8,11 @@ const { apiLimiter, strictLimiter, validate } = require('../middleware/security'
 const { calcPlatformFee } = require('../services/fees');
 const { LISTING_SHOWCASE_DAYS } = require('../services/listingExpiry');
 const { enrichListingAttributes } = require('../services/listingImport');
+const {
+  PROMOTE_PACKAGES,
+  getPromotePackage,
+  SQL_IS_PROMOTED,
+} = require('../services/listingPromote');
 
 function showcaseDaysLeft(publishedAt) {
   if (!publishedAt) return LISTING_SHOWCASE_DAYS;
@@ -270,10 +275,14 @@ router.get('/', apiLimiter, async (req, res) => {
   };
   const orderBy = orderMap[sort] || 'l.created_at DESC';
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+  // Paid TOP first; then requested sort; Founders only as soft tiebreaker
+  const rankingOrder = `${SQL_IS_PROMOTED} DESC, ${orderBy}, COALESCE(u.is_founding_seller, FALSE) DESC`;
 
   const listSqlWithFounders = `
       SELECT l.id, l.title, l.price, l.original_price, l.discount_percent, l.currency,
-              l.game, l.listing_type, l.images, l.views_count, l.is_featured,
+              l.game, l.listing_type, l.images, l.views_count,
+              (${SQL_IS_PROMOTED}) AS is_featured,
+              l.featured_until,
               l.delivery_method, l.created_at, l.published_at, l.status,
               u.username AS seller_username, u.avatar_url AS seller_avatar,
               u.rating AS seller_rating, u.sales_count AS seller_sales,
@@ -285,7 +294,7 @@ router.get('/', apiLimiter, async (req, res) => {
        JOIN users u ON u.id = l.seller_id
        LEFT JOIN categories c ON c.id = l.category_id
        ${where}
-       ORDER BY COALESCE(u.is_founding_seller, FALSE) DESC, l.is_featured DESC, ${orderBy}
+       ORDER BY ${rankingOrder}
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
 
   const listSqlBase = `
@@ -309,6 +318,7 @@ router.get('/', apiLimiter, async (req, res) => {
   try {
     dataRes = await pool.query(listSqlWithFounders, [...params, take, offset]);
   } catch (err) {
+    // 42703 = undefined_column (e.g. featured_until / founders cols before migrate)
     if (err.code !== '42703') throw err;
     dataRes = await pool.query(listSqlBase, [...params, take, offset]);
   }
@@ -333,6 +343,10 @@ router.get('/', apiLimiter, async (req, res) => {
     page: parseInt(page),
     pages: Math.ceil(parseInt(countRes.rows[0].count) / take),
   });
+});
+
+router.get('/promote/packages', apiLimiter, (_req, res) => {
+  res.json({ packages: PROMOTE_PACKAGES });
 });
 
 router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
@@ -370,8 +384,12 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
     listingType: listing.listing_type,
     isFoundingSeller: Boolean(listing.seller_is_founding),
   });
+  const featuredUntil = listing.featured_until ? new Date(listing.featured_until) : null;
+  const isPromoted = Boolean(featuredUntil && featuredUntil.getTime() > Date.now());
   res.json({
     ...listing,
+    is_featured: isPromoted,
+    featured_until: isPromoted ? listing.featured_until : null,
     showcase_days: LISTING_SHOWCASE_DAYS,
     showcase_days_left: listing.status === 'active'
       ? showcaseDaysLeft(listing.published_at || listing.created_at)
@@ -379,6 +397,7 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
     platform_fee_percent: fee.feePercent,
     platform_fee: fee.fee,
     seller_receives: fee.sellerReceives,
+    promote_packages: PROMOTE_PACKAGES,
   });
 });
 
@@ -568,6 +587,110 @@ router.post('/:id/reactivate', authenticate(), strictLimiter, async (req, res) =
     message: `Лот снова на витрине на ${LISTING_SHOWCASE_DAYS} дней`,
   });
 });
+
+router.post(
+  '/:id/promote',
+  authenticate(),
+  strictLimiter,
+  [body('days').isInt({ min: 1, max: 30 })],
+  validate,
+  async (req, res) => {
+    const pkg = getPromotePackage(req.body.days);
+    if (!pkg) {
+      return res.status(400).json({
+        error: 'Выберите пакет продвижения',
+        packages: PROMOTE_PACKAGES,
+      });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows: listingRows } = await client.query(
+        `SELECT id, seller_id, status, title, featured_until
+         FROM listings WHERE id=$1 FOR UPDATE`,
+        [req.params.id]
+      );
+      const listing = listingRows[0];
+      if (!listing) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Лот не найден' });
+      }
+      if (String(listing.seller_id) !== String(req.user.id) && req.user.role !== 'admin') {
+        await client.query('ROLLBACK');
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      if (listing.status !== 'active') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Продвигать можно только активный лот' });
+      }
+
+      const { rows: userRows } = await client.query(
+        'SELECT id, balance FROM users WHERE id=$1 FOR UPDATE',
+        [req.user.id]
+      );
+      const balance = parseFloat(userRows[0]?.balance || 0);
+      if (balance < pkg.price) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          error: 'Недостаточно средств на балансе',
+          code: 'INSUFFICIENT_BALANCE',
+          required: pkg.price,
+          balance,
+        });
+      }
+
+      const { rows: balRows } = await client.query(
+        `UPDATE users SET balance = balance - $1, updated_at = NOW()
+         WHERE id=$2 RETURNING balance`,
+        [pkg.price, req.user.id]
+      );
+
+      await client.query(
+        `INSERT INTO wallet_transactions (user_id, type, amount, balance_after, description, reference_id)
+         VALUES ($1, 'listing_promote', $2, $3, $4, $5)`,
+        [
+          req.user.id,
+          -pkg.price,
+          balRows[0].balance,
+          `Продвижение лота «${String(listing.title).slice(0, 80)}» на ${pkg.days} дн.`,
+          listing.id,
+        ]
+      );
+
+      const base = listing.featured_until && new Date(listing.featured_until) > new Date()
+        ? new Date(listing.featured_until)
+        : new Date();
+      const featuredUntil = new Date(base.getTime() + pkg.days * 86400000);
+
+      const { rows: updated } = await client.query(
+        `UPDATE listings
+         SET is_featured = TRUE,
+             featured_until = $1,
+             updated_at = NOW()
+         WHERE id=$2
+         RETURNING id, title, is_featured, featured_until, status`,
+        [featuredUntil.toISOString(), listing.id]
+      );
+
+      await client.query('COMMIT');
+      res.json({
+        listing: {
+          ...updated[0],
+          is_featured: true,
+        },
+        package: pkg,
+        balance: balRows[0].balance,
+        message: `Лот в ТОП на ${pkg.days} дн. до ${featuredUntil.toLocaleString('ru-RU')}`,
+      });
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+);
 
 router.delete('/:id', authenticate(), async (req, res) => {
   const { rows } = await pool.query('SELECT seller_id FROM listings WHERE id=$1', [req.params.id]);

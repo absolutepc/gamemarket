@@ -86,8 +86,8 @@ function FoundersSubtitle() {
       <span className="text-amber-200 font-semibold">5%</span>
       {' '}и{' '}
       <span className="line-through text-dark-500">17.5%</span>{' '}
-      <span className="text-amber-200 font-semibold">10%</span>
-      , золотая галочка, приоритет в поиске и бейдж Founding Seller. Вход по заявке после рассмотрения — один аккаунт на человека.
+      <span className="text-amber-200 font-semibold">13%</span>
+      , золотая галочка и бейдж Founding Seller. Вход по заявке после рассмотрения — один аккаунт на человека.
     </>
   );
 }
@@ -199,11 +199,11 @@ function FoundersVisual({ sellersCount, foundersJoined, foundersLimit }) {
               <span className="text-amber-200 font-semibold">5%</span>
               {' / '}
               <span className="line-through text-dark-500">17.5%</span>{' '}
-              <span className="text-amber-200 font-semibold">10%</span>
+              <span className="text-amber-200 font-semibold">13%</span>
             </span>
           </li>
           <li className="flex items-center gap-1.5"><BadgeCheck size={11} className="text-amber-300" /> Золотая галочка</li>
-          <li className="flex items-center gap-1.5"><Trophy size={11} className="text-amber-300" /> Выше в поиске</li>
+          <li className="flex items-center gap-1.5"><Trophy size={11} className="text-amber-300" /> Льготная комиссия</li>
         </ul>
       </div>
     </div>

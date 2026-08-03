@@ -7,6 +7,7 @@ import api from '../utils/api';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import Seo from '../components/Seo';
 import ProfileMenuModal from '../components/ProfileMenuModal';
+import PromoteListingModal from '../components/PromoteListingModal';
 import useAuthStore from '../store/authStore';
 import { formatDate, formatPrice } from '../utils/format';
 import { compressImageFile } from '../utils/imageCompress';
@@ -58,6 +59,7 @@ export default function ProfilePage() {
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [promoteListing, setPromoteListing] = useState(null);
   const fileRef = useRef(null);
 
   const { data: profile, isLoading, isError, isFetching, refetch } = useQuery({
@@ -304,6 +306,7 @@ export default function ProfilePage() {
                   if (window.confirm('Удалить лот?')) deleteMutation.mutate(listing.id);
                 }}
                 onReactivate={(listing) => reactivateMutation.mutate(listing.id)}
+                onPromote={(listing) => setPromoteListing(listing)}
               />
             ))}
           </div>
@@ -373,6 +376,15 @@ export default function ProfilePage() {
       {isOwn && (
         <ProfileMenuModal open={menuOpen} onClose={() => setMenuOpen(false)} />
       )}
+      <PromoteListingModal
+        open={Boolean(promoteListing)}
+        onClose={() => setPromoteListing(null)}
+        listing={promoteListing}
+        onPromoted={() => {
+          qc.invalidateQueries({ queryKey: ['my-listings'] });
+          qc.invalidateQueries({ queryKey: ['profile', username] });
+        }}
+      />
     </div>
   );
 }

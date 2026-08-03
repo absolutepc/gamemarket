@@ -108,9 +108,9 @@ export default function BecomeSellerPage() {
             <span className="text-amber-200 font-semibold">5%</span>
             {' / '}
             <span className="line-through text-dark-500">17.5%</span>{' '}
-            <span className="text-amber-200 font-semibold">10%</span>
-            , золотая галочка, выше в поиске. Сейчас занято {foundersJoined}/{foundersLimit}.
-            Вход только по заявке после рассмотрения.
+            <span className="text-amber-200 font-semibold">13%</span>
+            , золотая галочка. Сейчас занято {foundersJoined}/{foundersLimit}.
+            Вход только по заявке после рассмотрения. В выдаче выше — платное ТОП-продвижение лота.
           </p>
           <ul className="space-y-1.5 text-sm text-dark-200 mb-3">
             <li className="flex items-start gap-2">

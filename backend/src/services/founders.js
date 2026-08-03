@@ -7,7 +7,7 @@ const FOUNDERS_LIMIT = 100;
 const FOUNDERS_ADVISORY_LOCK = 42010001;
 
 const FEE_FOUNDERS_REDUCED = 0.05;
-const FEE_FOUNDERS_STANDARD = 0.10;
+const FEE_FOUNDERS_STANDARD = 0.13;
 
 function normalizeEmailIdentity(email) {
   const raw = String(email || '').trim().toLowerCase();
@@ -327,7 +327,7 @@ async function approveFoundersApplication(pool, applicationId, adminUser, { admi
                $2, $3)`,
       [
         user.id,
-        `Вы Founding Seller #${grant.number}. Комиссия 5%/10% активна.`,
+        `Вы Founding Seller #${grant.number}. Комиссия 5%/13% активна.`,
         JSON.stringify({ founding_seller_number: grant.number, application_id: applicationId }),
       ]
     );

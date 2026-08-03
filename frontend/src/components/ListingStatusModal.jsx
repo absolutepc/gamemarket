@@ -8,7 +8,7 @@ export function resolveListingStatus(listing) {
       key: 'premium',
       label: 'Премиум',
       title: 'Статус Премиум',
-      description: 'Чем выше статус, тем быстрее и дороже вы продадите свой товар. Премиум повышает заметность лота в каталоге.',
+      description: 'Чем выше статус, тем быстрее и дороже вы продадите свой товар. Премиум (ТОП) — платное продвижение: лот выше в каталоге, чем у обычных и Founders без буста.',
       dotClass: 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.55)]',
       iconClass: 'bg-amber-400',
     };
@@ -18,7 +18,7 @@ export function resolveListingStatus(listing) {
       key: 'founders',
       label: 'Founders',
       title: 'Статус Founders',
-      description: 'Чем выше статус, тем быстрее и дороже вы продадите свой товар. Founders даёт сниженную комиссию и приоритет в выдаче.',
+      description: 'Чем выше статус, тем быстрее и дороже вы продадите свой товар. Founders даёт сниженную комиссию; платное ТОП-продвижение поднимает лот выше в каталоге.',
       dotClass: 'bg-amber-300 shadow-[0_0_10px_rgba(252,211,77,0.5)]',
       iconClass: 'bg-gradient-to-br from-amber-300 to-amber-500',
       showCrown: true,

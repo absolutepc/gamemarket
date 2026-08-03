@@ -12,6 +12,7 @@ import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
 import GuaranteeModal from '../components/GuaranteeModal';
 import ListingStatusModal, { resolveListingStatus } from '../components/ListingStatusModal';
+import PromoteListingModal from '../components/PromoteListingModal';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { formatPrice, formatDate, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
@@ -37,6 +38,7 @@ function BuyActions({
   deleteMutation,
   reactivateMutation,
   setCheckoutOpen,
+  setPromoteOpen,
 }) {
   if (isOwner) {
     return (
@@ -49,6 +51,18 @@ function BuyActions({
             className="btn-primary w-full h-12 flex items-center justify-center gap-2"
           >
             Активировать на 30 дней
+          </button>
+        )}
+        {listing.status === 'active' && (
+          <button
+            type="button"
+            onClick={() => setPromoteOpen?.(true)}
+            className="w-full h-12 rounded-2xl bg-[#2B71F3]/15 border border-[#2B71F3]/40
+                       hover:bg-[#2B71F3]/25 text-[#8EB6FF] font-semibold
+                       flex items-center justify-center gap-2 transition-colors"
+          >
+            <Zap size={16} />
+            {listing.is_featured ? 'Продлить ТОП' : 'Продвинуть в ТОП'}
           </button>
         )}
         <div className="flex gap-2">
@@ -113,6 +127,7 @@ export default function ListingPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [guaranteeOpen, setGuaranteeOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [promoteOpen, setPromoteOpen] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
@@ -286,6 +301,7 @@ export default function ListingPage() {
     deleteMutation,
     reactivateMutation,
     setCheckoutOpen,
+    setPromoteOpen,
   };
 
   const gallery = (
@@ -807,6 +823,15 @@ export default function ListingPage() {
         open={statusOpen}
         onClose={() => setStatusOpen(false)}
         listing={listing}
+      />
+      <PromoteListingModal
+        open={promoteOpen}
+        onClose={() => setPromoteOpen(false)}
+        listing={listing}
+        packages={listing.promote_packages}
+        onPromoted={() => {
+          qc.invalidateQueries({ queryKey: ['listing', id] });
+        }}
       />
     </div>
   );

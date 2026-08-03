@@ -291,6 +291,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founders_fingerprint
   ON users (founders_fingerprint) WHERE is_founding_seller = TRUE AND founders_fingerprint IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_users_is_founding_seller
   ON users (is_founding_seller) WHERE is_founding_seller = TRUE;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_listings_featured_until
+  ON listings (featured_until) WHERE featured_until IS NOT NULL;
 CREATE TABLE IF NOT EXISTS founders_applications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
