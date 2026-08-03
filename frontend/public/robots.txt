@@ -3,7 +3,11 @@ Allow: /
 Disallow: /wallet
 Disallow: /transactions
 Disallow: /listings/create
+Disallow: /listings/import
 Disallow: /login
 Disallow: /register
+Disallow: /chats
+Disallow: /admin
 
+# Prefer the live API sitemap index (static + landings + listings)
 Sitemap: https://www.lootz.ru/api/sitemap.xml

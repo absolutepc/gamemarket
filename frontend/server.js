@@ -36,6 +36,15 @@ const apiProxy = createProxyMiddleware({
   target: BACKEND_URL,
   changeOrigin: true,
   secure: true,
+  onProxyReq(proxyReq, req) {
+    // Preserve public host so backend absolute URLs (sitemaps, redirects) stay on www.lootz.ru
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    if (host) {
+      proxyReq.setHeader('X-Forwarded-Host', host);
+    }
+    const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    proxyReq.setHeader('X-Forwarded-Proto', proto);
+  },
 });
 
 const wsProxy = createProxyMiddleware({

@@ -36,13 +36,14 @@ function escapeXml(value) {
 }
 
 function siteBase() {
-  return (process.env.FRONTEND_URL || 'https://lootz.ru').replace(/\/$/, '');
+  const raw = (process.env.FRONTEND_URL || 'https://www.lootz.ru').replace(/\/$/, '');
+  // Prefer canonical www mirror used in Webmaster / Cloudflare
+  if (raw === 'https://lootz.ru') return 'https://www.lootz.ru';
+  return raw;
 }
 
-function apiBase(req) {
-  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
-  const host = req.get('x-forwarded-host') || req.get('host');
-  if (host) return `${proto}://${host}/api`;
+/** Public API origin for sitemap index — never leak Railway/internal Host */
+function apiPublicBase() {
   return `${siteBase()}/api`;
 }
 
@@ -101,7 +102,7 @@ function sendXml(res, body) {
 }
 
 router.get('/sitemap.xml', (req, res) => {
-  const base = apiBase(req);
+  const base = apiPublicBase();
   const now = new Date().toISOString();
   const maps = [
     'sitemap-static.xml',
