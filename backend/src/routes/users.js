@@ -57,6 +57,8 @@ router.post('/me/become-seller',
           email: req.user.email,
           role: req.user.role,
           account_type: 'seller',
+          account_type_chosen: true,
+          needs_account_type: false,
           balance: req.user.balance,
           avatar_url: req.user.avatar_url,
           rating: req.user.rating,
@@ -66,12 +68,75 @@ router.post('/me/become-seller',
       });
     }
     const { rows } = await pool.query(
-      `UPDATE users SET account_type = 'seller', updated_at = NOW()
+      `UPDATE users SET account_type = 'seller', account_type_chosen = TRUE, updated_at = NOW()
        WHERE id = $1
-       RETURNING id, username, email, role, account_type, balance, avatar_url, rating, sales_count, auth_provider`,
+       RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url, rating, sales_count, auth_provider`,
       [req.user.id]
     );
-    res.json({ user: rows[0] });
+    const u = rows[0];
+    res.json({
+      user: {
+        ...u,
+        account_type_chosen: true,
+        needs_account_type: false,
+      },
+    });
+  }
+);
+
+/** First-time buyer/seller choice after OAuth (Google / VK / Apple) */
+router.post('/me/account-type',
+  authenticate(),
+  strictLimiter,
+  [
+    body('account_type').isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
+  ],
+  validate,
+  async (req, res) => {
+    const accountType = req.body.account_type === 'seller' ? 'seller' : 'buyer';
+    if (accountType === 'seller' && req.body.accept_seller_terms !== true && req.body.accept_seller_terms !== 'true') {
+      return res.status(400).json({
+        error: 'Для регистрации продавца нужно принять правила продажи',
+        code: 'SELLER_TERMS_REQUIRED',
+      });
+    }
+    if (req.user.account_type_chosen !== false && req.user.account_type === accountType) {
+      return res.json({
+        user: {
+          id: req.user.id,
+          username: req.user.username,
+          email: req.user.email,
+          role: req.user.role,
+          account_type: accountType,
+          account_type_chosen: true,
+          needs_account_type: false,
+          balance: req.user.balance,
+          avatar_url: req.user.avatar_url,
+          rating: req.user.rating,
+          sales_count: req.user.sales_count,
+          auth_provider: req.user.auth_provider,
+        },
+      });
+    }
+    // Allow first choice freely; if already seller, keep seller (no downgrade here)
+    if (req.user.account_type === 'seller' && accountType === 'buyer') {
+      return res.status(400).json({ error: 'Нельзя сменить тип с продавца на покупателя здесь' });
+    }
+    const { rows } = await pool.query(
+      `UPDATE users SET account_type = $1, account_type_chosen = TRUE, updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, username, email, role, account_type, account_type_chosen, balance, avatar_url, rating, sales_count, auth_provider`,
+      [accountType, req.user.id]
+    );
+    const u = rows[0];
+    res.json({
+      user: {
+        ...u,
+        account_type_chosen: true,
+        needs_account_type: false,
+      },
+    });
   }
 );
 
@@ -339,7 +404,7 @@ router.get('/:username', apiLimiter, async (req, res) => {
   const { rows } = await pool.query(
     `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
             COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified
-     FROM users WHERE username=$1 AND is_banned=FALSE`,
+     FROM users WHERE LOWER(username)=LOWER($1) AND is_banned=FALSE`,
     [req.params.username]
   );
   if (!rows[0]) return res.status(404).json({ error: 'User not found' });

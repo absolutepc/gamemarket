@@ -4,6 +4,11 @@ import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import { parseGoogleCallback } from '../utils/googleAuth';
+import {
+  clearOAuthAccountChoice,
+  oauthAccountTypePayload,
+  pathAfterOAuth,
+} from '../utils/oauthAccount';
 
 export default function GoogleCallbackPage() {
   const navigate = useNavigate();
@@ -33,13 +38,15 @@ export default function GoogleCallbackPage() {
           code_verifier: saved.codeVerifier,
           redirect_uri: saved.redirectUri,
           state: payload.state || saved.state,
+          ...oauthAccountTypePayload(),
         });
 
         sessionStorage.removeItem('google_oauth');
+        clearOAuthAccountChoice();
         if (cancelled) return;
         setAuth(data.user, data.accessToken);
         toast.success('Вход через Google выполнен');
-        navigate('/', { replace: true });
+        navigate(pathAfterOAuth(data), { replace: true });
       } catch (err) {
         if (cancelled) return;
         const msg = err.response?.data?.error || err.message || 'Ошибка входа через Google';

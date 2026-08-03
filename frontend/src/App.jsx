@@ -30,6 +30,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SellerRoute from './components/SellerRoute';
 import AdminRoute from './components/AdminRoute';
 import BecomeSellerPage from './pages/BecomeSellerPage';
+import CompleteAccountTypePage from './pages/CompleteAccountTypePage';
 import useAuthStore from './store/authStore';
 
 /** /users without username → own profile or login */
@@ -66,6 +67,7 @@ export default function App() {
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="user-agreement" element={<UserAgreementPage />} />
         <Route element={<ProtectedRoute />}>
+          <Route path="complete-account-type" element={<CompleteAccountTypePage />} />
           <Route path="become-seller" element={<BecomeSellerPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="transactions/:id" element={<TransactionPage />} />

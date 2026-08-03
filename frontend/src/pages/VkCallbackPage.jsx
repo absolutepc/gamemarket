@@ -4,6 +4,11 @@ import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
 import { parseVkCallbackPayload } from '../utils/vkAuth';
+import {
+  clearOAuthAccountChoice,
+  oauthAccountTypePayload,
+  pathAfterOAuth,
+} from '../utils/oauthAccount';
 
 export default function VkCallbackPage() {
   const navigate = useNavigate();
@@ -31,13 +36,15 @@ export default function VkCallbackPage() {
           device_id: payload.device_id || payload.deviceId,
           redirect_uri: saved.redirectUri,
           state: payload.state || saved.state,
+          ...oauthAccountTypePayload(),
         });
 
         sessionStorage.removeItem('vk_oauth');
+        clearOAuthAccountChoice();
         if (cancelled) return;
         setAuth(data.user, data.accessToken);
         toast.success('Вход через VK ID выполнен');
-        navigate('/', { replace: true });
+        navigate(pathAfterOAuth(data), { replace: true });
       } catch (err) {
         if (cancelled) return;
         const msg = err.response?.data?.error || err.message || 'Ошибка входа через VK';

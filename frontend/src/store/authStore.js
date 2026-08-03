@@ -26,8 +26,12 @@ const useAuthStore = create(
         try {
           const { data } = await api.get('/auth/me');
           if (data?.user) {
-            set({ user: data.user });
-            return data.user;
+            const next = {
+              ...data.user,
+              needs_account_type: data.needs_account_type ?? data.user.needs_account_type,
+            };
+            set({ user: next });
+            return next;
           }
         } catch {
           /* keep existing session; hard logout only if refresh fails in api interceptor */

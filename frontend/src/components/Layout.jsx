@@ -32,6 +32,16 @@ export default function Layout() {
     if (accessToken) hydrateUser();
   }, [accessToken, hydrateUser]);
 
+  useEffect(() => {
+    if (!user) return;
+    const needsChoice = user.needs_account_type === true || user.account_type_chosen === false;
+    if (!needsChoice) return;
+    const allowed = pathname.startsWith('/complete-account-type')
+      || pathname.startsWith('/rules')
+      || pathname.startsWith('/auth/');
+    if (!allowed) navigate('/complete-account-type', { replace: true });
+  }, [user, pathname, navigate]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) navigate(`/catalog?search=${encodeURIComponent(search.trim())}`);

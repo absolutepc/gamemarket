@@ -79,8 +79,9 @@ router.post('/register',
       }
       const hash = await bcrypt.hash(password, 12);
       const { rows } = await client.query(
-        `INSERT INTO users (username, email, password_hash, account_type) VALUES ($1,$2,$3,$4)
-         RETURNING id, username, email, role, balance, avatar_url, account_type`,
+        `INSERT INTO users (username, email, password_hash, account_type, account_type_chosen)
+         VALUES ($1,$2,$3,$4,TRUE)
+         RETURNING id, username, email, role, balance, avatar_url, account_type, account_type_chosen`,
         [username, email, hash, accountType]
       );
       const user = rows[0];
@@ -174,22 +175,50 @@ router.post('/logout', authenticate(false), async (req, res) => {
 });
 
 router.get('/me', authenticate(), (req, res) => {
-  res.json({ user: req.user });
+  res.json({ user: publicUser(req.user), needs_account_type: needsAccountType(req.user) });
 });
 
+function needsAccountType(user) {
+  return user?.account_type_chosen === false;
+}
+
 function publicUser(user) {
+  const accountType = user.account_type || 'buyer';
+  const chosen = user.account_type_chosen !== false;
   return {
     id: user.id,
     username: user.username,
     email: user.email,
     role: user.role,
-    account_type: user.account_type || 'buyer',
+    account_type: accountType,
+    account_type_chosen: chosen,
+    needs_account_type: !chosen,
     balance: user.balance,
     avatar_url: user.avatar_url,
     rating: user.rating,
     sales_count: user.sales_count,
     auth_provider: user.auth_provider || 'email',
   };
+}
+
+/** Optional buyer/seller choice from OAuth body (register flow). */
+function resolveOAuthAccountType(body = {}) {
+  const raw = body.account_type;
+  if (raw !== 'buyer' && raw !== 'seller') {
+    return { accountType: 'buyer', chosen: false };
+  }
+  if (raw === 'seller' && body.accept_seller_terms !== true && body.accept_seller_terms !== 'true') {
+    return {
+      error: {
+        status: 400,
+        body: {
+          error: 'Для регистрации продавца нужно принять правила продажи',
+          code: 'SELLER_TERMS_REQUIRED',
+        },
+      },
+    };
+  }
+  return { accountType: raw, chosen: true };
 }
 
 async function issueSession(res, req, user) {
@@ -208,6 +237,16 @@ async function issueSession(res, req, user) {
     maxAge: REFRESH_EXPIRES_DAYS * 86400000,
   });
   return accessToken;
+}
+
+async function respondOAuth(res, req, user, { created = false } = {}) {
+  const accessToken = await issueSession(res, req, user);
+  res.json({
+    accessToken,
+    user: publicUser(user),
+    created,
+    needs_account_type: needsAccountType(user),
+  });
 }
 
 function oauthProviderConfig() {
@@ -264,12 +303,19 @@ router.post('/vk',
     body('device_id').optional({ nullable: true }).trim(),
     body('redirect_uri').trim().isURL({ require_tld: false }),
     body('state').optional().trim(),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
   ],
   validate,
   async (req, res) => {
     const appId = envCredential('VK_APP_ID');
     if (!oauthFlagEnabled('VK_OAUTH_ENABLED') || !appId) {
       return res.status(503).json({ error: 'Вход через VK ID временно отключён' });
+    }
+
+    const accountChoice = resolveOAuthAccountType(req.body);
+    if (accountChoice.error) {
+      return res.status(accountChoice.error.status).json(accountChoice.error.body);
     }
 
     const { code, code_verifier, redirect_uri, state } = req.body;
@@ -320,6 +366,7 @@ router.post('/vk',
 
     let { rows } = await pool.query('SELECT * FROM users WHERE vk_id=$1', [vkId]);
     let user = rows[0];
+    let created = false;
 
     if (!user && vkUser.email) {
       const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [vkUser.email]);
@@ -342,12 +389,13 @@ router.post('/vk',
         username = `vk_${vkId}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
       }
       const inserted = await pool.query(
-        `INSERT INTO users (username, email, password_hash, avatar_url, vk_id, auth_provider, is_verified)
-         VALUES ($1,$2,NULL,$3,$4,'vk',TRUE)
+        `INSERT INTO users (username, email, password_hash, avatar_url, vk_id, auth_provider, is_verified, account_type, account_type_chosen)
+         VALUES ($1,$2,NULL,$3,$4,'vk',TRUE,$5,$6)
          RETURNING *`,
-        [username, email, vkUser.avatar || null, vkId]
+        [username, email, vkUser.avatar || null, vkId, accountChoice.accountType, accountChoice.chosen]
       );
       user = inserted.rows[0];
+      created = true;
     } else if (user.is_banned) {
       return res.status(403).json({ error: 'Account suspended' });
     } else if (vkUser.avatar && !user.avatar_url) {
@@ -358,8 +406,15 @@ router.post('/vk',
       user = updated.rows[0];
     }
 
-    const accessToken = await issueSession(res, req, user);
-    res.json({ accessToken, user: publicUser(user) });
+    if (created === false && accountChoice.chosen && user.account_type_chosen === false) {
+      const updated = await pool.query(
+        `UPDATE users SET account_type=$1, account_type_chosen=TRUE, updated_at=NOW() WHERE id=$2 RETURNING *`,
+        [accountChoice.accountType, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    await respondOAuth(res, req, user, { created });
   }
 );
 
@@ -368,11 +423,18 @@ router.post('/apple',
   [
     body('identityToken').trim().notEmpty(),
     body('user').optional({ nullable: true }),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
   ],
   validate,
   async (req, res) => {
     if (!oauthFlagEnabled('APPLE_OAUTH_ENABLED') || !envCredential('APPLE_CLIENT_ID')) {
       return res.status(503).json({ error: 'Вход через Apple ID временно отключён' });
+    }
+
+    const accountChoice = resolveOAuthAccountType(req.body);
+    if (accountChoice.error) {
+      return res.status(accountChoice.error.status).json(accountChoice.error.body);
     }
 
     let claims;
@@ -403,6 +465,7 @@ router.post('/apple',
 
     let { rows } = await pool.query('SELECT * FROM users WHERE apple_id=$1', [appleId]);
     let user = rows[0];
+    let created = false;
 
     if (!user && appleEmail) {
       const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [appleEmail]);
@@ -424,12 +487,13 @@ router.post('/apple',
         username = `apple_${shortSub}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
       }
       const inserted = await pool.query(
-        `INSERT INTO users (username, email, password_hash, apple_id, auth_provider, is_verified)
-         VALUES ($1,$2,NULL,$3,'apple',TRUE)
+        `INSERT INTO users (username, email, password_hash, apple_id, auth_provider, is_verified, account_type, account_type_chosen)
+         VALUES ($1,$2,NULL,$3,'apple',TRUE,$4,$5)
          RETURNING *`,
-        [username, email, appleId]
+        [username, email, appleId, accountChoice.accountType, accountChoice.chosen]
       );
       user = inserted.rows[0];
+      created = true;
     } else if (user.is_banned) {
       return res.status(403).json({ error: 'Account suspended' });
     } else if (user.auth_provider !== 'apple') {
@@ -440,8 +504,15 @@ router.post('/apple',
       user = updated.rows[0];
     }
 
-    const accessToken = await issueSession(res, req, user);
-    res.json({ accessToken, user: publicUser(user) });
+    if (created === false && accountChoice.chosen && user.account_type_chosen === false) {
+      const updated = await pool.query(
+        `UPDATE users SET account_type=$1, account_type_chosen=TRUE, updated_at=NOW() WHERE id=$2 RETURNING *`,
+        [accountChoice.accountType, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    await respondOAuth(res, req, user, { created });
   }
 );
 
@@ -452,6 +523,8 @@ router.post('/google',
     body('code_verifier').trim().isLength({ min: 43, max: 128 }),
     body('redirect_uri').trim().isURL({ require_tld: false }),
     body('state').optional().trim(),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional(),
   ],
   validate,
   async (req, res) => {
@@ -459,6 +532,11 @@ router.post('/google',
     const clientSecret = envCredential('GOOGLE_CLIENT_SECRET');
     if (!clientId || !clientSecret) {
       return res.status(503).json({ error: 'Google вход не настроен (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)' });
+    }
+
+    const accountChoice = resolveOAuthAccountType(req.body);
+    if (accountChoice.error) {
+      return res.status(accountChoice.error.status).json(accountChoice.error.body);
     }
 
     const { code, code_verifier, redirect_uri } = req.body;
@@ -505,6 +583,7 @@ router.post('/google',
 
     let { rows } = await pool.query('SELECT * FROM users WHERE google_id=$1', [googleId]);
     let user = rows[0];
+    let created = false;
 
     if (!user && googleUser.email) {
       const byEmail = await pool.query('SELECT * FROM users WHERE email=$1', [googleUser.email]);
@@ -532,12 +611,13 @@ router.post('/google',
         username = `g_${googleId.slice(-10)}_${crypto.randomBytes(2).toString('hex')}`.slice(0, 50);
       }
       const inserted = await pool.query(
-        `INSERT INTO users (username, email, password_hash, avatar_url, google_id, auth_provider, is_verified)
-         VALUES ($1,$2,NULL,$3,$4,'google',$5)
+        `INSERT INTO users (username, email, password_hash, avatar_url, google_id, auth_provider, is_verified, account_type, account_type_chosen)
+         VALUES ($1,$2,NULL,$3,$4,'google',$5,$6,$7)
          RETURNING *`,
-        [username, email, avatar, googleId, googleUser.email_verified === true]
+        [username, email, avatar, googleId, googleUser.email_verified === true, accountChoice.accountType, accountChoice.chosen]
       );
       user = inserted.rows[0];
+      created = true;
     } else if (user.is_banned) {
       return res.status(403).json({ error: 'Account suspended' });
     } else {
@@ -553,8 +633,15 @@ router.post('/google',
       user = updated.rows[0];
     }
 
-    const accessToken = await issueSession(res, req, user);
-    res.json({ accessToken, user: publicUser(user) });
+    if (created === false && accountChoice.chosen && user.account_type_chosen === false) {
+      const updated = await pool.query(
+        `UPDATE users SET account_type=$1, account_type_chosen=TRUE, updated_at=NOW() WHERE id=$2 RETURNING *`,
+        [accountChoice.accountType, user.id]
+      );
+      user = updated.rows[0];
+    }
+
+    await respondOAuth(res, req, user, { created });
   }
 );
 

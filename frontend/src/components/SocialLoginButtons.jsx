@@ -6,6 +6,13 @@ import useAuthStore from '../store/authStore';
 import { startVkLogin } from '../utils/vkAuth';
 import { startAppleLogin } from '../utils/appleAuth';
 import { startGoogleLogin } from '../utils/googleAuth';
+import { ACCOUNT_TYPES } from '../utils/accountTypes';
+import {
+  clearOAuthAccountChoice,
+  oauthAccountTypePayload,
+  pathAfterOAuth,
+  saveOAuthAccountChoice,
+} from '../utils/oauthAccount';
 
 function VkIcon() {
   return (
@@ -34,7 +41,19 @@ function GoogleIcon() {
   );
 }
 
-export default function SocialLoginButtons({ className = '', dividerLabel = 'или по email' }) {
+/**
+ * @param {object} props
+ * @param {string} [props.accountType] — from register form (buyer|seller)
+ * @param {boolean} [props.acceptSellerTerms]
+ * @param {boolean} [props.passAccountType] — save choice before OAuth (register page)
+ */
+export default function SocialLoginButtons({
+  className = '',
+  dividerLabel = 'или по email',
+  accountType,
+  acceptSellerTerms = false,
+  passAccountType = false,
+}) {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [providers, setProviders] = useState(null);
@@ -65,7 +84,31 @@ export default function SocialLoginButtons({ className = '', dividerLabel = 'и�
 
   if (!anyEnabled) return null;
 
+  const prepareChoice = () => {
+    if (!passAccountType) {
+      clearOAuthAccountChoice();
+      return true;
+    }
+    if (accountType === ACCOUNT_TYPES.seller && !acceptSellerTerms) {
+      toast.error('Примите правила продавца перед входом через соцсеть');
+      return false;
+    }
+    saveOAuthAccountChoice({
+      accountType: accountType || ACCOUNT_TYPES.buyer,
+      acceptSellerTerms,
+    });
+    return true;
+  };
+
+  const finishSocial = (data, successMsg) => {
+    clearOAuthAccountChoice();
+    setAuth(data.user, data.accessToken);
+    toast.success(successMsg);
+    navigate(pathAfterOAuth(data), { replace: true });
+  };
+
   const onVk = async () => {
+    if (!prepareChoice()) return;
     setBusy('vk');
     try {
       await startVkLogin(providers.vk);
@@ -76,6 +119,7 @@ export default function SocialLoginButtons({ className = '', dividerLabel = 'и�
   };
 
   const onGoogle = async () => {
+    if (!prepareChoice()) return;
     setBusy('google');
     try {
       await startGoogleLogin(providers.google);
@@ -86,16 +130,16 @@ export default function SocialLoginButtons({ className = '', dividerLabel = 'и�
   };
 
   const onApple = async () => {
+    if (!prepareChoice()) return;
     setBusy('apple');
     try {
       const result = await startAppleLogin(providers.apple);
       const { data } = await api.post('/auth/apple', {
         identityToken: result.identityToken,
         user: result.user || undefined,
+        ...oauthAccountTypePayload(),
       });
-      setAuth(data.user, data.accessToken);
-      toast.success('Вход через Apple выполнен');
-      navigate('/');
+      finishSocial(data, 'Вход через Apple выполнен');
     } catch (err) {
       const msg = err.response?.data?.error || err.message || 'Apple ID недоступен';
       if (!/popup|cancel|закрыт|closed/i.test(String(msg))) {

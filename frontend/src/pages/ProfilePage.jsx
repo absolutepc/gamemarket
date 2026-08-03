@@ -51,7 +51,11 @@ export default function ProfilePage() {
   const qc = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
-  const isOwn = currentUser?.username === username;
+  const isOwn = Boolean(
+    currentUser?.username
+    && username
+    && currentUser.username.toLowerCase() === String(username).toLowerCase()
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileRef = useRef(null);

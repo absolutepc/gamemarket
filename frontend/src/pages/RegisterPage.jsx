@@ -63,7 +63,6 @@ export default function RegisterPage() {
         </div>
 
         <div className="card p-6">
-          <SocialLoginButtons dividerLabel="или создать аккаунт" />
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Тип аккаунта</label>
@@ -122,6 +121,14 @@ export default function RegisterPage() {
             {errors.accept_seller_terms && (
               <p className="text-red-400 text-xs -mt-2">{errors.accept_seller_terms.message}</p>
             )}
+
+            <SocialLoginButtons
+              className="mb-0"
+              dividerLabel="или создать через email"
+              passAccountType
+              accountType={accountType}
+              acceptSellerTerms={Boolean(watch('accept_seller_terms'))}
+            />
 
             <div>
               <label className="text-sm font-medium mb-1.5 block">Никнейм</label>

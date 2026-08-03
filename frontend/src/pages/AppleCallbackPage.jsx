@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
+import {
+  clearOAuthAccountChoice,
+  oauthAccountTypePayload,
+  pathAfterOAuth,
+} from '../utils/oauthAccount';
 
 /**
  * Fallback redirect landing for Sign in with Apple (when popup is blocked).
@@ -38,14 +43,16 @@ export default function AppleCallbackPage() {
         const { data } = await api.post('/auth/apple', {
           identityToken,
           user,
+          ...oauthAccountTypePayload(),
         });
 
         sessionStorage.removeItem('apple_id_token');
         sessionStorage.removeItem('apple_user');
+        clearOAuthAccountChoice();
         if (cancelled) return;
         setAuth(data.user, data.accessToken);
         toast.success('Вход через Apple выполнен');
-        navigate('/', { replace: true });
+        navigate(pathAfterOAuth(data), { replace: true });
       } catch (err) {
         if (cancelled) return;
         const msg = err.response?.data?.error || err.message || 'Ошибка входа через Apple';

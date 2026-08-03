@@ -197,6 +197,11 @@ WHERE account_type IS DISTINCT FROM 'seller'
     COALESCE(sales_count, 0) > 0
     OR EXISTS (SELECT 1 FROM listings l WHERE l.seller_id = users.id AND l.status != 'deleted')
   );
+-- NULL first so existing rows can be marked "already chosen" once; new OAuth defaults to false
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type_chosen BOOLEAN;
+UPDATE users SET account_type_chosen = TRUE WHERE account_type_chosen IS NULL;
+ALTER TABLE users ALTER COLUMN account_type_chosen SET DEFAULT FALSE;
+ALTER TABLE users ALTER COLUMN account_type_chosen SET NOT NULL;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS original_price DECIMAL(12,2);
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_id BIGINT UNIQUE;
