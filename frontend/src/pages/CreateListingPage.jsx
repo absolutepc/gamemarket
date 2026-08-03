@@ -586,13 +586,17 @@ export default function CreateListingPage() {
                     key={tab.id}
                     type="button"
                     onClick={() => { setAssortmentTab(tab.id); setAssortmentQ(''); }}
-                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium ${
-                      active ? 'bg-dark-700 text-white' : 'bg-dark-900 text-dark-300 border border-dark-800'
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-colors duration-150 ${
+                      active
+                        ? 'bg-[#2B71F3] text-white'
+                        : 'bg-dark-900 text-dark-300 border border-dark-800 hover:bg-[#2B71F3]/25 hover:border-[#2B71F3]/60 hover:text-white'
                     }`}
                   >
                     <Icon size={14} />
                     {tab.label}
-                    <span className="text-dark-500 text-xs">{tabCounts[tab.id] || 0}</span>
+                    <span className={`text-xs ${active ? 'text-white/70' : 'text-dark-500'}`}>
+                      {tabCounts[tab.id] || 0}
+                    </span>
                   </button>
                 );
               })}
@@ -630,7 +634,13 @@ export default function CreateListingPage() {
                     onClick={() => pickExpandedOffer(item, type.value)}
                     className="flex flex-col items-center gap-1.5 group text-left"
                   >
-                    <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10 group-active:scale-95 transition-transform">
+                    <div
+                      className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
+                                 ring-1 ring-white/10 transition-all duration-150
+                                 group-hover:ring-2 group-hover:ring-[#2B71F3]
+                                 group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]
+                                 group-active:scale-95"
+                    >
                       <img
                         src={item.icon || FALLBACK_ICON}
                         alt=""
@@ -642,7 +652,7 @@ export default function CreateListingPage() {
                         <FeeBadge percent={reducedFeePercent} className="rounded-none rounded-br-md" />
                       </span>
                     </div>
-                    <span className="text-[11px] text-white text-center line-clamp-1 leading-tight w-full font-medium">
+                    <span className="text-[11px] text-white text-center line-clamp-1 leading-tight w-full font-medium group-hover:text-[#8EB6FF] transition-colors">
                       {item.name}
                     </span>
                     <span className="text-[10px] text-dark-400 text-center line-clamp-1 leading-tight w-full">
@@ -660,7 +670,13 @@ export default function CreateListingPage() {
                     onClick={() => pickGame(item)}
                     className="flex flex-col items-center gap-1.5 group"
                   >
-                    <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10 group-active:scale-95 transition-transform">
+                    <div
+                      className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
+                                 ring-1 ring-white/10 transition-all duration-150
+                                 group-hover:ring-2 group-hover:ring-[#2B71F3]
+                                 group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]
+                                 group-active:scale-95"
+                    >
                       <img
                         src={item.icon || FALLBACK_ICON}
                         alt=""
@@ -669,7 +685,7 @@ export default function CreateListingPage() {
                         onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
                       />
                     </div>
-                    <span className="text-[11px] text-dark-300 text-center line-clamp-2 leading-tight w-full">
+                    <span className="text-[11px] text-dark-300 text-center line-clamp-2 leading-tight w-full group-hover:text-[#8EB6FF] transition-colors">
                       {item.name}
                     </span>
                   </button>
