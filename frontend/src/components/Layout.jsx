@@ -6,6 +6,7 @@ import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import ThemeToggle from './ThemeToggle';
 import BrandJsonLd from './BrandJsonLd';
+import ScrollToTop from './ScrollToTop';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
 import { sellPathForUser } from '../utils/sellPath';
 
@@ -49,6 +50,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollToTop />
       <BrandJsonLd />
       <header
         className={`sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl ${

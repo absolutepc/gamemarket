@@ -4,7 +4,7 @@ import {
   Shield, Star, Eye, Clock, MessageCircle, Pencil, Trash2, Zap,
   ChevronLeft, ChevronRight, Lock, CheckSquare, Package, Crown,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import useAuthStore from '../store/authStore';
@@ -112,10 +112,26 @@ export default function ListingPage() {
   const [guaranteeOpen, setGuaranteeOpen] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    setImgIdx(0);
+    setDescExpanded(false);
+  }, [id]);
+
   const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
     queryFn: () => api.get(`/listings/${id}`).then((r) => r.data),
   });
+
+  // Content loads after navigation — pin to top again once the lot is ready
+  useEffect(() => {
+    if (!listing || isLoading) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [listing?.id, isLoading]);
 
   const { data: sellerReviews = [] } = useQuery({
     queryKey: ['listing-seller-reviews', listing?.seller_username],
