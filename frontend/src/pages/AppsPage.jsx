@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { Gamepad2, Smartphone, Layers, Plus, Search } from 'lucide-react';
+import { Gamepad2, Smartphone, Layers, Plus, Search, Monitor } from 'lucide-react';
 import Seo from '../components/Seo';
 import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { ASSORTMENT_TABS } from '../data/assortment';
@@ -10,7 +10,9 @@ import { getAssortmentPath } from '../utils/gameSlug';
 const FALLBACK_ICON = '/assortment/other-apps.png';
 
 const TAB_ICONS = {
-  games: Gamepad2,
+  pc: Monitor,
+  xbox: Gamepad2,
+  playstation: Gamepad2,
   mobile: Smartphone,
   apps: Layers,
 };
@@ -18,7 +20,8 @@ const TAB_ICONS = {
 export default function AppsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const activeTab = ASSORTMENT_TABS.some((t) => t.id === tabParam) ? tabParam : 'games';
+  const normalizedParam = tabParam === 'games' ? 'pc' : tabParam;
+  const activeTab = ASSORTMENT_TABS.some((t) => t.id === normalizedParam) ? normalizedParam : 'pc';
   const [q, setQ] = useState('');
   const { byTab } = useVisibleAssortment();
 
@@ -39,20 +42,30 @@ export default function AppsPage() {
   );
 
   const setTab = (id) => {
-    setSearchParams(id === 'games' ? {} : { tab: id }, { replace: true });
+    setSearchParams(id === 'pc' ? {} : { tab: id }, { replace: true });
     setQ('');
   };
 
-  const activeLabel = ASSORTMENT_TABS.find((t) => t.id === activeTab)?.label || 'Игры';
+  const activeLabel = ASSORTMENT_TABS.find((t) => t.id === activeTab)?.label || 'PC';
   const ActiveIcon = TAB_ICONS[activeTab] || Layers;
   const suggestTopic =
-    activeTab === 'apps' ? 'suggest_app' : activeTab === 'mobile' ? 'suggest_mobile' : 'suggest_game';
+    activeTab === 'apps'
+      ? 'suggest_app'
+      : activeTab === 'mobile'
+        ? 'suggest_mobile'
+        : activeTab === 'xbox' || activeTab === 'playstation'
+          ? 'suggest_console'
+          : 'suggest_game';
   const searchPlaceholder =
     activeTab === 'apps'
       ? 'Поиск приложений...'
       : activeTab === 'mobile'
         ? 'Поиск мобильных игр...'
-        : 'Поиск игр...';
+        : activeTab === 'xbox'
+          ? 'Поиск Xbox...'
+          : activeTab === 'playstation'
+            ? 'Поиск PlayStation...'
+            : 'Поиск PC игр...';
 
   return (
     <div className={`${PAGE_WIDTH_CLASS} py-6 sm:py-8 pb-28`}>

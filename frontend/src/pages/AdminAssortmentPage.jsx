@@ -12,12 +12,12 @@ import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 const KIND_LABEL = {
   app: 'Приложение',
   mobile: 'Мобильная',
-  pc: 'Игра',
+  pc: 'PC',
 };
 
 const TAB_FILTERS = [
   { id: 'all', label: 'Все', icon: Layers },
-  { id: 'games', label: 'Игры', icon: Gamepad2 },
+  { id: 'pc', label: 'PC', icon: Gamepad2 },
   { id: 'mobile', label: 'Мобильные', icon: Smartphone },
   { id: 'apps', label: 'Приложения', icon: Layers },
   { id: 'hidden', label: 'Скрытые', icon: EyeOff },
@@ -71,7 +71,7 @@ export default function AdminAssortmentPage() {
       if (tab === 'hidden' && !isHidden) return false;
       if (tab === 'apps' && item.kind !== 'app') return false;
       if (tab === 'mobile' && item.kind !== 'mobile') return false;
-      if (tab === 'games' && item.kind === 'app') return false;
+      if (tab === 'pc' && item.kind !== 'pc') return false;
 
       if (!query) return true;
       return (

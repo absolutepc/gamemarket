@@ -800,14 +800,88 @@ export const ASSORTMENT = [
 export const ASSORTMENT_PREVIEW_COUNT = HOME_CAROUSEL_PINNED.length;
 
 export const ASSORTMENT_TABS = [
-  { id: 'games', label: 'Игры' },
+  { id: 'pc', label: 'PC' },
+  { id: 'xbox', label: 'Xbox' },
+  { id: 'playstation', label: 'PlayStation' },
   { id: 'mobile', label: 'Мобильные игры' },
   { id: 'apps', label: 'Приложения' },
 ];
 
+/** Platform hubs shown in dedicated console tabs (not in «Приложения») */
+const XBOX_HUB_APPS = new Set(['Xbox', 'Microsoft Store']);
+const PLAYSTATION_HUB_APPS = new Set(['PlayStation']);
+const CONSOLE_HUB_APPS = new Set([...XBOX_HUB_APPS, ...PLAYSTATION_HUB_APPS]);
+
+/** Cross-gen titles from the PC catalog that also sell on Xbox / PlayStation */
+const MULTI_CONSOLE_NAMES = new Set([
+  'GTA 5',
+  'GTA Online',
+  'GTA Trilogy',
+  'GTA 4',
+  'FIFA 23',
+  'EA FC 24',
+  'EA FC 25',
+  'Minecraft',
+  'Fortnite',
+  'Rocket League',
+  'Red Dead Online',
+  'Red Dead Redemption 2',
+  'Call of Duty®',
+  'NBA 2K24',
+  'NBA 2K25',
+  'NBA 2K26',
+  'Mortal Kombat 1',
+  'Tekken 8',
+  'Elden Ring',
+  'Elden Ring Nightreign',
+  'Cyberpunk 2077',
+  'Cyberpunk 2077: Phantom Liberty',
+  'The Witcher 3: Wild Hunt',
+  'Destiny 2',
+  'Apex Legends',
+  'Overwatch 2',
+  'Overwatch®',
+  'Rainbow Six Siege',
+  "Tom Clancy's Rainbow Six Siege",
+  "Assassin's Creed Black Flag",
+  'Watch Dogs 2',
+  'Final Fantasy XIV',
+  'FINAL FANTASY XIV Online',
+  'Final Fantasy XVI',
+  'Final Fantasy VII Remake',
+]);
+
+const XBOX_NAME_RE = /^(forza|halo|sea of thieves|gears)/i;
+const PLAYSTATION_NAME_RE =
+  /spider-?man|god of war|horizon forbidden|last of us|uncharted|bloodborne|gran turismo|demon's souls|ghost of tsushima|marvel.?s spider/i;
+
+function isXboxCatalogItem(item) {
+  if (item.kind === 'app') return XBOX_HUB_APPS.has(item.name);
+  if (item.kind !== 'pc') return false;
+  if (MULTI_CONSOLE_NAMES.has(item.name)) return true;
+  return XBOX_NAME_RE.test(item.name);
+}
+
+function isPlayStationCatalogItem(item) {
+  if (item.kind === 'app') return PLAYSTATION_HUB_APPS.has(item.name);
+  if (item.kind !== 'pc') return false;
+  if (MULTI_CONSOLE_NAMES.has(item.name)) return true;
+  return PLAYSTATION_NAME_RE.test(item.name);
+}
+
+function withHubsFirst(items, hubNames) {
+  const hubs = [];
+  const rest = [];
+  for (const item of items) {
+    if (hubNames.has(item.name)) hubs.push(item);
+    else rest.push(item);
+  }
+  return [...hubs, ...rest];
+}
+
 /**
  * Mix two lists by current remaining ratio into rows of `rowSize`.
- * Example: 300 PC + 200 mobile → ~3 PC + 2 mobile per row of 5.
+ * Kept for legacy callers / optional combined views.
  */
 export function interleaveByRatio(primary, secondary, rowSize = 5) {
   const out = [];
@@ -839,12 +913,22 @@ export function interleaveByRatio(primary, secondary, rowSize = 5) {
   return out;
 }
 
-/** All games = mobile + PC (not apps/services). Games tab mixes PC/mobile by ratio. */
-export function assortmentByTab(tabId, { rowSize = 5 } = {}) {
-  if (tabId === 'apps') return ASSORTMENT.filter((i) => i.kind === 'app');
-  if (tabId === 'mobile') return ASSORTMENT.filter((i) => i.kind === 'mobile');
-  const pc = ASSORTMENT.filter((i) => i.kind === 'pc');
-  const mobile = ASSORTMENT.filter((i) => i.kind === 'mobile');
-  // PC first in the ratio so denser catalog leads rows (e.g. 3 PC + 2 mobile)
-  return interleaveByRatio(pc, mobile, rowSize);
+/** Resolve tab contents for sell / apps catalog. Legacy `games` → PC. */
+export function assortmentByTab(tabId) {
+  const id = tabId === 'games' ? 'pc' : tabId;
+
+  if (id === 'pc') return ASSORTMENT.filter((i) => i.kind === 'pc');
+  if (id === 'mobile') return ASSORTMENT.filter((i) => i.kind === 'mobile');
+  if (id === 'apps') {
+    return ASSORTMENT.filter((i) => i.kind === 'app' && !CONSOLE_HUB_APPS.has(i.name));
+  }
+  if (id === 'xbox') {
+    return withHubsFirst(ASSORTMENT.filter(isXboxCatalogItem), XBOX_HUB_APPS);
+  }
+  if (id === 'playstation') {
+    return withHubsFirst(ASSORTMENT.filter(isPlayStationCatalogItem), PLAYSTATION_HUB_APPS);
+  }
+
+  // Fallback: everything game-like
+  return ASSORTMENT.filter((i) => i.kind === 'pc' || i.kind === 'mobile');
 }

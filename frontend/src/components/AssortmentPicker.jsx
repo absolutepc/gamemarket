@@ -12,7 +12,7 @@ import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 export default function AssortmentPicker({ value, onChange, required = true }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
-  const [tab, setTab] = useState('games');
+  const [tab, setTab] = useState('pc');
   const rootRef = useRef(null);
   const inputRef = useRef(null);
   const { items: visibleAssortment, byTab } = useVisibleAssortment();
@@ -177,7 +177,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
                               ? 'Приложение'
                               : item.kind === 'mobile'
                                 ? 'Мобильная игра'
-                                : 'Игра'}
+                                : 'PC'}
                           </span>
                         </span>
                         {active && <Check size={16} className="text-[#2B71F3] shrink-0" />}

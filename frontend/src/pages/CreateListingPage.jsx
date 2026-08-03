@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ChevronLeft, X, Search, Gamepad2, Smartphone, Layers,
+  ChevronLeft, X, Search, Gamepad2, Smartphone, Layers, Monitor,
   Tag, Eye, EyeOff, Package, Shield, Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -46,7 +46,13 @@ const STEPS = [
   { id: 'product', title: 'Данные товара' },
 ];
 
-const TAB_ICONS = { games: Gamepad2, mobile: Smartphone, apps: Layers };
+const TAB_ICONS = {
+  pc: Monitor,
+  xbox: Gamepad2,
+  playstation: Gamepad2,
+  mobile: Smartphone,
+  apps: Layers,
+};
 
 const ACCESS_OPTIONS = [
   {
@@ -114,7 +120,7 @@ export default function CreateListingPage() {
   const [attributes, setAttributes] = useState({});
   const [images, setImages] = useState([]);
   const [compressing, setCompressing] = useState(false);
-  const [assortmentTab, setAssortmentTab] = useState('games');
+  const [assortmentTab, setAssortmentTab] = useState('pc');
   const [assortmentQ, setAssortmentQ] = useState('');
   const [feeFilterOn, setFeeFilterOn] = useState(false);
   const [accessType, setAccessType] = useState('');
