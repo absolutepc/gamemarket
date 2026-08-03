@@ -271,7 +271,6 @@ export default function ListingPage() {
     ? listing.images.map((src) => String(src || '').trim()).filter(Boolean)
     : [];
   const images = rawImages.length ? rawImages : [PLACEHOLDER];
-  const galleryIsIcon = false;
 
   const buyProps = {
     isOwner,

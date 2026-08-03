@@ -161,7 +161,9 @@ router.post(
         const discount = calcDiscount(price, d.original_price);
         let images = normalizeImages(d.images);
         if (!images.length) {
-          images = [fallbackAssortmentImage(game)];
+          // Leave empty — storefront keeps previous placeholder behavior.
+          // Seller can add a photo in the editor; do not force category icons.
+          images = [];
         }
         const categoryId = await categoryIdForType(listingType);
         const importMeta = {
