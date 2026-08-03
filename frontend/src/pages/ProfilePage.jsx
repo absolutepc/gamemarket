@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera, Crown } from 'lucide-react';
+import { Star, Package, Calendar, ShoppingBag, MessageCircle, BadgeCheck, Pencil, Wallet, Camera, Crown, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
@@ -14,6 +14,7 @@ import { formatDate, formatPrice } from '../utils/format';
 import { compressImageFile } from '../utils/imageCompress';
 import { labelsForCriteria } from '../utils/reviewCriteria';
 import { sellPathForUser } from '../utils/sellPath';
+import { isStaffAdmin } from '../utils/roles';
 
 function StarRow({ rating }) {
   return (
@@ -260,6 +261,15 @@ export default function ProfilePage() {
               >
                 <Wallet size={16} />
                 {formatPrice(currentUser.balance)}
+              </Link>
+            )}
+            {isOwn && isStaffAdmin(currentUser) && (
+              <Link
+                to="/admin"
+                className="lg:hidden rounded-xl bg-dark-800 border border-dark-700 px-4 py-3 text-white font-semibold text-sm hover:border-[#2B71F3]/50 transition-colors inline-flex items-center gap-2"
+              >
+                <Shield size={16} className="text-[#5B8CFF]" />
+                Админ-панель
               </Link>
             )}
             {!isOwn && currentUser && (
