@@ -19,6 +19,7 @@ import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmen
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 import { labelsForCriteria } from '../utils/reviewCriteria';
 import { getAttributeLabel, sortAttributeEntries } from '../utils/listingAttributes';
+import ReviewListingChip from '../components/ReviewListingChip';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -778,6 +779,7 @@ export default function ListingPage() {
                       ))}
                     </div>
                   )}
+                  <ReviewListingChip review={r} />
                 </div>
               ))}
             </div>

@@ -71,9 +71,10 @@ export default function WalletPage() {
         </div>
         <div className="card p-5">
           <div className="flex items-center gap-2 text-dark-400 text-sm mb-2">
-            <Lock size={15} /> В эскроу
+            <Lock size={15} /> Заморожено
           </div>
           <p className="text-2xl font-bold text-yellow-400">{formatPrice(user?.frozen_balance || 0)}</p>
+          <p className="text-xs text-dark-500 mt-1.5">Эскроу и холд 24–48 ч после продажи</p>
         </div>
       </div>
 

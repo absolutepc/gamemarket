@@ -21,7 +21,7 @@ const STATUS_UI = {
     icon: CheckCircle2,
     label: 'Одобрена',
     className: 'text-emerald-400',
-    hint: 'Вы Founding Seller — льготная комиссия 5%/13% активна.',
+    hint: 'Вы Founding Seller — льготная комиссия 5%/13% и вывод через 24 ч после сделки.',
   },
   rejected: {
     icon: XCircle,
@@ -114,12 +114,18 @@ export default function FoundersPage() {
           {' / '}
           <span className="line-through text-dark-500">17.5%</span>{' '}
           <span className="text-amber-200 font-semibold">13%</span>
-          , золотая галочка и бейдж Founding Seller. В каталоге выше поднимает платное ТОП-продвижение.
+          , вывод через{' '}
+          <span className="text-amber-200 font-semibold">24 ч</span>
+          {' '}после сделки (обычно 48 ч), золотая галочка и бейдж Founding Seller.
         </p>
         <ul className="space-y-1.5 text-sm text-dark-200">
           <li className="flex items-start gap-2">
             <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />
             Заявка → рассмотрение → решение. Автоматического входа нет.
+          </li>
+          <li className="flex items-start gap-2">
+            <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />
+            Вывод средств через 24 часа после продажи (у остальных продавцов — 48 часов)
           </li>
           <li className="flex items-start gap-2">
             <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />

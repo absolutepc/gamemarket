@@ -87,7 +87,9 @@ function FoundersSubtitle() {
       {' '}и{' '}
       <span className="line-through text-dark-500">17.5%</span>{' '}
       <span className="text-amber-200 font-semibold">13%</span>
-      , золотая галочка и бейдж Founding Seller. Вход по заявке после рассмотрения — один аккаунт на человека.
+      , вывод через{' '}
+      <span className="text-amber-200 font-semibold">24 ч</span>
+      {' '}после сделки (обычно 48 ч), золотая галочка и бейдж Founding Seller.
     </>
   );
 }
@@ -202,8 +204,12 @@ function FoundersVisual({ sellersCount, foundersJoined, foundersLimit }) {
               <span className="text-amber-200 font-semibold">13%</span>
             </span>
           </li>
-          <li className="flex items-center gap-1.5"><BadgeCheck size={11} className="text-amber-300" /> Золотая галочка</li>
-          <li className="flex items-center gap-1.5"><Trophy size={11} className="text-amber-300" /> Льготная комиссия</li>
+          <li className="flex items-center gap-1.5">
+            <BadgeCheck size={11} className="text-amber-300" /> Золотая галочка
+          </li>
+          <li className="flex items-center gap-1.5">
+            <Zap size={11} className="text-amber-300" /> Вывод за 24 ч (обычно 48 ч)
+          </li>
         </ul>
       </div>
     </div>

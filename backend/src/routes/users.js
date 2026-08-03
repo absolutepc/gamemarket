@@ -431,8 +431,22 @@ router.get('/:username', apiLimiter, async (req, res) => {
     ),
     pool.query(
       `SELECT r.rating, r.comment, COALESCE(r.criteria, '[]'::jsonb) AS criteria, r.created_at,
-              u.username AS reviewer_username, u.avatar_url AS reviewer_avatar
-       FROM reviews r JOIN users u ON u.id = r.reviewer_id
+              u.username AS reviewer_username, u.avatar_url AS reviewer_avatar,
+              l.id AS listing_id,
+              l.title AS listing_title,
+              l.price AS listing_price,
+              l.original_price AS listing_original_price,
+              l.discount_percent AS listing_discount_percent,
+              l.status AS listing_status,
+              CASE
+                WHEN l.images IS NULL THEN NULL
+                WHEN jsonb_typeof(l.images) = 'array' THEN l.images->>0
+                ELSE NULL
+              END AS listing_image
+       FROM reviews r
+       JOIN users u ON u.id = r.reviewer_id
+       LEFT JOIN transactions t ON t.id = r.transaction_id
+       LEFT JOIN listings l ON l.id = t.listing_id
        WHERE r.reviewed_id=$1
        ORDER BY r.created_at DESC LIMIT 20`,
       [user.id]

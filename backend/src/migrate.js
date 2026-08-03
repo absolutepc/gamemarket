@@ -310,6 +310,14 @@ CREATE TABLE IF NOT EXISTS platform_withdrawals (
 );
 CREATE INDEX IF NOT EXISTS idx_platform_withdrawals_status_created
   ON platform_withdrawals (status, created_at DESC);
+
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payout_available_at TIMESTAMPTZ;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payout_released_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_transactions_payout_available
+  ON transactions (payout_available_at)
+  WHERE status = 'completed'
+    AND payout_available_at IS NOT NULL
+    AND payout_released_at IS NULL;
 `;
 
 /** Usernames promoted to admin on each migrate (comma-separated). Default: Mercy */

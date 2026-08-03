@@ -8,6 +8,7 @@ import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components
 import Seo from '../components/Seo';
 import ProfileMenuModal from '../components/ProfileMenuModal';
 import PromoteListingModal from '../components/PromoteListingModal';
+import ReviewListingChip from '../components/ReviewListingChip';
 import useAuthStore from '../store/authStore';
 import { formatDate, formatPrice } from '../utils/format';
 import { compressImageFile } from '../utils/imageCompress';
@@ -365,6 +366,7 @@ export default function ProfilePage() {
                 </div>
                 {r.comment && <p className="text-dark-300 text-sm">{r.comment}</p>}
                 <CriteriaTags criteria={r.criteria} />
+                <ReviewListingChip review={r} />
               </div>
             ))}
           </div>
