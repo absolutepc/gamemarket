@@ -73,7 +73,7 @@ router.post('/',
       const { fee, sellerReceives } = calcPlatformFee(price, {
         categorySlug: listing.category_slug,
         listingType: listing.listing_type,
-        isFoundingSeller: listing.seller_is_founding,
+        isFoundingSeller: Boolean(listing.seller_is_founding),
       });
 
       await client.query(

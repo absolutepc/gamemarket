@@ -93,8 +93,13 @@ export default function BecomeSellerPage() {
             <h2 className="font-semibold text-amber-100">Программа Founders</h2>
           </div>
           <p className="text-sm text-dark-300 mb-3">
-            Первые {foundersLimit} продавцов: комиссия 5%/10%, золотая галочка, выше в поиске,
-            бейдж Founding Seller. Сейчас занято {foundersJoined}/{foundersLimit}.
+            Первые {foundersLimit} продавцов: комиссия{' '}
+            <span className="line-through text-dark-500">7.5%</span>{' '}
+            <span className="text-amber-200 font-semibold">5%</span>
+            {' / '}
+            <span className="line-through text-dark-500">17.5%</span>{' '}
+            <span className="text-amber-200 font-semibold">10%</span>
+            , золотая галочка, выше в поиске, бейдж Founding Seller. Сейчас занято {foundersJoined}/{foundersLimit}.
           </p>
           <ul className="space-y-1.5 text-sm text-dark-200">
             <li className="flex items-start gap-2">

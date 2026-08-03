@@ -137,7 +137,7 @@ export default function SocialLoginButtons({
       const { data } = await api.post('/auth/apple', {
         identityToken: result.identityToken,
         user: result.user || undefined,
-        ...oauthAccountTypePayload(),
+        ...(await oauthAccountTypePayload()),
       });
       finishSocial(data, 'Вход через Apple выполнен');
     } catch (err) {

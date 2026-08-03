@@ -309,7 +309,7 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
   const fee = calcPlatformFee(listing.price, {
     categorySlug: listing.category_slug,
     listingType: listing.listing_type,
-    isFoundingSeller: listing.seller_is_founding,
+    isFoundingSeller: Boolean(listing.seller_is_founding),
   });
   res.json({
     ...listing,

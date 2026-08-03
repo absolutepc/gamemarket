@@ -74,7 +74,8 @@ function isReducedTier({ categorySlug, listingType } = {}) {
 
 function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
   const reduced = isReducedTier({ categorySlug, listingType });
-  if (isFoundingSeller) {
+  const founding = isFoundingSeller === true || isFoundingSeller === 't' || isFoundingSeller === 1;
+  if (founding) {
     return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
   }
   return reduced ? FEE_REDUCED : FEE_STANDARD;

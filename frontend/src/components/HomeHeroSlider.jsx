@@ -24,8 +24,7 @@ const SLIDES = [
     id: 'founders',
     eyebrow: 'Программа Founders',
     title: 'Первые 100 продавцов',
-    subtitle:
-      'Комиссия 5% вместо 7.5% и 10% вместо 17.5%, золотая галочка, приоритет в поиске и бейдж Founding Seller. Один аккаунт на человека — места ограничены.',
+    subtitle: null, // rendered via FoundersSubtitle
     cta: { to: '/become-seller', label: 'Стать Founding Seller' },
     secondary: { to: '/register', label: 'Регистрация' },
     tone: 'founders',
@@ -78,6 +77,20 @@ const SLIDES = [
     tone: 'delivery',
   },
 ];
+
+function FoundersSubtitle() {
+  return (
+    <>
+      Комиссия{' '}
+      <span className="line-through text-dark-500">7.5%</span>{' '}
+      <span className="text-amber-200 font-semibold">5%</span>
+      {' '}и{' '}
+      <span className="line-through text-dark-500">17.5%</span>{' '}
+      <span className="text-amber-200 font-semibold">10%</span>
+      , золотая галочка, приоритет в поиске и бейдж Founding Seller. Один аккаунт на человека — места ограничены.
+    </>
+  );
+}
 
 function formatCount(n) {
   return new Intl.NumberFormat('ru-RU').format(Math.max(0, Number(n) || 0));
@@ -178,7 +191,17 @@ function FoundersVisual({ buyersCount, foundersJoined, foundersLimit }) {
         </div>
 
         <ul className="space-y-1.5 text-[11px] text-dark-200">
-          <li className="flex items-center gap-1.5"><Percent size={11} className="text-amber-300" /> Комиссия 5% / 10%</li>
+          <li className="flex items-center gap-1.5 flex-wrap">
+            <Percent size={11} className="text-amber-300 shrink-0" />
+            <span>
+              Комиссия{' '}
+              <span className="line-through text-dark-500">7.5%</span>{' '}
+              <span className="text-amber-200 font-semibold">5%</span>
+              {' / '}
+              <span className="line-through text-dark-500">17.5%</span>{' '}
+              <span className="text-amber-200 font-semibold">10%</span>
+            </span>
+          </li>
           <li className="flex items-center gap-1.5"><BadgeCheck size={11} className="text-amber-300" /> Золотая галочка</li>
           <li className="flex items-center gap-1.5"><Trophy size={11} className="text-amber-300" /> Выше в поиске</li>
         </ul>
@@ -357,7 +380,7 @@ export default function HomeHeroSlider() {
                   {slide.title}
                 </h1>
                 <p className="text-dark-300 text-sm sm:text-base leading-relaxed max-w-xl mb-3 sm:mb-4 line-clamp-4">
-                  {slide.subtitle}
+                  {slide.tone === 'founders' ? <FoundersSubtitle /> : slide.subtitle}
                 </p>
 
                 <div
