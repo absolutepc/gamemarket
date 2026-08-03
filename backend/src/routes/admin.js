@@ -6,8 +6,10 @@ const { validate } = require('../middleware/security');
 const { releaseEscrow, refundEscrow } = require('../services/escrow');
 const {
   listFoundersApplications,
+  listFoundingSellers,
   approveFoundersApplication,
   rejectFoundersApplication,
+  revokeFoundingSeller,
   getPlatformStats,
 } = require('../services/founders');
 
@@ -233,6 +235,33 @@ router.post(
     });
     if (!result.ok) {
       return res.status(404).json({ error: result.error, code: result.code });
+    }
+    res.json(result);
+  }
+);
+
+/** Current Founding Sellers */
+router.get('/founders/members', async (req, res) => {
+  const [members, stats] = await Promise.all([
+    listFoundingSellers(pool, { limit: req.query.limit }),
+    getPlatformStats(pool),
+  ]);
+  res.json({ members, founders: stats.founders });
+});
+
+router.post(
+  '/founders/members/:userId/revoke',
+  [
+    body('admin_note').optional({ nullable: true }).trim().isLength({ max: 1000 }),
+  ],
+  validate,
+  async (req, res) => {
+    const result = await revokeFoundingSeller(pool, req.params.userId, req.user, {
+      adminNote: req.body.admin_note,
+    });
+    if (!result.ok) {
+      const status = result.code === 'NOT_FOUND' ? 404 : 400;
+      return res.status(status).json({ error: result.error, code: result.code });
     }
     res.json(result);
   }

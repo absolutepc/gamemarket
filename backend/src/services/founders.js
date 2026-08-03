@@ -76,7 +76,11 @@ async function grantFoundingSellerInTx(client, user, { fingerprint, ip, emailNor
   const fp = sanitizeFingerprint(fingerprint);
   const ipStr = ip && String(ip).trim() ? String(ip).trim().slice(0, 64) : null;
 
-  const nextNumber = joined + 1;
+  // Use MAX+1 so revoked numbers (nulled) or gaps never collide with unique index
+  const { rows: maxRows } = await client.query(
+    `SELECT COALESCE(MAX(founding_seller_number), 0)::int AS m FROM users`
+  );
+  const nextNumber = (maxRows[0]?.m || 0) + 1;
   const { rows } = await client.query(
     `UPDATE users SET
        is_founding_seller = TRUE,
@@ -98,7 +102,7 @@ async function grantFoundingSellerInTx(client, user, { fingerprint, ip, emailNor
   return {
     granted: true,
     number: rows[0].founding_seller_number,
-    joined: nextNumber,
+    joined: joined + 1,
     limit: FOUNDERS_LIMIT,
   };
 }
@@ -415,6 +419,113 @@ async function rejectFoundersApplication(pool, applicationId, adminUser, { admin
   }
 }
 
+async function listFoundingSellers(pool, { limit = 100 } = {}) {
+  const take = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 100));
+  const { rows } = await pool.query(
+    `SELECT id, username, email, avatar_url, sales_count, account_type,
+            founding_seller_number, founding_seller_at,
+            founders_email_norm, founders_fingerprint, founders_ip
+     FROM users
+     WHERE is_founding_seller = TRUE
+     ORDER BY founding_seller_number ASC NULLS LAST, founding_seller_at ASC
+     LIMIT $1`,
+    [take]
+  );
+  return rows;
+}
+
+/**
+ * Revoke Founding Seller status. Frees the slot; email may re-apply later.
+ */
+async function revokeFoundingSeller(pool, userId, adminUser, { adminNote } = {}) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock($1)', [FOUNDERS_ADVISORY_LOCK]);
+
+    const { rows: users } = await client.query(
+      `SELECT id, username, is_founding_seller, founding_seller_number
+       FROM users WHERE id = $1 FOR UPDATE`,
+      [userId]
+    );
+    const user = users[0];
+    if (!user) {
+      await client.query('ROLLBACK');
+      return { ok: false, error: 'Пользователь не найден', code: 'NOT_FOUND' };
+    }
+    if (!user.is_founding_seller) {
+      await client.query('ROLLBACK');
+      return { ok: false, error: 'У пользователя нет статуса Founders', code: 'NOT_FOUNDER' };
+    }
+
+    const previousNumber = user.founding_seller_number;
+    const note = String(adminNote || '').trim().slice(0, 1000) || null;
+
+    await client.query(
+      `UPDATE users SET
+         is_founding_seller = FALSE,
+         founding_seller_number = NULL,
+         founders_email_norm = NULL,
+         founders_fingerprint = NULL,
+         founders_ip = NULL,
+         updated_at = NOW()
+       WHERE id = $1 AND is_founding_seller = TRUE`,
+      [userId]
+    );
+
+    // Mark latest approved application as revoked for admin history
+    await client.query(
+      `UPDATE founders_applications SET
+         admin_note = CASE
+           WHEN $2::text IS NULL THEN COALESCE(admin_note, 'Статус снят админом')
+           ELSE $2
+         END,
+         reviewed_by = $3,
+         reviewed_at = NOW(),
+         updated_at = NOW()
+       WHERE id = (
+         SELECT id FROM founders_applications
+         WHERE user_id = $1 AND status = 'approved'
+         ORDER BY reviewed_at DESC NULLS LAST, created_at DESC
+         LIMIT 1
+       )`,
+      [userId, note, adminUser.id]
+    );
+
+    await client.query(
+      `INSERT INTO notifications (user_id, type, title, body, data)
+       VALUES ($1, 'founders_revoked', 'Founders: статус снят',
+               $2, $3)`,
+      [
+        userId,
+        note
+          ? `Статус Founding Seller снят: ${note}`
+          : 'Статус Founding Seller снят администратором. Комиссия вернулась к стандартной.',
+        JSON.stringify({
+          previous_number: previousNumber,
+          revoked_by: adminUser.id,
+        }),
+      ]
+    );
+
+    const joined = await getFoundersJoined(client);
+    await client.query('COMMIT');
+    return {
+      ok: true,
+      user_id: userId,
+      username: user.username,
+      previous_number: previousNumber,
+      joined,
+      limit: FOUNDERS_LIMIT,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 async function getPlatformStats(pool) {
   try {
     const { rows } = await pool.query(
@@ -508,8 +619,10 @@ module.exports = {
   submitFoundersApplication,
   getMyFoundersApplication,
   listFoundersApplications,
+  listFoundingSellers,
   approveFoundersApplication,
   rejectFoundersApplication,
+  revokeFoundingSeller,
   getPlatformStats,
   getFoundersJoined,
 };
