@@ -11,6 +11,7 @@ import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import BuyCheckoutModal from '../components/BuyCheckoutModal';
 import GuaranteeModal from '../components/GuaranteeModal';
+import ListingStatusModal, { resolveListingStatus } from '../components/ListingStatusModal';
 import ListingCard, { LISTING_GRID_CLASS, PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { formatPrice, formatDate, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
@@ -111,6 +112,7 @@ export default function ListingPage() {
   const [imgIdx, setImgIdx] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [guaranteeOpen, setGuaranteeOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
@@ -272,6 +274,7 @@ export default function ListingPage() {
   const deliveryHint = listing.delivery_method === 'auto'
     ? 'После оплаты товар придёт сразу по указанным данным.'
     : 'Продавец передаст товар в чате сделки после оплаты.';
+  const listingStatus = resolveListingStatus(listing);
 
   const buyProps = {
     isOwner,
@@ -440,15 +443,30 @@ export default function ListingPage() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setGuaranteeOpen(true)}
-        className="flex items-center gap-2.5 py-1 group w-full text-left"
-      >
-        <Shield size={18} className="text-[#5B8CFF] shrink-0" />
-        <span className="flex-1 text-sm text-white font-medium">Гарантия Lootz</span>
-        <ChevronRight size={18} className="text-dark-500 group-hover:text-white transition-colors" />
-      </button>
+      {isOwner ? (
+        <button
+          type="button"
+          onClick={() => setStatusOpen(true)}
+          className="flex items-center gap-2.5 py-1 group w-full text-left"
+        >
+          <span
+            className={`w-2.5 h-2.5 rounded-full shrink-0 ${listingStatus.dotClass}`}
+            aria-hidden
+          />
+          <span className="flex-1 text-sm text-white font-medium">{listingStatus.label}</span>
+          <ChevronRight size={18} className="text-dark-500 group-hover:text-white transition-colors" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setGuaranteeOpen(true)}
+          className="flex items-center gap-2.5 py-1 group w-full text-left"
+        >
+          <Shield size={18} className="text-[#5B8CFF] shrink-0" />
+          <span className="flex-1 text-sm text-white font-medium">Гарантия Lootz</span>
+          <ChevronRight size={18} className="text-dark-500 group-hover:text-white transition-colors" />
+        </button>
+      )}
     </div>
   );
 
@@ -785,6 +803,11 @@ export default function ListingPage() {
         onConfirm={({ buyerData, comment }) => buyMutation.mutate({ buyerData, comment })}
       />
       <GuaranteeModal open={guaranteeOpen} onClose={() => setGuaranteeOpen(false)} />
+      <ListingStatusModal
+        open={statusOpen}
+        onClose={() => setStatusOpen(false)}
+        listing={listing}
+      />
     </div>
   );
 }
