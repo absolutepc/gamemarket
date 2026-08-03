@@ -80,6 +80,7 @@ export default function Layout() {
                 {user?.role === 'admin' && (
                   <>
                     <Link to="/admin/stats" className="btn-ghost text-sm">Статистика</Link>
+                    <Link to="/admin/finance" className="btn-ghost text-sm">Финансы</Link>
                     <Link to="/admin/contest" className="btn-ghost text-sm">Конкурс</Link>
                     <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
                     <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>

@@ -26,6 +26,7 @@ import AdminAssortmentPage from './pages/AdminAssortmentPage';
 import AdminFoundersPage from './pages/AdminFoundersPage';
 import AdminStatsPage from './pages/AdminStatsPage';
 import AdminContestPage from './pages/AdminContestPage';
+import AdminFinancePage from './pages/AdminFinancePage';
 import ContestPage from './pages/ContestPage';
 import AppsPage from './pages/AppsPage';
 import GameLandingPage from './pages/GameLandingPage';
@@ -90,6 +91,7 @@ export default function App() {
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="admin/stats" element={<AdminStatsPage />} />
+          <Route path="admin/finance" element={<AdminFinancePage />} />
           <Route path="admin/contest" element={<AdminContestPage />} />
           <Route path="admin/disputes" element={<AdminDisputesPage />} />
           <Route path="admin/assortment" element={<AdminAssortmentPage />} />

@@ -273,6 +273,43 @@ CREATE TABLE IF NOT EXISTS contests (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_contests_status_starts ON contests (status, starts_at DESC);
+
+CREATE TABLE IF NOT EXISTS platform_ledger (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entry_type VARCHAR(40) NOT NULL,
+  direction VARCHAR(10) NOT NULL CHECK (direction IN ('credit', 'debit')),
+  amount DECIMAL(14,2) NOT NULL CHECK (amount > 0),
+  description TEXT,
+  reference_id UUID,
+  reference_type VARCHAR(40),
+  meta JSONB,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_platform_ledger_created ON platform_ledger (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_platform_ledger_type_created
+  ON platform_ledger (entry_type, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_platform_ledger_idempotent
+  ON platform_ledger (entry_type, reference_id)
+  WHERE reference_id IS NOT NULL
+    AND entry_type IN ('sale_fee', 'listing_promote');
+
+CREATE TABLE IF NOT EXISTS platform_withdrawals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  amount DECIMAL(14,2) NOT NULL CHECK (amount > 0),
+  method VARCHAR(40) NOT NULL DEFAULT 'card',
+  destination TEXT,
+  note TEXT,
+  admin_note TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_platform_withdrawals_status_created
+  ON platform_withdrawals (status, created_at DESC);
 `;
 
 /** Usernames promoted to admin on each migrate (comma-separated). Default: Mercy */

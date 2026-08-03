@@ -13,6 +13,7 @@ const {
   getPromotePackage,
   SQL_IS_PROMOTED,
 } = require('../services/listingPromote');
+const { creditPlatform, ENTRY_TYPES } = require('../services/platformLedger');
 
 function showcaseDaysLeft(publishedAt) {
   if (!publishedAt) return LISTING_SHOWCASE_DAYS;
@@ -728,9 +729,10 @@ router.post(
         [pkg.price, req.user.id]
       );
 
-      await client.query(
+      const { rows: walletRows } = await client.query(
         `INSERT INTO wallet_transactions (user_id, type, amount, balance_after, description, reference_id)
-         VALUES ($1, 'listing_promote', $2, $3, $4, $5)`,
+         VALUES ($1, 'listing_promote', $2, $3, $4, $5)
+         RETURNING id`,
         [
           req.user.id,
           -pkg.price,
@@ -739,6 +741,21 @@ router.post(
           listing.id,
         ]
       );
+
+      await creditPlatform(client, {
+        entryType: ENTRY_TYPES.LISTING_PROMOTE,
+        amount: pkg.price,
+        description: `ТОП ${pkg.days} дн. · «${String(listing.title).slice(0, 80)}»`,
+        referenceId: walletRows[0].id,
+        referenceType: 'wallet_transaction',
+        meta: {
+          listing_id: listing.id,
+          days: pkg.days,
+          seller_id: req.user.id,
+          package_price: pkg.price,
+        },
+        createdBy: req.user.id,
+      });
 
       const base = listing.featured_until && new Date(listing.featured_until) > new Date()
         ? new Date(listing.featured_until)

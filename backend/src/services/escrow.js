@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const logger = require('../utils/logger');
 const { PLATFORM_FEE_PERCENT } = require('./fees');
+const { creditPlatform, ENTRY_TYPES } = require('./platformLedger');
 
 const SELLER_OFFLINE_CANCEL_HOURS = 24;
 /** Auto-confirm / escrow release after seller marks delivered */
@@ -31,6 +32,25 @@ async function releaseEscrow(client, tx, { systemMessage, notifySeller = true } 
      escrow_released_at=NOW(), updated_at=NOW() WHERE id=$1`,
     [tx.id]
   );
+
+  const feeAmount = parseFloat(tx.platform_fee || 0);
+  if (feeAmount > 0) {
+    await creditPlatform(client, {
+      entryType: ENTRY_TYPES.SALE_FEE,
+      amount: feeAmount,
+      description: 'Комиссия площадки со сделки',
+      referenceId: tx.id,
+      referenceType: 'transaction',
+      meta: {
+        listing_id: tx.listing_id,
+        seller_id: tx.seller_id,
+        buyer_id: tx.buyer_id,
+        amount: tx.amount,
+        seller_receives: tx.seller_receives,
+      },
+    });
+  }
+
   if (systemMessage) {
     await client.query(
       `INSERT INTO messages (transaction_id, sender_id, content, is_system)

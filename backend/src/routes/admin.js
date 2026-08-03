@@ -25,6 +25,16 @@ const {
   updateContest,
   publicContestView,
 } = require('../services/contest');
+const {
+  getPlatformBalance,
+  getPlatformBreakdown,
+  listPlatformLedger,
+  backfillPlatformLedger,
+  listWithdrawals,
+  createWithdrawalRequest,
+  processWithdrawal,
+  addAdjustment,
+} = require('../services/platformLedger');
 
 function normalizeAssortmentKey(value) {
   return String(value || '')
@@ -415,5 +425,105 @@ router.post('/contests/:id/draw', async (req, res) => {
     res.status(500).json({ error: 'Не удалось провести розыгрыш' });
   }
 });
+
+/** Platform finance / treasury ledger */
+router.get('/finance', async (req, res) => {
+  try {
+    await backfillPlatformLedger(pool).catch((err) => {
+      console.error('platform ledger backfill', err.message);
+    });
+    const [balance, breakdown, ledger, withdrawals] = await Promise.all([
+      getPlatformBalance(pool),
+      getPlatformBreakdown(pool),
+      listPlatformLedger(pool, {
+        limit: req.query.limit,
+        offset: req.query.offset,
+        entryType: req.query.entry_type || null,
+      }),
+      listWithdrawals(pool, { limit: 50 }),
+    ]);
+    res.json({ balance, breakdown, ledger, withdrawals });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось загрузить финансы' });
+  }
+});
+
+router.post(
+  '/finance/withdrawals',
+  [
+    body('amount').isFloat({ gt: 0 }),
+    body('method').optional({ nullable: true }).trim().isLength({ max: 40 }),
+    body('destination').optional({ nullable: true }).trim().isLength({ max: 500 }),
+    body('note').optional({ nullable: true }).trim().isLength({ max: 1000 }),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const result = await createWithdrawalRequest(pool, req.user, {
+        amount: req.body.amount,
+        method: req.body.method,
+        destination: req.body.destination,
+        note: req.body.note,
+      });
+      if (!result.ok) {
+        return res.status(400).json({ error: result.error, code: result.code, balance: result.balance });
+      }
+      res.status(201).json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Не удалось создать заявку на вывод' });
+    }
+  }
+);
+
+router.post(
+  '/finance/withdrawals/:id/process',
+  [
+    body('status').isIn(['paid', 'cancelled', 'failed']),
+    body('admin_note').optional({ nullable: true }).trim().isLength({ max: 1000 }),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const result = await processWithdrawal(pool, req.params.id, req.user, {
+        status: req.body.status,
+        adminNote: req.body.admin_note,
+      });
+      if (!result.ok) {
+        const code = result.code === 'NOT_FOUND' ? 404 : 400;
+        return res.status(code).json({ error: result.error, code: result.code });
+      }
+      res.json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Не удалось обработать заявку' });
+    }
+  }
+);
+
+router.post(
+  '/finance/adjustments',
+  [
+    body('amount').isFloat({ gt: -1e12, lt: 1e12 }),
+    body('description').trim().isLength({ min: 3, max: 500 }),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const result = await addAdjustment(pool, req.user, {
+        amount: req.body.amount,
+        description: req.body.description,
+      });
+      if (!result.ok) {
+        return res.status(400).json({ error: result.error, code: result.code });
+      }
+      res.status(201).json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Не удалось внести корректировку' });
+    }
+  }
+);
 
 module.exports = router;
