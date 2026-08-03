@@ -89,9 +89,14 @@ export default function AdminAssortmentPage() {
           <EyeOff className="text-brand-400" size={22} />
           <h1 className="text-2xl font-bold">Каталог</h1>
         </div>
-        <Link to="/admin/disputes" className="btn-ghost text-sm inline-flex items-center gap-1.5">
-          <Scale size={14} /> Споры
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/admin/disputes" className="btn-ghost text-sm inline-flex items-center gap-1.5">
+            <Scale size={14} /> Споры
+          </Link>
+          <Link to="/admin/founders" className="btn-ghost text-sm inline-flex items-center gap-1.5">
+            Founders
+          </Link>
+        </div>
       </div>
       <p className="text-sm text-dark-400 mb-6">
         Скрывайте лишние позиции — они пропадут из выбора при создании лота, с главной и страницы приложений.

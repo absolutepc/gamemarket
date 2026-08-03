@@ -14,6 +14,23 @@ function showcaseDaysLeft(publishedAt) {
   return Math.max(0, Math.ceil((end - Date.now()) / 86400000));
 }
 
+/** Keep list payloads small — huge data: URLs were breaking home/catalog on mobile */
+function slimListingImages(images) {
+  if (!Array.isArray(images) || !images.length) return [];
+  const first = images[0];
+  if (typeof first !== 'string') return [];
+  if (first.startsWith('data:') && first.length > 12_000) {
+    return ['/placeholder-listing.svg'];
+  }
+  return [first];
+}
+
+function slimAvatar(url) {
+  if (!url || typeof url !== 'string') return null;
+  if (url.startsWith('data:') && url.length > 8_000) return null;
+  return url;
+}
+
 function listingViewerKey(req) {
   if (req.user?.id) return `user:${req.user.id}`;
   const raw = `${req.ip || ''}|${req.get('user-agent') || ''}`;
@@ -251,9 +268,8 @@ router.get('/', apiLimiter, async (req, res) => {
   const orderBy = orderMap[sort] || 'l.created_at DESC';
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
 
-  const [dataRes, countRes] = await Promise.all([
-    pool.query(
-      `SELECT l.id, l.title, l.price, l.original_price, l.discount_percent, l.currency,
+  const listSqlWithFounders = `
+      SELECT l.id, l.title, l.price, l.original_price, l.discount_percent, l.currency,
               l.game, l.listing_type, l.images, l.views_count, l.is_featured,
               l.delivery_method, l.created_at, l.published_at, l.status,
               u.username AS seller_username, u.avatar_url AS seller_avatar,
@@ -267,19 +283,49 @@ router.get('/', apiLimiter, async (req, res) => {
        LEFT JOIN categories c ON c.id = l.category_id
        ${where}
        ORDER BY COALESCE(u.is_founding_seller, FALSE) DESC, l.is_featured DESC, ${orderBy}
-       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
-      [...params, take, offset]
-    ),
-    pool.query(
-      `SELECT COUNT(*) FROM listings l
+       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+
+  const listSqlBase = `
+      SELECT l.id, l.title, l.price, l.original_price, l.discount_percent, l.currency,
+              l.game, l.listing_type, l.images, l.views_count, l.is_featured,
+              l.delivery_method, l.created_at, l.published_at, l.status,
+              u.username AS seller_username, u.avatar_url AS seller_avatar,
+              u.rating AS seller_rating, u.sales_count AS seller_sales,
+              u.reviews_count AS seller_reviews,
+              FALSE AS seller_is_founding,
+              NULL::int AS seller_founding_number,
+              c.name AS category_name, c.slug AS category_slug
+       FROM listings l
+       JOIN users u ON u.id = l.seller_id
        LEFT JOIN categories c ON c.id = l.category_id
-       ${where}`,
-      params
-    ),
-  ]);
+       ${where}
+       ORDER BY l.is_featured DESC, ${orderBy}
+       LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+
+  let dataRes;
+  try {
+    dataRes = await pool.query(listSqlWithFounders, [...params, take, offset]);
+  } catch (err) {
+    if (err.code !== '42703') throw err;
+    dataRes = await pool.query(listSqlBase, [...params, take, offset]);
+  }
+
+  const countRes = await pool.query(
+    `SELECT COUNT(*) FROM listings l
+     LEFT JOIN categories c ON c.id = l.category_id
+     ${where}`,
+    params
+  );
+
+  const slimListings = dataRes.rows.map((row) => ({
+    ...row,
+    images: slimListingImages(row.images),
+    // Heavy avatars in list kill mobile payloads
+    seller_avatar: slimAvatar(row.seller_avatar),
+  }));
 
   res.json({
-    listings: dataRes.rows,
+    listings: slimListings,
     total: parseInt(countRes.rows[0].count),
     page: parseInt(page),
     pages: Math.ceil(parseInt(countRes.rows[0].count) / take),

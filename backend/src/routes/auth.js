@@ -87,24 +87,6 @@ router.post('/register',
         [username, email, hash, accountType]
       );
       let user = rows[0];
-      let founders = null;
-      if (accountType === 'seller') {
-        const { tryGrantFoundingSeller } = require('../services/founders');
-        // Release connection before nested pool transaction in tryGrant
-        founders = await tryGrantFoundingSeller(pool, user, {
-          fingerprint: req.body.device_fingerprint,
-          ip: req.ip,
-        });
-        if (founders.granted) {
-          const refreshed = await client.query(
-            `SELECT id, username, email, role, balance, avatar_url, account_type, account_type_chosen,
-                    is_founding_seller, founding_seller_number, auth_provider, is_verified
-             FROM users WHERE id = $1`,
-            [user.id]
-          );
-          user = refreshed.rows[0];
-        }
-      }
       const { accessToken, refreshToken } = generateTokens(user.id);
       const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
       const expiresAt = new Date(Date.now() + REFRESH_EXPIRES_DAYS * 86400000);
@@ -119,7 +101,7 @@ router.post('/register',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: REFRESH_EXPIRES_DAYS * 86400000,
       });
-      res.status(201).json({ accessToken, user: publicUser(user), founders });
+      res.status(201).json({ accessToken, user: publicUser(user) });
     } finally {
       client.release();
     }
@@ -263,25 +245,12 @@ async function issueSession(res, req, user) {
 }
 
 async function respondOAuth(res, req, user, { created = false } = {}) {
-  let founders = null;
-  if (user.account_type === 'seller' && !user.is_founding_seller) {
-    const { tryGrantFoundingSeller } = require('../services/founders');
-    founders = await tryGrantFoundingSeller(pool, user, {
-      fingerprint: req.body?.device_fingerprint,
-      ip: req.ip,
-    });
-    if (founders.granted) {
-      const { rows } = await pool.query('SELECT * FROM users WHERE id=$1', [user.id]);
-      user = rows[0];
-    }
-  }
   const accessToken = await issueSession(res, req, user);
   res.json({
     accessToken,
     user: publicUser(user),
     created,
     needs_account_type: needsAccountType(user),
-    founders,
   });
 }
 

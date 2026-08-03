@@ -150,9 +150,11 @@ export default function HomePage() {
     };
   }, []);
 
-  const { data: listings } = useQuery({
+  const { data: listings, isLoading: listingsLoading, isError: listingsError } = useQuery({
     queryKey: ['listings', 'featured'],
     queryFn: () => api.get('/listings?limit=12&sort=popular').then((r) => r.data),
+    retry: 1,
+    staleTime: 30_000,
   });
 
   const scrollAssortment = (dir) => {
@@ -446,8 +448,18 @@ export default function HomePage() {
             </Link>
           </div>
           <div className={LISTING_GRID_CLASS}>
-            {listings?.listings?.map((l) => <ListingCard key={l.id} listing={l} />)}
-            {(!listings?.listings || listings.listings.length === 0) && (
+            {listingsLoading && (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="rounded-2xl bg-dark-900 border border-dark-800 aspect-[3/4] animate-pulse" />
+              ))
+            )}
+            {!listingsLoading && listings?.listings?.map((l) => <ListingCard key={l.id} listing={l} />)}
+            {!listingsLoading && listingsError && (
+              <div className="col-span-full text-center text-dark-400 py-12 text-sm">
+                Не удалось загрузить лоты. Обновите страницу.
+              </div>
+            )}
+            {!listingsLoading && !listingsError && (!listings?.listings || listings.listings.length === 0) && (
               <div className="col-span-full text-center text-dark-400 py-12 text-sm">
                 Пока нет активных лотов —{' '}
                 <Link to="/listings/create" className="text-[#2B71F3] hover:underline">создайте первый</Link>

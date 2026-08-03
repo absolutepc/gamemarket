@@ -45,16 +45,14 @@ export default function RegisterPage() {
       }
       const res = await api.post('/auth/register', payload);
       setAuth(res.data.user, res.data.accessToken);
-      if (res.data?.founders?.granted) {
-        toast.success(`Founding Seller #${res.data.founders.number}!`);
-      } else {
-        toast.success(
-          data.account_type === ACCOUNT_TYPES.seller
-            ? 'Аккаунт продавца создан!'
-            : 'Аккаунт покупателя создан!'
-        );
-      }
-      navigate(data.account_type === ACCOUNT_TYPES.seller ? '/listings/create' : '/');
+      toast.success(
+        data.account_type === ACCOUNT_TYPES.seller
+          ? 'Аккаунт продавца создан!'
+          : 'Аккаунт покупателя создан!'
+      );
+      navigate(
+        data.account_type === ACCOUNT_TYPES.seller ? '/founders' : '/'
+      );
     } catch (err) {
       toast.error(err.response?.data?.error || 'Ошибка регистрации');
     }

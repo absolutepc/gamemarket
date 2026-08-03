@@ -31,6 +31,8 @@ import SellerRoute from './components/SellerRoute';
 import AdminRoute from './components/AdminRoute';
 import BecomeSellerPage from './pages/BecomeSellerPage';
 import CompleteAccountTypePage from './pages/CompleteAccountTypePage';
+import FoundersPage from './pages/FoundersPage';
+import AdminFoundersPage from './pages/AdminFoundersPage';
 import useAuthStore from './store/authStore';
 
 /** /users without username → own profile or login */
@@ -62,6 +64,7 @@ export default function App() {
         <Route path="rules" element={<RulesPage />} />
         <Route path="faq" element={<FaqPage />} />
         <Route path="about" element={<AboutPage />} />
+        <Route path="founders" element={<FoundersPage />} />
         <Route path="support" element={<SupportPage />} />
         <Route path="terms-of-sale" element={<TermsOfSalePage />} />
         <Route path="privacy" element={<PrivacyPage />} />
@@ -82,6 +85,7 @@ export default function App() {
         <Route element={<AdminRoute />}>
           <Route path="admin/disputes" element={<AdminDisputesPage />} />
           <Route path="admin/assortment" element={<AdminAssortmentPage />} />
+          <Route path="admin/founders" element={<AdminFoundersPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

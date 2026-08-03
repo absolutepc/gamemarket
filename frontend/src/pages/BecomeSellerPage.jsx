@@ -37,9 +37,22 @@ export default function BecomeSellerPage() {
             Founding Seller #{user.founding_seller_number}
           </p>
         ) : (
-          <p className="text-dark-400 mb-6">Можно сразу выставлять лоты</p>
+          <p className="text-dark-400 mb-6">
+            Можно сразу выставлять лоты
+            {stats?.founders?.open !== false && (
+              <>
+                {' · '}
+                <Link to="/founders" className="text-amber-200 hover:underline">заявка в Founders</Link>
+              </>
+            )}
+          </p>
         )}
-        <Link to="/listings/create" className="btn-primary inline-flex">Выставить лот</Link>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Link to="/listings/create" className="btn-primary inline-flex">Выставить лот</Link>
+          {!user.is_founding_seller && stats?.founders?.open !== false && (
+            <Link to="/founders" className="btn-secondary inline-flex">Founders</Link>
+          )}
+        </div>
       </div>
     );
   }
@@ -62,11 +75,7 @@ export default function BecomeSellerPage() {
         device_fingerprint: device_fingerprint || undefined,
       });
       if (data?.user) setUser(data.user);
-      if (data?.founders?.granted) {
-        toast.success(`Founding Seller #${data.founders.number} — комиссия 5%/10%`);
-      } else {
-        toast.success('Аккаунт продавца активирован');
-      }
+      toast.success('Аккаунт продавца активирован');
       navigate('/listings/create');
     } catch (err) {
       toast.error(err.response?.data?.error || 'Не удалось стать продавцом');
@@ -99,18 +108,22 @@ export default function BecomeSellerPage() {
             {' / '}
             <span className="line-through text-dark-500">17.5%</span>{' '}
             <span className="text-amber-200 font-semibold">10%</span>
-            , золотая галочка, выше в поиске, бейдж Founding Seller. Сейчас занято {foundersJoined}/{foundersLimit}.
+            , золотая галочка, выше в поиске. Сейчас занято {foundersJoined}/{foundersLimit}.
+            Вход только по заявке после рассмотрения.
           </p>
-          <ul className="space-y-1.5 text-sm text-dark-200">
+          <ul className="space-y-1.5 text-sm text-dark-200 mb-3">
             <li className="flex items-start gap-2">
               <BadgeCheck size={15} className="text-amber-300 mt-0.5 shrink-0" />
               Один слот на человека (email / устройство / IP)
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle2 size={15} className="text-emerald-400 mt-0.5 shrink-0" />
-              Мультиаккаунты для наживы блокируются автоматически
+              После активации продавца подайте заявку — решение примет модерация
             </li>
           </ul>
+          <Link to="/founders" className="text-sm text-amber-200 hover:underline font-medium">
+            Подробнее и заявка →
+          </Link>
         </div>
       )}
 

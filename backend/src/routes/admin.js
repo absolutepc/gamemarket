@@ -4,6 +4,12 @@ const pool = require('../config/database');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { validate } = require('../middleware/security');
 const { releaseEscrow, refundEscrow } = require('../services/escrow');
+const {
+  listFoundersApplications,
+  approveFoundersApplication,
+  rejectFoundersApplication,
+  getPlatformStats,
+} = require('../services/founders');
 
 function normalizeAssortmentKey(value) {
   return String(value || '')
@@ -182,6 +188,53 @@ router.post('/disputes/:id/resolve',
     } finally {
       client.release();
     }
+  }
+);
+
+/** Founders applications queue */
+router.get('/founders/applications', async (req, res) => {
+  const status = req.query.status || 'pending';
+  const [applications, stats] = await Promise.all([
+    listFoundersApplications(pool, { status, limit: req.query.limit }),
+    getPlatformStats(pool),
+  ]);
+  res.json({ applications, founders: stats.founders });
+});
+
+router.post(
+  '/founders/applications/:id/approve',
+  [
+    body('admin_note').optional({ nullable: true }).trim().isLength({ max: 1000 }),
+  ],
+  validate,
+  async (req, res) => {
+    const result = await approveFoundersApplication(pool, req.params.id, req.user, {
+      adminNote: req.body.admin_note,
+    });
+    if (!result.ok) {
+      return res.status(result.code === 'NOT_FOUND' ? 404 : 400).json({
+        error: result.error,
+        code: result.code,
+      });
+    }
+    res.json(result);
+  }
+);
+
+router.post(
+  '/founders/applications/:id/reject',
+  [
+    body('admin_note').optional({ nullable: true }).trim().isLength({ max: 1000 }),
+  ],
+  validate,
+  async (req, res) => {
+    const result = await rejectFoundersApplication(pool, req.params.id, req.user, {
+      adminNote: req.body.admin_note,
+    });
+    if (!result.ok) {
+      return res.status(404).json({ error: result.error, code: result.code });
+    }
+    res.json(result);
   }
 );
 

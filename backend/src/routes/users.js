@@ -5,7 +5,6 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const { apiLimiter, strictLimiter, validate } = require('../middleware/security');
 const { normalizeCriteria, ratingFromCriteria } = require('../utils/reviewCriteria');
 const { LISTING_SHOWCASE_DAYS } = require('../services/listingExpiry');
-const { tryGrantFoundingSeller } = require('../services/founders');
 
 function publicSellerUser(u) {
   return {
@@ -25,23 +24,6 @@ function publicSellerUser(u) {
     auth_provider: u.auth_provider,
     is_verified: Boolean(u.is_verified),
   };
-}
-
-async function grantFoundersIfEligible(user, req) {
-  const result = await tryGrantFoundingSeller(pool, user, {
-    fingerprint: req.body?.device_fingerprint,
-    ip: req.ip,
-  });
-  if (result.granted) {
-    const { rows } = await pool.query(
-      `SELECT id, username, email, role, account_type, account_type_chosen, balance, avatar_url,
-              rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number
-       FROM users WHERE id = $1`,
-      [user.id]
-    );
-    return { user: rows[0], founders: result };
-  }
-  return { user, founders: result };
 }
 
 router.get('/me/wallet-history', authenticate(), async (req, res) => {
@@ -84,7 +66,6 @@ router.post('/me/become-seller',
   strictLimiter,
   [
     body('accept_seller_terms').custom((v) => v === true || v === 'true'),
-    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
@@ -108,11 +89,7 @@ router.post('/me/become-seller',
       userRow = rows[0];
     }
 
-    const { user, founders } = await grantFoundersIfEligible(userRow, req);
-    res.json({
-      user: publicSellerUser(user),
-      founders,
-    });
+    res.json({ user: publicSellerUser(userRow) });
   }
 );
 
@@ -123,7 +100,6 @@ router.post('/me/account-type',
   [
     body('account_type').isIn(['buyer', 'seller']),
     body('accept_seller_terms').optional(),
-    body('device_fingerprint').optional().isString().isLength({ min: 16, max: 128 }),
   ],
   validate,
   async (req, res) => {
@@ -135,19 +111,10 @@ router.post('/me/account-type',
       });
     }
     if (req.user.account_type_chosen !== false && req.user.account_type === accountType) {
-      let user = req.user;
-      let founders = null;
-      if (accountType === 'seller' && !user.is_founding_seller) {
-        const granted = await grantFoundersIfEligible(user, req);
-        user = granted.user;
-        founders = granted.founders;
-      }
       return res.json({
-        user: publicSellerUser({ ...user, account_type: accountType }),
-        founders,
+        user: publicSellerUser({ ...req.user, account_type: accountType }),
       });
     }
-    // Allow first choice freely; if already seller, keep seller (no downgrade here)
     if (req.user.account_type === 'seller' && accountType === 'buyer') {
       return res.status(400).json({ error: 'Нельзя сменить тип с продавца на покупателя здесь' });
     }
@@ -158,17 +125,7 @@ router.post('/me/account-type',
                  rating, sales_count, auth_provider, is_verified, is_founding_seller, founding_seller_number`,
       [accountType, req.user.id]
     );
-    let user = rows[0];
-    let founders = null;
-    if (accountType === 'seller') {
-      const granted = await grantFoundersIfEligible(user, req);
-      user = granted.user;
-      founders = granted.founders;
-    }
-    res.json({
-      user: publicSellerUser(user),
-      founders,
-    });
+    res.json({ user: publicSellerUser(rows[0]) });
   }
 );
 

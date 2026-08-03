@@ -42,16 +42,12 @@ export default function CompleteAccountTypePage() {
       }
       const { data } = await api.post('/users/me/account-type', payload);
       if (data?.user) setUser(data.user);
-      if (data?.founders?.granted) {
-        toast.success(`Founding Seller #${data.founders.number}`);
-      } else {
-        toast.success(
-          accountType === ACCOUNT_TYPES.seller
-            ? 'Аккаунт продавца активирован'
-            : 'Аккаунт покупателя готов'
-        );
-      }
-      navigate(accountType === ACCOUNT_TYPES.seller ? '/listings/create' : '/', { replace: true });
+      toast.success(
+        accountType === ACCOUNT_TYPES.seller
+          ? 'Аккаунт продавца активирован'
+          : 'Аккаунт покупателя готов'
+      );
+      navigate(accountType === ACCOUNT_TYPES.seller ? '/founders' : '/', { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.error || 'Не удалось сохранить тип аккаунта');
     } finally {

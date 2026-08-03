@@ -291,11 +291,36 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_founders_fingerprint
   ON users (founders_fingerprint) WHERE is_founding_seller = TRUE AND founders_fingerprint IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_users_is_founding_seller
   ON users (is_founding_seller) WHERE is_founding_seller = TRUE;
+CREATE TABLE IF NOT EXISTS founders_applications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  message TEXT,
+  device_fingerprint TEXT,
+  ip TEXT,
+  email_norm TEXT,
+  admin_note TEXT,
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_founders_applications_status_created
+  ON founders_applications (status, created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_founders_applications_one_pending
+  ON founders_applications (user_id) WHERE status = 'pending';
 `;
 
 async function migrateFounders(client) {
-  await client.query('SET LOCAL statement_timeout = 15000');
-  await client.query(foundersAlters);
+  await client.query('BEGIN');
+  try {
+    await client.query('SET LOCAL statement_timeout = 15000');
+    await client.query(foundersAlters);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  }
 }
 
 async function migrate({ closePool = false } = {}) {

@@ -25,8 +25,8 @@ const SLIDES = [
     eyebrow: 'Программа Founders',
     title: 'Первые 100 продавцов',
     subtitle: null, // rendered via FoundersSubtitle
-    cta: { to: '/become-seller', label: 'Стать Founding Seller' },
-    secondary: { to: '/register', label: 'Регистрация' },
+    cta: { to: '/founders', label: 'Подать заявку' },
+    secondary: { to: '/become-seller', label: 'Стать продавцом' },
     tone: 'founders',
   },
   {
@@ -87,7 +87,7 @@ function FoundersSubtitle() {
       {' '}и{' '}
       <span className="line-through text-dark-500">17.5%</span>{' '}
       <span className="text-amber-200 font-semibold">10%</span>
-      , золотая галочка, приоритет в поиске и бейдж Founding Seller. Один аккаунт на человека — места ограничены.
+      , золотая галочка, приоритет в поиске и бейдж Founding Seller. Вход по заявке после рассмотрения — один аккаунт на человека.
     </>
   );
 }

@@ -43,6 +43,7 @@ export default function AdminDisputesPage() {
         <Scale className="text-brand-400" size={22} />
         <h1 className="text-2xl font-bold">Разбор споров</h1>
         <Link to="/admin/assortment" className="ml-auto btn-ghost text-sm">Каталог</Link>
+        <Link to="/admin/founders" className="btn-ghost text-sm">Founders</Link>
       </div>
 
       <div className="flex gap-2 mb-6">
