@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Star, Zap } from 'lucide-react';
 import { formatPrice, formatReviewsCount } from '../utils/format';
-import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
+import { resolveAssortmentIcon, resolveAssortmentItem, assortmentIconUrl } from '../utils/assortmentIcons';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
@@ -56,7 +56,7 @@ export default function ListingCard({
               loading="lazy"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = '/assortment/other-apps.png';
+                e.currentTarget.src = assortmentIconUrl('/assortment/other-apps.png');
               }}
             />
           </div>

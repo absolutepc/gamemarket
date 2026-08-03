@@ -170,7 +170,7 @@ export default function AdminAssortmentPage() {
                     loading="lazy"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = '/assortment/other-apps.png';
+                      e.currentTarget.src = '/assortment/other-apps.png?v=20260803c';
                     }}
                   />
                   <div className="flex-1 min-w-0">

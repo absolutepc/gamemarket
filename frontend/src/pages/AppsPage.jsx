@@ -6,8 +6,9 @@ import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { ASSORTMENT_TABS } from '../data/assortment';
 import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 import { getAssortmentPath } from '../utils/gameSlug';
+import { assortmentIconUrl } from '../utils/assortmentIcons';
 
-const FALLBACK_ICON = '/assortment/other-apps.png';
+const FALLBACK_ICON = assortmentIconUrl('/assortment/other-apps.png');
 
 const TAB_ICONS = {
   pc: Monitor,

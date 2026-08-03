@@ -797,6 +797,19 @@ export const ASSORTMENT = [
   { name: 'AAR Labs', search: 'AAR Labs', icon: '/assortment/aar-labs.png', kind: 'pc' },
 ];
 
+/**
+ * Bust browser/CDN caches for /assortment/*.png.
+ * Static hosting used max-age=1y + immutable, so letter-tile PNGs stuck after we replaced art.
+ * Bump this when mass-updating assortment icons.
+ */
+export const ASSORTMENT_ICON_VERSION = '20260803c';
+
+for (const item of ASSORTMENT) {
+  if (item.icon && item.icon.startsWith('/assortment/') && !item.icon.includes('?')) {
+    item.icon = `${item.icon}?v=${ASSORTMENT_ICON_VERSION}`;
+  }
+}
+
 export const ASSORTMENT_PREVIEW_COUNT = HOME_CAROUSEL_PINNED.length;
 
 export const ASSORTMENT_TABS = [

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X, Check } from 'lucide-react';
 import { ASSORTMENT_TABS } from '../data/assortment';
-import { resolveAssortmentItem } from '../utils/assortmentIcons';
+import { resolveAssortmentItem, assortmentIconUrl } from '../utils/assortmentIcons';
 import { useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 
 /**
@@ -80,7 +80,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
               className="w-8 h-8 rounded-lg object-cover shrink-0 ring-1 ring-white/10"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = '/assortment/other-apps.png';
+                e.currentTarget.src = assortmentIconUrl('/assortment/other-apps.png');
               }}
             />
             <span className="flex-1 truncate text-white font-medium">{selected.name}</span>
@@ -167,7 +167,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
                           loading="lazy"
                           onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = '/assortment/other-apps.png';
+                            e.currentTarget.src = assortmentIconUrl('/assortment/other-apps.png');
                           }}
                         />
                         <span className="flex-1 min-w-0">

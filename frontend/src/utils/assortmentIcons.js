@@ -1,6 +1,14 @@
-import { ASSORTMENT } from '../data/assortment';
+import { ASSORTMENT, ASSORTMENT_ICON_VERSION } from '../data/assortment';
 
-const FALLBACK_ICON = '/assortment/other-apps.png';
+const FALLBACK_ICON = `/assortment/other-apps.png?v=${ASSORTMENT_ICON_VERSION}`;
+
+/** Ensure assortment icon URLs carry the cache-bust query. */
+export function assortmentIconUrl(src) {
+  const raw = String(src || '').trim() || FALLBACK_ICON;
+  if (!raw.startsWith('/assortment/')) return raw;
+  const bare = raw.split('?')[0];
+  return `${bare}?v=${ASSORTMENT_ICON_VERSION}`;
+}
 
 /** Normalize for fuzzy game / service matching */
 export function normalizeAssortmentKey(value) {
@@ -71,7 +79,7 @@ export function resolveAssortmentItem(gameOrSearch) {
 }
 
 export function resolveAssortmentIcon(gameOrSearch) {
-  return resolveAssortmentItem(gameOrSearch)?.icon || FALLBACK_ICON;
+  return assortmentIconUrl(resolveAssortmentItem(gameOrSearch)?.icon || FALLBACK_ICON);
 }
 
 /**

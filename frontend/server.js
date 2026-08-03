@@ -62,7 +62,14 @@ app.use(express.static(distDir, {
   setHeaders(res, filePath) {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    } else if (/\.(?:js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$/i.test(filePath)) {
+      return;
+    }
+    // Assortment logos are updated in place (same filename) — do not mark immutable
+    if (filePath.includes(`${path.sep}assortment${path.sep}`) && /\.png$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+      return;
+    }
+    if (/\.(?:js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }
   },

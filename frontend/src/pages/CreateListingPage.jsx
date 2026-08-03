@@ -25,7 +25,7 @@ import {
   attributesToTags,
 } from '../utils/listingAttributes';
 import { compressImageFile } from '../utils/imageCompress';
-import { resolveAssortmentItem, isExactAssortmentName } from '../utils/assortmentIcons';
+import { resolveAssortmentItem, isExactAssortmentName, assortmentIconUrl } from '../utils/assortmentIcons';
 import { useHiddenAssortmentKeys, useVisibleAssortment } from '../hooks/useAssortmentCatalog';
 import { ASSORTMENT_TABS } from '../data/assortment';
 import { categoryIdForListingType } from '../utils/listingCategoryMap';
@@ -33,7 +33,7 @@ import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 
 const DEFAULT_FIELD = { key: 'player_id', label: 'ID / ник', required: true };
 const MAX_IMAGES = 5;
-const FALLBACK_ICON = '/assortment/other-apps.png';
+const FALLBACK_ICON = assortmentIconUrl('/assortment/other-apps.png');
 
 const STEPS = [
   { id: 'game', title: 'Игры и приложения' },
