@@ -90,6 +90,7 @@ export default function App() {
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="admin/stats" element={<AdminStatsPage />} />
+          <Route path="admin/contest" element={<AdminContestPage />} />
           <Route path="admin/disputes" element={<AdminDisputesPage />} />
           <Route path="admin/assortment" element={<AdminAssortmentPage />} />
           <Route path="admin/founders" element={<AdminFoundersPage />} />
