@@ -268,14 +268,10 @@ export default function ListingPage() {
     : 'Продавец передаст товар в чате сделки после оплаты.';
 
   const rawImages = Array.isArray(listing.images)
-    ? listing.images.filter((src) => {
-      const s = String(src || '').trim();
-      if (!s || s === PLACEHOLDER) return false;
-      return true;
-    })
+    ? listing.images.map((src) => String(src || '').trim()).filter(Boolean)
     : [];
-  const images = rawImages.length ? rawImages : [gameIcon || PLACEHOLDER];
-  const galleryIsIcon = rawImages.length === 0;
+  const images = rawImages.length ? rawImages : [PLACEHOLDER];
+  const galleryIsIcon = false;
 
   const buyProps = {
     isOwner,
@@ -291,19 +287,12 @@ export default function ListingPage() {
 
   const gallery = (
     <div>
-      <div className={`relative aspect-[4/3] lg:aspect-[5/4] rounded-2xl overflow-hidden bg-dark-800 ${
-        galleryIsIcon ? 'flex items-center justify-center bg-gradient-to-br from-dark-800 to-dark-900' : ''
-      }`}>
+      <div className="relative aspect-[4/3] lg:aspect-[5/4] rounded-2xl overflow-hidden bg-dark-800">
         <img
           src={images[imgIdx]}
-          className={galleryIsIcon
-            ? 'w-[46%] max-w-[220px] h-auto object-contain drop-shadow-lg'
-            : 'w-full h-full object-cover'}
+          className="w-full h-full object-cover"
           alt={listing.title}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = '/assortment/other-apps.png';
-          }}
+          onError={(e) => { e.target.src = PLACEHOLDER; }}
         />
         {listing.delivery_method === 'auto' && (
           <span className="absolute top-3 left-3 badge bg-violet-500/95 text-white flex items-center gap-1">
