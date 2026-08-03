@@ -22,7 +22,7 @@ export default function GuaranteeModal({ open, onClose }) {
           Гарантия <span className="text-[#8EB6FF]">Lootz</span>
         </h2>
 
-        <p className="text-sm sm:text-base text-white/75 leading-relaxed mb-6 max-w-sm">
+        <p className="text-sm sm:text-base text-white/90 leading-relaxed mb-6 max-w-sm">
           Сделка защищена. Продавец не получит оплату, пока вы не подтвердите получение товара
         </p>
 
