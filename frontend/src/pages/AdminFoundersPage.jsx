@@ -5,6 +5,7 @@ import { Crown, CheckCircle, XCircle, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { formatRelative } from '../utils/format';
+import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 
 export default function AdminFoundersPage() {
   const qc = useQueryClient();
