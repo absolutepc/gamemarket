@@ -196,22 +196,20 @@ export default function AdminAssortmentPage() {
                       type="button"
                       disabled={busy}
                       onClick={() => unhideMutation.mutate(item.name)}
-                      className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1 shrink-0"
-                      title="Вернуть"
+                      className="btn-secondary text-xs px-2 py-1.5 inline-flex items-center gap-1 shrink-0"
                     >
                       <Eye size={14} />
-                      <span className="hidden 2xl:inline">Вернуть</span>
+                      <span className="hidden sm:inline">Вернуть</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => hideMutation.mutate(item.name)}
-                      className="btn-ghost text-xs px-2.5 py-1.5 text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 shrink-0"
-                      title="Скрыть"
+                      className="btn-ghost text-xs px-2 py-1.5 text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 shrink-0"
                     >
                       <EyeOff size={14} />
-                      <span className="hidden 2xl:inline">Скрыть</span>
+                      <span className="hidden sm:inline">Скрыть</span>
                     </button>
                   )}
                 </li>
