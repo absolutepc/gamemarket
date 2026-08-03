@@ -1,34 +1,71 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Download, Upload, CheckSquare, Square, ArrowRight, AlertTriangle } from 'lucide-react';
+import {
+  Download, Upload, CheckSquare, Square, ArrowRight, AlertTriangle, Plus, Trash2,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import Seo from '../components/Seo';
 import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 import { formatPrice } from '../utils/format';
+import { resolveAssortmentItem } from '../utils/assortmentIcons';
 
 const EXAMPLE_JSON = `[
   {
     "title": "Cursor Pro — подписка",
     "description": "Что входит в подписку Cursor Pro. Выдача вручную после оплаты на Lootz.",
     "price": 2080,
-    "game": "Cursor AI",
+    "listing_type": "subscription",
+    "images": []
+  },
+  {
+    "title": "Claude Pro 1 месяц",
+    "description": "Подписка Claude Pro, выдача вручную после оплаты на Lootz.",
+    "price": 1990,
     "listing_type": "subscription",
     "images": []
   }
 ]`;
 
 const STEPS = ['Источник', 'Проверка', 'Готово'];
+const MAX_FORM_LOTS = 50;
 
-const EMPTY_FORM = {
-  title: '',
-  description: '',
-  price: '',
-  game: 'Cursor AI',
-  listing_type: 'subscription',
-  image_url: '',
-};
+const TYPE_HINTS = [
+  ['subscription', /подписк|premium|pro\b|plus\b|ps\s*plus|game\s*pass/i],
+  ['topup', /пополнен|uc\b|gcoin|robux|v-?bucks|баланс/i],
+  ['donate', /донат/i],
+  ['currency', /валют|монет/i],
+  ['account', /аккаунт|акк\b|account/i],
+  ['keys', /ключ|key|gift\s*card/i],
+  ['boosting', /буст|boost|прокачк/i],
+];
+
+function newLotForm() {
+  return {
+    id: `lot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: '',
+    description: '',
+    price: '',
+    game: '',
+    gameManual: false,
+    listing_type: 'other',
+    typeManual: false,
+    image_url: '',
+  };
+}
+
+function guessGameFromTitle(title) {
+  return resolveAssortmentItem(title)?.name || '';
+}
+
+function guessTypeFromText(title, description = '') {
+  const hay = `${title} ${description}`;
+  for (const [type, re] of TYPE_HINTS) {
+    if (re.test(hay)) return type;
+  }
+  return 'other';
+}
 
 function explainJsonError(err, text) {
   const msg = String(err?.message || '');
@@ -41,13 +78,31 @@ function explainJsonError(err, text) {
   return `Некорректный JSON: ${msg || 'проверьте кавычки и запятые'}`;
 }
 
+function enrichItemsWithAssortment(items) {
+  return (items || []).map((item) => {
+    const title = String(item.title || item.name || '').trim();
+    const description = String(item.description || item.desc || '').trim();
+    const guessedGame = guessGameFromTitle(title);
+    const game = String(item.game || '').trim() || guessedGame;
+    const listingType = String(item.listing_type || item.type || '').trim()
+      || guessTypeFromText(title, description);
+    return {
+      ...item,
+      title,
+      description,
+      game: game || 'Другое',
+      listing_type: listingType,
+    };
+  });
+}
+
 export default function ImportListingsPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [provider, setProvider] = useState('playerok');
   const [profileUrl, setProfileUrl] = useState('');
   const [mode, setMode] = useState('form'); // form | json | csv
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [forms, setForms] = useState([newLotForm()]);
   const [payloadText, setPayloadText] = useState(EXAMPLE_JSON);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -55,6 +110,24 @@ export default function ImportListingsPage() {
   const [result, setResult] = useState(null);
 
   const selectedCount = useMemo(() => drafts.filter((d) => d.selected).length, [drafts]);
+
+  const updateForm = (id, patch) => {
+    setForms((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+  };
+
+  const onTitleChange = (id, title) => {
+    setForms((prev) => prev.map((f) => {
+      if (f.id !== id) return f;
+      const next = { ...f, title: title.slice(0, 200) };
+      if (!f.gameManual) {
+        next.game = guessGameFromTitle(title);
+      }
+      if (!f.typeManual) {
+        next.listing_type = guessTypeFromText(title, f.description);
+      }
+      return next;
+    }));
+  };
 
   const runPreview = async () => {
     setLoading(true);
@@ -64,33 +137,44 @@ export default function ImportListingsPage() {
       if (provider === 'playerok' && profileUrl.trim()) body.profile_url = profileUrl.trim();
 
       if (mode === 'form') {
-        const title = form.title.trim();
-        const description = form.description.trim();
-        const price = parseFloat(String(form.price).replace(',', '.'));
-        if (title.length < 5) {
-          toast.error('Укажите короткое название (от 5 символов)');
+        const items = [];
+        for (let i = 0; i < forms.length; i += 1) {
+          const form = forms[i];
+          const title = form.title.trim();
+          const description = form.description.trim();
+          const price = parseFloat(String(form.price).replace(',', '.'));
+          if (!title && !description && !form.price) continue; // skip empty rows
+          if (title.length < 5) {
+            toast.error(`Лот ${i + 1}: название от 5 символов`);
+            return;
+          }
+          if (description.length < 20) {
+            toast.error(`Лот ${i + 1}: описание — минимум 20 символов`);
+            return;
+          }
+          if (!Number.isFinite(price) || price < 1) {
+            toast.error(`Лот ${i + 1}: укажите цену`);
+            return;
+          }
+          const game = form.game.trim() || guessGameFromTitle(title);
+          if (!game) {
+            toast.error(`Лот ${i + 1}: укажите игру / сервис (не удалось угадать по названию)`);
+            return;
+          }
+          items.push({
+            title,
+            description,
+            price,
+            game,
+            listing_type: form.listing_type || guessTypeFromText(title, description),
+            images: form.image_url.trim() ? [form.image_url.trim()] : [],
+          });
+        }
+        if (!items.length) {
+          toast.error('Добавьте хотя бы один лот');
           return;
         }
-        if (description.length < 20) {
-          toast.error('Описание — минимум 20 символов');
-          return;
-        }
-        if (!Number.isFinite(price) || price < 1) {
-          toast.error('Укажите цену');
-          return;
-        }
-        if (!form.game.trim()) {
-          toast.error('Укажите игру / сервис');
-          return;
-        }
-        body.items = [{
-          title,
-          description,
-          price,
-          game: form.game.trim(),
-          listing_type: form.listing_type,
-          images: form.image_url.trim() ? [form.image_url.trim()] : [],
-        }];
+        body.items = enrichItemsWithAssortment(items);
       } else if (mode === 'csv') {
         body.csv = payloadText;
       } else {
@@ -102,15 +186,26 @@ export default function ImportListingsPage() {
           return;
         }
         if (!Array.isArray(items)) {
-          toast.error('JSON должен быть массивом лотов: [ { ... } ]');
+          toast.error('JSON должен быть массивом лотов: [ { ... }, { ... } ]');
           return;
         }
-        body.items = items;
+        body.items = enrichItemsWithAssortment(items);
       }
 
+      // For CSV, enrich after preview from server drafts instead
       const { data } = await api.post('/listings/import/preview', body);
+      const draftsNext = (data.drafts || []).map((d, i) => {
+        const guessed = guessGameFromTitle(d.title);
+        const game = (!d.game || d.game === 'Другое') && guessed ? guessed : d.game;
+        return {
+          ...d,
+          game,
+          selected: d.selected !== false,
+          key: d.key || `draft-${i}`,
+        };
+      });
       setPreview(data);
-      setDrafts((data.drafts || []).map((d) => ({ ...d, selected: d.selected !== false })));
+      setDrafts(draftsNext);
       setStep(1);
     } catch (err) {
       const msg = err.response?.data?.error || 'Не удалось разобрать импорт';
@@ -128,7 +223,15 @@ export default function ImportListingsPage() {
   };
 
   const updateDraft = (key, patch) => {
-    setDrafts((prev) => prev.map((d) => (d.key === key ? { ...d, ...patch } : d)));
+    setDrafts((prev) => prev.map((d) => {
+      if (d.key !== key) return d;
+      const next = { ...d, ...patch };
+      if (patch.title != null && patch.game === undefined) {
+        const guessed = guessGameFromTitle(patch.title);
+        if (guessed) next.game = guessed;
+      }
+      return next;
+    }));
   };
 
   const publish = async () => {
@@ -164,7 +267,7 @@ export default function ImportListingsPage() {
         <div>
           <h1 className="text-2xl font-bold">Импорт лотов</h1>
           <p className="text-sm text-dark-400 mt-1">
-            Перенос ваших публичных объявлений с другой площадки на Lootz. Автовыдача и секреты не копируются.
+            Можно перенести сразу несколько объявлений. Игра/сервис подставляется из названия, если есть в каталоге Lootz.
           </p>
         </div>
       </div>
@@ -219,7 +322,7 @@ export default function ImportListingsPage() {
                 onChange={(e) => setProfileUrl(e.target.value)}
               />
               <p className="text-xs text-dark-500 mt-1.5">
-                Автозагрузка с Playerok недоступна. Заполните форму ниже по своему лоту — это самый простой способ.
+                Автозагрузка с Playerok недоступна. Добавьте несколько лотов формой ниже или вставьте JSON/CSV списком.
               </p>
             </div>
           )}
@@ -244,72 +347,112 @@ export default function ImportListingsPage() {
           </div>
 
           {mode === 'form' ? (
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className="block text-sm text-dark-300 mb-1">Название (коротко)</label>
-                <input
-                  className="input w-full"
-                  placeholder="Cursor Pro — подписка"
-                  value={form.title}
-                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value.slice(0, 200) }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-dark-300 mb-1">Описание</label>
-                <textarea
-                  className="input w-full min-h-[120px]"
-                  placeholder="Что входит в подписку, как выдаёте…"
-                  value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, 5000) }))}
-                />
-              </div>
-              <div className="grid sm:grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-sm text-dark-300 mb-1">Цена ₽</label>
-                  <input
-                    className="input w-full"
-                    type="number"
-                    min="1"
-                    value={form.price}
-                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                  />
+            <div className="flex flex-col gap-4">
+              {forms.map((form, index) => (
+                <div key={form.id} className="rounded-2xl border border-dark-800 bg-dark-950/40 p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-sm font-medium text-dark-200">Лот {index + 1}</div>
+                    {forms.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn-ghost text-sm text-red-300 inline-flex items-center gap-1"
+                        onClick={() => setForms((prev) => prev.filter((f) => f.id !== form.id))}
+                      >
+                        <Trash2 size={14} /> Удалить
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm text-dark-300 mb-1">Название (коротко)</label>
+                    <input
+                      className="input w-full"
+                      placeholder="Например: Claude Pro 1 месяц"
+                      value={form.title}
+                      onChange={(e) => onTitleChange(form.id, e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-dark-300 mb-1">Описание</label>
+                    <textarea
+                      className="input w-full min-h-[100px]"
+                      placeholder="Что входит, как выдаёте…"
+                      value={form.description}
+                      onChange={(e) => updateForm(form.id, {
+                        description: e.target.value.slice(0, 5000),
+                        ...(!form.typeManual
+                          ? { listing_type: guessTypeFromText(form.title, e.target.value) }
+                          : {}),
+                      })}
+                    />
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-sm text-dark-300 mb-1">Цена ₽</label>
+                      <input
+                        className="input w-full"
+                        type="number"
+                        min="1"
+                        value={form.price}
+                        onChange={(e) => updateForm(form.id, { price: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-dark-300 mb-1">Игра / сервис</label>
+                      <input
+                        className="input w-full"
+                        placeholder="Подставится из названия"
+                        value={form.game}
+                        onChange={(e) => updateForm(form.id, {
+                          game: e.target.value,
+                          gameManual: true,
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-dark-300 mb-1">Тип</label>
+                      <select
+                        className="input w-full"
+                        value={form.listing_type}
+                        onChange={(e) => updateForm(form.id, {
+                          listing_type: e.target.value,
+                          typeManual: true,
+                        })}
+                      >
+                        {LISTING_TYPE_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-dark-300 mb-1">Ссылка на фото (необязательно)</label>
+                    <input
+                      className="input w-full"
+                      placeholder="https://…"
+                      value={form.image_url}
+                      onChange={(e) => updateForm(form.id, { image_url: e.target.value.slice(0, 500) })}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm text-dark-300 mb-1">Игра / сервис</label>
-                  <input
-                    className="input w-full"
-                    value={form.game}
-                    onChange={(e) => setForm((f) => ({ ...f, game: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-dark-300 mb-1">Тип</label>
-                  <select
-                    className="input w-full"
-                    value={form.listing_type}
-                    onChange={(e) => setForm((f) => ({ ...f, listing_type: e.target.value }))}
-                  >
-                    {LISTING_TYPE_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm text-dark-300 mb-1">Ссылка на фото (необязательно)</label>
-                <input
-                  className="input w-full"
-                  placeholder="https://… — иначе будет обычный placeholder, без иконки категории"
-                  value={form.image_url}
-                  onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value.slice(0, 500) }))}
-                />
-              </div>
+              ))}
+
+              <button
+                type="button"
+                className="btn-secondary h-11 inline-flex items-center justify-center gap-2"
+                disabled={forms.length >= MAX_FORM_LOTS}
+                onClick={() => setForms((prev) => (
+                  prev.length >= MAX_FORM_LOTS ? prev : [...prev, newLotForm()]
+                ))}
+              >
+                <Plus size={16} /> Добавить ещё лот
+              </button>
+              <p className="text-xs text-dark-500">До {MAX_FORM_LOTS} лотов за один импорт. JSON/CSV — тоже списком.</p>
             </div>
           ) : (
             <>
               {mode === 'json' && (
                 <p className="text-xs text-dark-500">
-                  Важно: в JSON нельзя делать Enter внутри кавычек title. Длинный текст кладите в description.
+                  Массив из нескольких объектов. Поле game можно не указывать — подставим из title, если игра есть в каталоге.
                 </p>
               )}
               <textarea
@@ -460,6 +603,7 @@ export default function ImportListingsPage() {
                 setResult(null);
                 setDrafts([]);
                 setPreview(null);
+                setForms([newLotForm()]);
               }}
             >
               Новый импорт
