@@ -131,7 +131,7 @@ async function submitFoundersApplication(pool, user, { message, fingerprint, ip 
   if (user.is_founding_seller) {
     return { ok: false, error: 'Вы уже Founding Seller', code: 'ALREADY_FOUNDER' };
   }
-  if (user.account_type !== 'seller' && user.role !== 'admin') {
+  if (user.account_type !== 'seller' && user.role !== 'admin' && user.role !== 'owner') {
     return { ok: false, error: 'Сначала станьте продавцом', code: 'SELLER_REQUIRED' };
   }
 

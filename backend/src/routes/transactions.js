@@ -169,7 +169,7 @@ router.get('/:id', authenticate(), async (req, res) => {
   if (
     String(tx.buyer_id) !== String(req.user.id)
     && String(tx.seller_id) !== String(req.user.id)
-    && req.user.role !== 'admin'
+    && req.user.role !== 'admin' && req.user.role !== 'owner'
   ) {
     return res.status(403).json({ error: 'Forbidden' });
   }
@@ -355,7 +355,7 @@ router.post('/:id/cancel', authenticate(), async (req, res) => {
     }
     const isBuyer = String(tx.buyer_id) === String(req.user.id);
     const isSeller = String(tx.seller_id) === String(req.user.id);
-    const isAdmin = req.user.role === 'admin';
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'owner';
     if (!isBuyer && !isSeller && !isAdmin) {
       await client.query('ROLLBACK');
       return res.status(403).json({ error: 'Forbidden' });

@@ -502,7 +502,7 @@ router.post('/',
   ],
   validate,
   async (req, res) => {
-    if (req.user.account_type !== 'seller' && req.user.role !== 'admin') {
+    if (req.user.account_type !== 'seller' && req.user.role !== 'admin' && req.user.role !== 'owner') {
       return res.status(403).json({
         error: 'Чтобы выставить лот, зарегистрируйтесь как продавец или перейдите в статус продавца',
         code: 'SELLER_REQUIRED',
@@ -561,7 +561,7 @@ router.put('/:id',
   async (req, res) => {
     const { rows: existing } = await pool.query('SELECT * FROM listings WHERE id=$1', [req.params.id]);
     if (!existing[0]) return res.status(404).json({ error: 'Not found' });
-    if (existing[0].seller_id !== req.user.id && req.user.role !== 'admin') {
+    if (existing[0].seller_id !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'owner') {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const {
@@ -633,7 +633,7 @@ router.post('/:id/reactivate', authenticate(), strictLimiter, async (req, res) =
   );
   const listing = existing[0];
   if (!listing) return res.status(404).json({ error: 'Лот не найден' });
-  if (String(listing.seller_id) !== String(req.user.id) && req.user.role !== 'admin') {
+  if (String(listing.seller_id) !== String(req.user.id) && req.user.role !== 'admin' && req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Forbidden' });
   }
   if (listing.status === 'deleted') {
@@ -699,7 +699,7 @@ router.post(
         await client.query('ROLLBACK');
         return res.status(404).json({ error: 'Лот не найден' });
       }
-      if (String(listing.seller_id) !== String(req.user.id) && req.user.role !== 'admin') {
+      if (String(listing.seller_id) !== String(req.user.id) && req.user.role !== 'admin' && req.user.role !== 'owner') {
         await client.query('ROLLBACK');
         return res.status(403).json({ error: 'Forbidden' });
       }
@@ -794,7 +794,7 @@ router.post(
 router.delete('/:id', authenticate(), async (req, res) => {
   const { rows } = await pool.query('SELECT seller_id FROM listings WHERE id=$1', [req.params.id]);
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });
-  if (rows[0].seller_id !== req.user.id && req.user.role !== 'admin') {
+  if (rows[0].seller_id !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Forbidden' });
   }
   await pool.query("UPDATE listings SET status='deleted', updated_at=NOW() WHERE id=$1", [req.params.id]);

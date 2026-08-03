@@ -84,7 +84,7 @@ router.post(
   strictLimiter,
   apiLimiter,
   async (req, res) => {
-    if (req.user.account_type !== 'seller' && req.user.role !== 'admin') {
+    if (req.user.account_type !== 'seller' && req.user.role !== 'admin' && req.user.role !== 'owner') {
       return res.status(403).json({
         error: 'Импорт доступен только продавцам',
         code: 'SELLER_REQUIRED',
@@ -113,7 +113,7 @@ router.post(
   ],
   validate,
   async (req, res) => {
-    if (req.user.account_type !== 'seller' && req.user.role !== 'admin') {
+    if (req.user.account_type !== 'seller' && req.user.role !== 'admin' && req.user.role !== 'owner') {
       return res.status(403).json({
         error: 'Импорт доступен только продавцам',
         code: 'SELLER_REQUIRED',
