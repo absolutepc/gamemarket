@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Trophy, Dices, Store, ShoppingBag, RefreshCw } from 'lucide-react';
+import { Trophy, Dices, Store, ShoppingBag, RefreshCw, Play } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
@@ -10,6 +10,13 @@ function formatPct(n) {
   const v = Number(n) || 0;
   if (v < 0.01 && v > 0) return '<0.01%';
   return `${v.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
+}
+
+function currentMonthSlug() {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
 }
 
 export default function AdminContestPage() {
@@ -36,6 +43,15 @@ export default function AdminContestPage() {
     onError: (err) => toast.error(err.response?.data?.error || 'Ошибка розыгрыша'),
   });
 
+  const startMutation = useMutation({
+    mutationFn: () => api.post('/admin/contests/start', {}).then((r) => r.data),
+    onSuccess: (res) => {
+      toast.success(res.message || (res.created ? 'Конкурс создан' : 'Конкурс уже активен'));
+      qc.invalidateQueries({ queryKey: ['admin-contest-current'] });
+    },
+    onError: (err) => toast.error(err.response?.data?.error || 'Не удалось запустить конкурс'),
+  });
+
   const contest = data?.contest;
   const stats = data?.stats || {};
   const rows = tab === 'sellers' ? data?.sellers || [] : data?.buyers || [];
@@ -44,6 +60,14 @@ export default function AdminContestPage() {
   const alreadyDrawn = Boolean(
     tab === 'sellers' ? contest?.seller_drawn_at : contest?.buyer_drawn_at
   );
+  const monthSlug = currentMonthSlug();
+  const isThisMonthActive =
+    contest?.slug === monthSlug
+    && contest?.status === 'active'
+    && contest?.starts_at
+    && contest?.ends_at
+    && new Date(contest.starts_at) <= new Date()
+    && new Date(contest.ends_at) > new Date();
 
   const runDraw = () => {
     const label = tab === 'sellers' ? 'продавцов' : 'покупателей';
@@ -57,6 +81,19 @@ export default function AdminContestPage() {
     drawMutation.mutate(tab);
   };
 
+  const runStart = () => {
+    if (
+      !window.confirm(
+        isThisMonthActive
+          ? `Конкурс ${monthSlug} уже активен. Нажать всё равно? (ничего не сломает — операция безопасна)`
+          : `Создать / активировать конкурс на ${monthSlug}? Новый месяц также поднимается автоматически.`
+      )
+    ) {
+      return;
+    }
+    startMutation.mutate();
+  };
+
   return (
     <div className={`${PAGE_WIDTH_CLASS} py-8`}>
       <div className="flex flex-wrap items-center gap-3 mb-2">
@@ -65,8 +102,8 @@ export default function AdminContestPage() {
         <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
       </div>
       <p className="text-sm text-dark-400 mb-6 max-w-3xl">
-        Участники — те, у кого за период конкурса есть завершённые сделки. Шансы видит только админ;
-        у пользователей на сайте показываются только общие счётчики и факт участия.
+        Период — календарный месяц (UTC). Новый конкурс создаётся автоматически при смене месяца.
+        Кнопка «Начать конкурс» — ручной запасной вариант. Розыгрыш победителей по-прежнему ручной.
       </p>
 
       {isLoading ? (
@@ -96,6 +133,9 @@ export default function AdminContestPage() {
                     : '—'}
                   {' · '}
                   <span className="text-dark-300">{contest?.status}</span>
+                  {contest?.slug ? (
+                    <span className="text-dark-500"> · {contest.slug}</span>
+                  ) : null}
                 </p>
                 <p className="text-sm text-dark-300 mt-2">
                   Приз продавцам: {contest?.prize_sellers || '—'}
@@ -103,15 +143,31 @@ export default function AdminContestPage() {
                   Приз покупателям: {contest?.prize_buyers || '—'}
                 </p>
               </div>
-              <button
-                type="button"
-                className="btn-secondary h-9 px-3 inline-flex items-center gap-1.5 text-sm"
-                onClick={() => refetch()}
-                disabled={isFetching}
-              >
-                <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
-                Обновить
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary h-9 px-3 inline-flex items-center gap-1.5 text-sm"
+                  onClick={() => refetch()}
+                  disabled={isFetching}
+                >
+                  <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
+                  Обновить
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary h-9 px-3 inline-flex items-center gap-1.5 text-sm"
+                  onClick={runStart}
+                  disabled={startMutation.isPending}
+                  title="Создать конкурс текущего месяца, если его ещё нет"
+                >
+                  <Play size={14} />
+                  {startMutation.isPending
+                    ? 'Запуск…'
+                    : isThisMonthActive
+                      ? 'Конкурс активен'
+                      : 'Начать конкурс'}
+                </button>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-3 mt-5">

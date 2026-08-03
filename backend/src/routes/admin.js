@@ -16,6 +16,7 @@ const {
 const { getAdminAudienceStats } = require('../services/adminStats');
 const {
   ensureMonthContest,
+  startContest,
   getCurrentContest,
   getContestById,
   listContests,
@@ -329,6 +330,41 @@ router.get('/contests', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Не удалось загрузить конкурсы' });
+  }
+});
+
+/**
+ * Idempotent: create/activate contest for current UTC month (or body.month=YYYY-MM).
+ * Safe to click every month; if already exists, returns it.
+ */
+router.post('/contests/start', async (req, res) => {
+  try {
+    const month = typeof req.body?.month === 'string' ? req.body.month.trim() : undefined;
+    const result = await startContest(pool, month || new Date());
+    const withNames = await pool.query(
+      `SELECT c.*,
+              sw.username AS seller_winner_username,
+              bw.username AS buyer_winner_username
+       FROM contests c
+       LEFT JOIN users sw ON sw.id = c.seller_winner_id
+       LEFT JOIN users bw ON bw.id = c.buyer_winner_id
+       WHERE c.id = $1`,
+      [result.contest.id]
+    );
+    res.json({
+      created: result.created,
+      already_active: result.already_active,
+      slug: result.slug,
+      contest: publicContestView(withNames.rows[0] || result.contest),
+      message: result.created
+        ? `Конкурс ${result.slug} создан`
+        : result.already_active
+          ? `Конкурс ${result.slug} уже активен`
+          : `Конкурс ${result.slug} уже существует`,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось запустить конкурс' });
   }
 });
 

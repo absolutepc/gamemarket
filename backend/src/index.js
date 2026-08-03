@@ -168,6 +168,7 @@ const HOST = '0.0.0.0';
 const { migrate } = require('./migrate');
 const { startAutoReleaseJob } = require('./services/escrow');
 const { startListingExpiryJob } = require('./services/listingExpiry');
+const { startContestRolloverJob } = require('./services/contest');
 
 async function start() {
   // Bind port first so deploys/healthchecks are not blocked by DDL locks
@@ -185,6 +186,7 @@ async function start() {
 
   startAutoReleaseJob(60_000);
   startListingExpiryJob(300_000);
+  startContestRolloverJob(3_600_000);
 }
 
 start();

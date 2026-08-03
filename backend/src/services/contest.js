@@ -38,17 +38,92 @@ function publicContestView(row) {
 async function ensureMonthContest(pool, date = new Date()) {
   const b = monthBounds(date);
   const existing = await pool.query(`SELECT * FROM contests WHERE slug = $1`, [b.slug]);
-  if (existing.rows[0]) return existing.rows[0];
+  if (existing.rows[0]) {
+    return { contest: existing.rows[0], created: false };
+  }
+
+  // Inherit prizes from the most recent previous contest when starting a new month
+  const prev = await pool.query(
+    `SELECT prize_sellers, prize_buyers
+     FROM contests
+     WHERE starts_at < $1
+     ORDER BY starts_at DESC
+     LIMIT 1`,
+    [b.starts_at.toISOString()]
+  );
+  const prizeSellers = prev.rows[0]?.prize_sellers || DEFAULT_PRIZE;
+  const prizeBuyers = prev.rows[0]?.prize_buyers || DEFAULT_PRIZE;
 
   const { rows } = await pool.query(
     `INSERT INTO contests (
        slug, title, prize_sellers, prize_buyers, starts_at, ends_at, status
-     ) VALUES ($1, $2, $3, $3, $4, $5, 'active')
+     ) VALUES ($1, $2, $3, $4, $5, $6, 'active')
      ON CONFLICT (slug) DO UPDATE SET slug = EXCLUDED.slug
      RETURNING *`,
-    [b.slug, b.title, DEFAULT_PRIZE, b.starts_at.toISOString(), b.ends_at.toISOString()]
+    [
+      b.slug,
+      b.title,
+      prizeSellers,
+      prizeBuyers,
+      b.starts_at.toISOString(),
+      b.ends_at.toISOString(),
+    ]
   );
-  return rows[0];
+  return { contest: rows[0], created: true };
+}
+
+/**
+ * Start (or return) the contest for a given month.
+ * @param {Date|string} [dateOrSlug] Date, or 'YYYY-MM' slug
+ */
+async function startContest(pool, dateOrSlug = new Date()) {
+  let date = new Date();
+  if (typeof dateOrSlug === 'string' && /^\d{4}-\d{2}$/.test(dateOrSlug.trim())) {
+    const [y, m] = dateOrSlug.trim().split('-').map(Number);
+    date = new Date(Date.UTC(y, m - 1, 1, 12, 0, 0, 0));
+  } else if (dateOrSlug instanceof Date && !Number.isNaN(dateOrSlug.getTime())) {
+    date = dateOrSlug;
+  }
+
+  const { contest, created } = await ensureMonthContest(pool, date);
+  const bounds = monthBounds(date);
+  const now = new Date();
+  const isCurrent =
+    contest.slug === bounds.slug
+    && new Date(contest.starts_at) <= now
+    && new Date(contest.ends_at) > now;
+
+  return {
+    contest,
+    created,
+    already_active: !created && isCurrent && contest.status === 'active',
+    slug: contest.slug,
+  };
+}
+
+/**
+ * Hourly/periodic tick: ensure current UTC month contest exists.
+ * Previous months stay available for admin draws (status not force-closed).
+ */
+async function processContestRollover(pool) {
+  const { contest, created } = await ensureMonthContest(pool, new Date());
+  return { contest, created, slug: contest.slug };
+}
+
+function startContestRolloverJob(intervalMs = 3_600_000) {
+  const pool = require('../config/database');
+  const logger = require('../utils/logger');
+  const tick = () => {
+    processContestRollover(pool)
+      .then((res) => {
+        if (res.created) {
+          logger.info(`Contest auto-started for ${res.slug}`);
+        }
+      })
+      .catch((err) => logger.error(err));
+  };
+  tick();
+  return setInterval(tick, intervalMs);
 }
 
 async function getContestById(pool, id) {
@@ -74,7 +149,7 @@ async function getCurrentContest(pool) {
   );
   if (rows[0]) return rows[0];
   // Ensure current month exists for ops continuity
-  const created = await ensureMonthContest(pool, now);
+  const { contest: created } = await ensureMonthContest(pool, now);
   const again = await pool.query(
     `SELECT c.*,
             sw.username AS seller_winner_username,
@@ -341,6 +416,9 @@ module.exports = {
   monthBounds,
   publicContestView,
   ensureMonthContest,
+  startContest,
+  processContestRollover,
+  startContestRolloverJob,
   getContestById,
   getCurrentContest,
   listContestParticipants,
