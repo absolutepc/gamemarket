@@ -11,6 +11,7 @@ export function GlassModalShell({
   onClose,
   labelledBy,
   children,
+  maxWidthClass = 'max-w-md',
 }) {
   useEffect(() => {
     if (!open) return undefined;
@@ -42,7 +43,7 @@ export function GlassModalShell({
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-md">
+      <div className={`relative w-full ${maxWidthClass}`}>
         <div
           className="relative overflow-hidden rounded-[22px] px-6 pt-7 pb-6 sm:px-8 sm:pt-8 sm:pb-7"
           style={{
