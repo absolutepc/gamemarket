@@ -27,7 +27,6 @@ const EMPTY_FORM = {
   price: '',
   game: 'Cursor AI',
   listing_type: 'subscription',
-  image_url: '',
 };
 
 function explainJsonError(err, text) {
@@ -89,7 +88,7 @@ export default function ImportListingsPage() {
           price,
           game: form.game.trim(),
           listing_type: form.listing_type,
-          images: form.image_url.trim() ? [form.image_url.trim()] : [],
+          images: [],
         }];
       } else if (mode === 'csv') {
         body.csv = payloadText;
@@ -294,15 +293,6 @@ export default function ImportListingsPage() {
                     ))}
                   </select>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm text-dark-300 mb-1">Ссылка на фото (необязательно)</label>
-                <input
-                  className="input w-full"
-                  placeholder="https://… или оставьте пустым — подставим иконку из каталога"
-                  value={form.image_url}
-                  onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value.slice(0, 500) }))}
-                />
               </div>
             </div>
           ) : (

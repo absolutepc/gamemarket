@@ -235,6 +235,7 @@ export default function ListingPage() {
     return <div className="text-center py-20 text-dark-400">Лот не найден</div>;
   }
 
+  const images = listing.images?.length ? listing.images : [PLACEHOLDER];
   const isOwner = user?.id === listing.seller_id;
   const canBuy = user && !isOwner && listing.status === 'active';
   const hasDiscount = listing.discount_percent > 0 && listing.original_price;
@@ -248,29 +249,14 @@ export default function ListingPage() {
   const plainDesc = (listing.description || '').replace(/<[^>]+>/g, '').trim();
   const descLong = plainDesc.length > 280;
   const descShown = descExpanded || !descLong ? plainDesc : `${plainDesc.slice(0, 280).trimEnd()}…`;
-  const HIDDEN_ATTR_KEYS = new Set([
-    'imported_from',
-    'source_seller',
-    'source_url',
-    'external_id',
-    '_import',
-  ]);
   const attrEntries = listing.attributes && typeof listing.attributes === 'object'
-    ? Object.entries(listing.attributes).filter(([key, v]) => {
-      if (HIDDEN_ATTR_KEYS.has(key) || String(key).startsWith('_')) return false;
-      return v != null && String(v).trim() !== '';
-    })
+    ? Object.entries(listing.attributes).filter(([, v]) => v != null && String(v).trim() !== '')
     : [];
   const sellerRating = parseFloat(listing.seller_rating || 0);
   const deliveryLabel = listing.delivery_method === 'auto' ? 'Автоматическая выдача' : 'Вручную через чат сделки';
   const deliveryHint = listing.delivery_method === 'auto'
     ? 'После оплаты товар придёт сразу по указанным данным.'
     : 'Продавец передаст товар в чате сделки после оплаты.';
-
-  const rawImages = Array.isArray(listing.images)
-    ? listing.images.map((src) => String(src || '').trim()).filter(Boolean)
-    : [];
-  const images = rawImages.length ? rawImages : [PLACEHOLDER];
 
   const buyProps = {
     isOwner,
