@@ -25,6 +25,8 @@ import AdminDisputesPage from './pages/AdminDisputesPage';
 import AdminAssortmentPage from './pages/AdminAssortmentPage';
 import AdminFoundersPage from './pages/AdminFoundersPage';
 import AdminStatsPage from './pages/AdminStatsPage';
+import AdminContestPage from './pages/AdminContestPage';
+import ContestPage from './pages/ContestPage';
 import AppsPage from './pages/AppsPage';
 import GameLandingPage from './pages/GameLandingPage';
 import AboutPage from './pages/AboutPage';
@@ -67,6 +69,7 @@ export default function App() {
         <Route path="faq" element={<FaqPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="founders" element={<FoundersPage />} />
+        <Route path="contest" element={<ContestPage />} />
         <Route path="support" element={<SupportPage />} />
         <Route path="terms-of-sale" element={<TermsOfSalePage />} />
         <Route path="privacy" element={<PrivacyPage />} />

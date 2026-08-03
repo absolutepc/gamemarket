@@ -252,6 +252,27 @@ CREATE INDEX IF NOT EXISTS idx_listing_views_created ON listing_views(created_at
 CREATE INDEX IF NOT EXISTS idx_listing_views_listing_ip
   ON listing_views (listing_id, ip_hash, created_at DESC)
   WHERE ip_hash IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS contests (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug VARCHAR(20) NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  prize_sellers TEXT NOT NULL DEFAULT 'MacBook Air 15″ 256 ГБ',
+  prize_buyers TEXT NOT NULL DEFAULT 'MacBook Air 15″ 256 ГБ',
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  seller_winner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  buyer_winner_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  seller_drawn_at TIMESTAMPTZ,
+  buyer_drawn_at TIMESTAMPTZ,
+  drawn_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  sellers_draw_snapshot JSONB,
+  buyers_draw_snapshot JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_contests_status_starts ON contests (status, starts_at DESC);
 `;
 
 /** Usernames promoted to admin on each migrate (comma-separated). Default: Mercy */

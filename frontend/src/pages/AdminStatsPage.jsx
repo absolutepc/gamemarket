@@ -65,6 +65,7 @@ export default function AdminStatsPage() {
         <Activity className="text-brand-400" size={22} />
         <h1 className="text-2xl font-bold">Статистика</h1>
         <div className="ml-auto flex flex-wrap gap-2">
+          <Link to="/admin/contest" className="btn-ghost text-sm">Конкурс</Link>
           <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
           <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
           <Link to="/admin/founders" className="btn-ghost text-sm">Founders</Link>

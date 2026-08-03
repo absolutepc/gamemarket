@@ -14,6 +14,17 @@ const {
   getPlatformStats,
 } = require('../services/founders');
 const { getAdminAudienceStats } = require('../services/adminStats');
+const {
+  ensureMonthContest,
+  getCurrentContest,
+  getContestById,
+  listContests,
+  listContestParticipants,
+  getContestPublicStats,
+  drawContestWinner,
+  updateContest,
+  publicContestView,
+} = require('../services/contest');
 
 function normalizeAssortmentKey(value) {
   return String(value || '')
@@ -290,6 +301,118 @@ router.get('/stats', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Не удалось загрузить статистику' });
+  }
+});
+
+/** Monthly contest admin */
+router.get('/contests', async (req, res) => {
+  try {
+    await ensureMonthContest(pool);
+    const contests = await listContests(pool, { limit: req.query.limit });
+    res.json({
+      contests: contests.map((c) => ({
+        ...publicContestView(c),
+        sellers_draw_snapshot: undefined,
+        buyers_draw_snapshot: undefined,
+      })),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось загрузить конкурсы' });
+  }
+});
+
+router.get('/contests/current', async (_req, res) => {
+  try {
+    const contest = await getCurrentContest(pool);
+    if (!contest) return res.status(404).json({ error: 'Конкурс не найден' });
+    const [sellers, buyers, stats] = await Promise.all([
+      listContestParticipants(pool, contest, 'sellers'),
+      listContestParticipants(pool, contest, 'buyers'),
+      getContestPublicStats(pool, contest),
+    ]);
+    res.json({
+      contest: {
+        ...publicContestView(contest),
+        sellers_draw_snapshot: contest.sellers_draw_snapshot || null,
+        buyers_draw_snapshot: contest.buyers_draw_snapshot || null,
+      },
+      stats,
+      sellers,
+      buyers,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось загрузить конкурс' });
+  }
+});
+
+router.get('/contests/:id', async (req, res) => {
+  try {
+    const contest = await getContestById(pool, req.params.id);
+    if (!contest) return res.status(404).json({ error: 'Конкурс не найден' });
+    const [sellers, buyers, stats] = await Promise.all([
+      listContestParticipants(pool, contest, 'sellers'),
+      listContestParticipants(pool, contest, 'buyers'),
+      getContestPublicStats(pool, contest),
+    ]);
+    const withNames = await pool.query(
+      `SELECT c.*,
+              sw.username AS seller_winner_username,
+              bw.username AS buyer_winner_username
+       FROM contests c
+       LEFT JOIN users sw ON sw.id = c.seller_winner_id
+       LEFT JOIN users bw ON bw.id = c.buyer_winner_id
+       WHERE c.id = $1`,
+      [contest.id]
+    );
+    res.json({
+      contest: {
+        ...publicContestView(withNames.rows[0] || contest),
+        sellers_draw_snapshot: contest.sellers_draw_snapshot || null,
+        buyers_draw_snapshot: contest.buyers_draw_snapshot || null,
+      },
+      stats,
+      sellers,
+      buyers,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось загрузить конкурс' });
+  }
+});
+
+router.patch('/contests/:id', async (req, res) => {
+  try {
+    const updated = await updateContest(pool, req.params.id, {
+      title: req.body.title,
+      prize_sellers: req.body.prize_sellers,
+      prize_buyers: req.body.prize_buyers,
+      status: req.body.status,
+    });
+    if (!updated) return res.status(404).json({ error: 'Конкурс не найден' });
+    res.json({ contest: publicContestView(updated) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось обновить конкурс' });
+  }
+});
+
+router.post('/contests/:id/draw', async (req, res) => {
+  try {
+    const side = req.body.side === 'buyers' ? 'buyers' : 'sellers';
+    const result = await drawContestWinner(pool, req.params.id, side, req.user);
+    if (!result.ok) {
+      const status =
+        result.code === 'NOT_FOUND' ? 404
+          : result.code === 'ALREADY_DRAWN' || result.code === 'NO_PARTICIPANTS' ? 400
+            : 400;
+      return res.status(status).json({ error: result.error, code: result.code });
+    }
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Не удалось провести розыгрыш' });
   }
 });
 

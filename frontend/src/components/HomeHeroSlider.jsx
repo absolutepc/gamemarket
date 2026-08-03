@@ -16,7 +16,7 @@ const SLIDES = [
     title: 'MacBook Air 15″ 256 ГБ',
     subtitle:
       'Каждый месяц разыгрываем два ноутбука: один среди продавцов и один среди покупателей. Участвуйте в сделках на Lootz — чем активнее месяц, тем выше шанс.',
-    cta: { to: '/catalog', label: 'Участвовать' },
+    cta: { to: '/contest', label: 'Участвовать' },
     secondary: { to: '/become-seller', label: 'Стать продавцом' },
     tone: 'contest',
   },
