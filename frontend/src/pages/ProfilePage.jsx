@@ -301,6 +301,7 @@ export default function ProfilePage() {
             {isOwn && (
               <div className="mt-3">
                 <Link to={sellPathForUser(currentUser)} className="btn-primary text-sm">Создать лот</Link>
+                <Link to="/listings/import" className="btn-secondary text-sm">Импорт</Link>
               </div>
             )}
           </div>
