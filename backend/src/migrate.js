@@ -309,6 +309,8 @@ CREATE INDEX IF NOT EXISTS idx_founders_applications_status_created
   ON founders_applications (status, created_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_founders_applications_one_pending
   ON founders_applications (user_id) WHERE status = 'pending';
+UPDATE users SET account_type = 'seller', account_type_chosen = TRUE, updated_at = NOW()
+  WHERE is_founding_seller = TRUE AND account_type IS DISTINCT FROM 'seller';
 `;
 
 async function migrateFounders(client) {
