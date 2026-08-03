@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { EyeOff, Eye, Search, Layers, Gamepad2, Smartphone, Scale } from 'lucide-react';
+import { EyeOff, Eye, Search, Layers, Gamepad2, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { ASSORTMENT } from '../data/assortment';
