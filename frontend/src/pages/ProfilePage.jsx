@@ -272,7 +272,7 @@ export default function ProfilePage() {
             Нет активных лотов
             {isOwn && (
               <div className="mt-3">
-                <Link to={sellPathForUser(user)} className="btn-primary text-sm">Создать лот</Link>
+                <Link to={sellPathForUser(currentUser)} className="btn-primary text-sm">Создать лот</Link>
               </div>
             )}
           </div>
