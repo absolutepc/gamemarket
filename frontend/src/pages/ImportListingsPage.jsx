@@ -10,23 +10,43 @@ import { formatPrice } from '../utils/format';
 
 const EXAMPLE_JSON = `[
   {
-    "title": "PUBG UC 60",
-    "description": "Пополнение UC. Выдача вручную после оплаты на Lootz.",
-    "price": 99,
-    "game": "PUBG",
-    "listing_type": "topup",
+    "title": "Cursor Pro — подписка",
+    "description": "Что входит в подписку Cursor Pro. Выдача вручную после оплаты на Lootz.",
+    "price": 2080,
+    "game": "Cursor AI",
+    "listing_type": "subscription",
     "images": []
   }
 ]`;
 
 const STEPS = ['Источник', 'Проверка', 'Готово'];
 
+const EMPTY_FORM = {
+  title: '',
+  description: '',
+  price: '',
+  game: 'Cursor AI',
+  listing_type: 'subscription',
+};
+
+function explainJsonError(err, text) {
+  const msg = String(err?.message || '');
+  if (/position|column|line/i.test(msg) && /string|escape|control|unexpected/i.test(msg)) {
+    return 'В JSON нельзя вставлять переносы строк прямо в кавычках. Короткое название в title, длинный текст — в description. Или используйте режим «Форма».';
+  }
+  if (text.includes('\n') && /"title"\s*:\s*"[^"]*\n/.test(text)) {
+    return 'В поле title есть перенос строки — так JSON ломается. Перенесите длинный текст в description.';
+  }
+  return `Некорректный JSON: ${msg || 'проверьте кавычки и запятые'}`;
+}
+
 export default function ImportListingsPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [provider, setProvider] = useState('playerok');
   const [profileUrl, setProfileUrl] = useState('');
-  const [mode, setMode] = useState('json'); // json | csv
+  const [mode, setMode] = useState('form'); // form | json | csv
+  const [form, setForm] = useState(EMPTY_FORM);
   const [payloadText, setPayloadText] = useState(EXAMPLE_JSON);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -42,18 +62,46 @@ export default function ImportListingsPage() {
       const body = { provider };
       if (provider === 'playerok' && profileUrl.trim()) body.profile_url = profileUrl.trim();
 
-      if (mode === 'csv') {
+      if (mode === 'form') {
+        const title = form.title.trim();
+        const description = form.description.trim();
+        const price = parseFloat(String(form.price).replace(',', '.'));
+        if (title.length < 5) {
+          toast.error('Укажите короткое название (от 5 символов)');
+          return;
+        }
+        if (description.length < 20) {
+          toast.error('Описание — минимум 20 символов');
+          return;
+        }
+        if (!Number.isFinite(price) || price < 1) {
+          toast.error('Укажите цену');
+          return;
+        }
+        if (!form.game.trim()) {
+          toast.error('Укажите игру / сервис');
+          return;
+        }
+        body.items = [{
+          title,
+          description,
+          price,
+          game: form.game.trim(),
+          listing_type: form.listing_type,
+          images: [],
+        }];
+      } else if (mode === 'csv') {
         body.csv = payloadText;
       } else {
         let items;
         try {
           items = JSON.parse(payloadText);
-        } catch {
-          toast.error('Некорректный JSON');
+        } catch (err) {
+          toast.error(explainJsonError(err, payloadText));
           return;
         }
         if (!Array.isArray(items)) {
-          toast.error('JSON должен быть массивом лотов');
+          toast.error('JSON должен быть массивом лотов: [ { ... } ]');
           return;
         }
         body.items = items;
@@ -66,7 +114,7 @@ export default function ImportListingsPage() {
     } catch (err) {
       const msg = err.response?.data?.error || 'Не удалось разобрать импорт';
       toast.error(msg);
-      if (err.response?.data?.hint?.json_example) {
+      if (err.response?.data?.hint?.json_example && mode === 'json') {
         setPayloadText(JSON.stringify(err.response.data.hint.json_example, null, 2));
       }
     } finally {
@@ -170,26 +218,21 @@ export default function ImportListingsPage() {
                 onChange={(e) => setProfileUrl(e.target.value)}
               />
               <p className="text-xs text-dark-500 mt-1.5">
-                Прямой парсинг Playerok с сервера часто блокируется. Поэтому лоты нужно вставить ниже (JSON или CSV) —
-                это ваши объявления, которые вы переносите сами.
+                Автозагрузка с Playerok недоступна. Заполните форму ниже по своему лоту — это самый простой способ.
               </p>
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {[
+              { id: 'form', label: 'Форма' },
               { id: 'json', label: 'JSON' },
               { id: 'csv', label: 'CSV' },
             ].map((m) => (
               <button
                 key={m.id}
                 type="button"
-                onClick={() => {
-                  setMode(m.id);
-                  if (m.id === 'csv' && payloadText.trim().startsWith('[')) {
-                    setPayloadText('title,description,price,game,listing_type,images,url\nPUBG UC 60,"Пополнение UC вручную",99,PUBG,topup,,');
-                  }
-                }}
+                onClick={() => setMode(m.id)}
                 className={`px-3 py-1.5 rounded-lg text-sm ${
                   mode === m.id ? 'bg-dark-700 text-white' : 'text-dark-400 hover:text-white'
                 }`}
@@ -199,12 +242,74 @@ export default function ImportListingsPage() {
             ))}
           </div>
 
-          <textarea
-            className="input w-full min-h-[220px] font-mono text-xs"
-            value={payloadText}
-            onChange={(e) => setPayloadText(e.target.value)}
-            spellCheck={false}
-          />
+          {mode === 'form' ? (
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-sm text-dark-300 mb-1">Название (коротко)</label>
+                <input
+                  className="input w-full"
+                  placeholder="Cursor Pro — подписка"
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value.slice(0, 200) }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-dark-300 mb-1">Описание</label>
+                <textarea
+                  className="input w-full min-h-[120px]"
+                  placeholder="Что входит в подписку, как выдаёте…"
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, 5000) }))}
+                />
+              </div>
+              <div className="grid sm:grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-sm text-dark-300 mb-1">Цена ₽</label>
+                  <input
+                    className="input w-full"
+                    type="number"
+                    min="1"
+                    value={form.price}
+                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-dark-300 mb-1">Игра / сервис</label>
+                  <input
+                    className="input w-full"
+                    value={form.game}
+                    onChange={(e) => setForm((f) => ({ ...f, game: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-dark-300 mb-1">Тип</label>
+                  <select
+                    className="input w-full"
+                    value={form.listing_type}
+                    onChange={(e) => setForm((f) => ({ ...f, listing_type: e.target.value }))}
+                  >
+                    {LISTING_TYPE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {mode === 'json' && (
+                <p className="text-xs text-dark-500">
+                  Важно: в JSON нельзя делать Enter внутри кавычек title. Длинный текст кладите в description.
+                </p>
+              )}
+              <textarea
+                className="input w-full min-h-[220px] font-mono text-xs"
+                value={payloadText}
+                onChange={(e) => setPayloadText(e.target.value)}
+                spellCheck={false}
+              />
+            </>
+          )}
 
           <button
             type="button"
