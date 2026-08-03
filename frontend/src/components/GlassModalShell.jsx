@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-/** Frosted / mirror-glass shell shared by listing info modals */
+/** Frosted / mirror-glass shell shared by Guarantee + Status modals */
 export function GlassModalShell({
   open,
   onClose,
@@ -30,9 +30,11 @@ export function GlassModalShell({
       aria-modal="true"
       aria-labelledby={labelledBy}
     >
+      {/* Dim overlay — keep page readable so glass can show through */}
       <button
         type="button"
-        className="absolute inset-0 bg-black/55 backdrop-blur-md"
+        className="absolute inset-0 bg-black/45"
+        style={{ backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
         aria-label="Закрыть"
         onClick={onClose}
       />
@@ -41,35 +43,54 @@ export function GlassModalShell({
         {/* Mirror reflection under the card */}
         <div
           aria-hidden
-          className="pointer-events-none absolute left-6 right-6 -bottom-10 h-14 rounded-2xl
-                     bg-gradient-to-b from-white/12 to-transparent opacity-40 blur-[1px]
-                     [transform:scaleY(-0.55)] origin-top"
+          className="pointer-events-none absolute left-8 right-8 top-full mt-1 h-16 rounded-[1.25rem]
+                     opacity-50"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.22) 0%, transparent 75%)',
+            transform: 'scaleY(-1)',
+            filter: 'blur(6px)',
+            maskImage: 'linear-gradient(180deg, rgba(0,0,0,0.55), transparent)',
+            WebkitMaskImage: 'linear-gradient(180deg, rgba(0,0,0,0.55), transparent)',
+          }}
         />
 
         <div
-          className="relative overflow-hidden rounded-2xl
-                     bg-dark-900/65 backdrop-blur-2xl
-                     border border-white/15
-                     shadow-[0_24px_64px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.12)]
-                     px-6 pt-7 pb-6 sm:px-8 sm:pt-8 sm:pb-7"
+          className="relative overflow-hidden rounded-2xl px-6 pt-7 pb-6 sm:px-8 sm:pt-8 sm:pb-7
+                     border border-white/25
+                     shadow-[0_24px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.28)]"
+          style={{
+            background: 'linear-gradient(165deg, rgba(255,255,255,0.16) 0%, rgba(24,24,32,0.55) 42%, rgba(18,18,26,0.72) 100%)',
+            backdropFilter: 'blur(28px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(160%)',
+          }}
         >
-          {/* Specular highlight */}
+          {/* Specular top shine */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-24
-                       bg-gradient-to-b from-white/18 via-white/5 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-28"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 45%, transparent 100%)',
+            }}
           />
+          {/* Diagonal mirror streak */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-16 left-1/2 h-40 w-[140%] -translate-x-1/2
-                       rotate-[-8deg] bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            className="pointer-events-none absolute -top-20 left-[-20%] h-44 w-[140%] rotate-[-12deg]"
+            style={{
+              background: 'linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.18) 50%, transparent 80%)',
+            }}
+          />
+          {/* Soft edge glow */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20"
           />
 
           <button
             type="button"
             onClick={onClose}
             className="absolute top-3.5 right-3.5 z-10 w-9 h-9 rounded-full flex items-center justify-center
-                       text-dark-400 hover:text-white hover:bg-white/10 transition-colors"
+                       text-white/70 hover:text-white hover:bg-white/15 transition-colors"
             aria-label="Закрыть"
           >
             <X size={18} />

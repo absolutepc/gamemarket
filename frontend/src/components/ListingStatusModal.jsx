@@ -56,7 +56,7 @@ export default function ListingStatusModal({ open, onClose, listing }) {
           {status.title}
         </h2>
 
-        <p className="text-sm sm:text-base text-dark-300 leading-relaxed mb-6 max-w-sm">
+        <p className="text-sm sm:text-base text-white/75 leading-relaxed mb-6 max-w-sm">
           {status.description}
         </p>
 
