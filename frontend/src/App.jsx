@@ -33,6 +33,7 @@ import BecomeSellerPage from './pages/BecomeSellerPage';
 import CompleteAccountTypePage from './pages/CompleteAccountTypePage';
 import FoundersPage from './pages/FoundersPage';
 import AdminFoundersPage from './pages/AdminFoundersPage';
+import ImportListingsPage from './pages/ImportListingsPage';
 import useAuthStore from './store/authStore';
 
 /** /users without username → own profile or login */
@@ -80,6 +81,7 @@ export default function App() {
         </Route>
         <Route element={<SellerRoute />}>
           <Route path="listings/create" element={<CreateListingPage />} />
+          <Route path="listings/import" element={<ImportListingsPage />} />
           <Route path="listings/:id/edit" element={<CreateListingPage />} />
         </Route>
         <Route element={<AdminRoute />}>

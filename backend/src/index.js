@@ -59,6 +59,7 @@ app.set('trust proxy', 1);
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/listings/import', require('./routes/listingsImport'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/users', require('./routes/users'));

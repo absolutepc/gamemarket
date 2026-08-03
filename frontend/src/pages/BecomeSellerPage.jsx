@@ -49,6 +49,7 @@ export default function BecomeSellerPage() {
         )}
         <div className="flex flex-wrap justify-center gap-2">
           <Link to="/listings/create" className="btn-primary inline-flex">Выставить лот</Link>
+          <Link to="/listings/import" className="btn-secondary inline-flex">Импорт лотов</Link>
           {!user.is_founding_seller && stats?.founders?.open !== false && (
             <Link to="/founders" className="btn-secondary inline-flex">Founders</Link>
           )}

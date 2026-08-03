@@ -570,3 +570,4 @@ module.exports = router;
 module.exports.normalizeBuyerFields = normalizeBuyerFields;
 module.exports.validateBuyerData = validateBuyerData;
 module.exports.DEFAULT_AUTO_BUYER_FIELDS = DEFAULT_AUTO_BUYER_FIELDS;
+module.exports.LISTING_TYPES = LISTING_TYPES;
