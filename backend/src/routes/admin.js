@@ -12,6 +12,7 @@ const {
   revokeFoundingSeller,
   getPlatformStats,
 } = require('../services/founders');
+const { getAdminAudienceStats } = require('../services/adminStats');
 
 function normalizeAssortmentKey(value) {
   return String(value || '')
@@ -270,7 +271,6 @@ router.post(
 /** Audience totals + online (admin dashboard) */
 router.get('/stats', async (req, res) => {
   try {
-    const { getAdminAudienceStats } = require('../services/adminStats');
     const stats = await getAdminAudienceStats(pool, {
       onlineMinutes: req.query.online_minutes,
     });
