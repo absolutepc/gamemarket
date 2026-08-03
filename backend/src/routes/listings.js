@@ -80,9 +80,9 @@ async function recordListingView(listingId, sellerId, req, res) {
         `SELECT 1 FROM listing_views
          WHERE listing_id = $1
            AND ip_hash = $2
-           AND created_at > NOW() - INTERVAL '${VIEW_IP_COOLDOWN}'
+           AND created_at > NOW() - $3::interval
          LIMIT 1`,
-        [listingId, ip]
+        [listingId, ip, VIEW_IP_COOLDOWN]
       );
       if (recent.rows[0]) return false;
     }
