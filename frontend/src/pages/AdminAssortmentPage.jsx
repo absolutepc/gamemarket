@@ -156,7 +156,7 @@ export default function AdminAssortmentPage() {
         {filtered.length === 0 ? (
           <div className="p-8 text-center text-dark-400">Ничего не найдено</div>
         ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 max-h-[70vh] overflow-y-auto divide-y sm:divide-y-0 divide-dark-800 sm:gap-px sm:bg-dark-800">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-h-[70vh] overflow-y-auto divide-y sm:divide-y-0 divide-dark-800 sm:gap-px sm:bg-dark-800">
             {filtered.map((item) => {
               const key = normalizeAssortmentKey(item.name);
               const isHidden = hiddenKeys.has(key);
@@ -164,14 +164,14 @@ export default function AdminAssortmentPage() {
               return (
                 <li
                   key={`${item.kind}-${item.name}`}
-                  className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 ${
+                  className={`flex items-center gap-2.5 px-3 py-2.5 min-w-0 ${
                     isHidden ? 'bg-amber-500/5' : 'bg-dark-900'
                   }`}
                 >
                   <img
                     src={item.icon}
                     alt=""
-                    className={`w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-white/10 ${
+                    className={`w-9 h-9 rounded-xl object-cover shrink-0 ring-1 ring-white/10 ${
                       isHidden ? 'opacity-50' : ''
                     }`}
                     loading="lazy"
@@ -196,20 +196,22 @@ export default function AdminAssortmentPage() {
                       type="button"
                       disabled={busy}
                       onClick={() => unhideMutation.mutate(item.name)}
-                      className="btn-secondary text-xs sm:text-sm inline-flex items-center gap-1.5 shrink-0"
+                      className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1 shrink-0"
+                      title="Вернуть"
                     >
                       <Eye size={14} />
-                      Вернуть
+                      <span className="hidden 2xl:inline">Вернуть</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => hideMutation.mutate(item.name)}
-                      className="btn-ghost text-xs sm:text-sm text-amber-400 hover:text-amber-300 inline-flex items-center gap-1.5 shrink-0"
+                      className="btn-ghost text-xs px-2.5 py-1.5 text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 shrink-0"
+                      title="Скрыть"
                     >
                       <EyeOff size={14} />
-                      Скрыть
+                      <span className="hidden 2xl:inline">Скрыть</span>
                     </button>
                   )}
                 </li>
