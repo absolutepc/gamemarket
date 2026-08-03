@@ -242,11 +242,16 @@ CREATE TABLE IF NOT EXISTS listing_views (
   listing_id UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
   viewer_key VARCHAR(80) NOT NULL,
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  ip_hash VARCHAR(64),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   PRIMARY KEY (listing_id, viewer_key)
 );
+ALTER TABLE listing_views ADD COLUMN IF NOT EXISTS ip_hash VARCHAR(64);
 CREATE INDEX IF NOT EXISTS idx_listing_views_user ON listing_views(user_id) WHERE user_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_listing_views_created ON listing_views(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_listing_views_listing_ip
+  ON listing_views (listing_id, ip_hash, created_at DESC)
+  WHERE ip_hash IS NOT NULL;
 `;
 
 /** Usernames promoted to admin on each migrate (comma-separated). Default: Mercy */

@@ -141,6 +141,8 @@ export default function ListingPage() {
   const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
     queryFn: () => api.get(`/listings/${id}`).then((r) => r.data),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 
   // Content loads after navigation — pin to top again once the lot is ready

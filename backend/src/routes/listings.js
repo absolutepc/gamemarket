@@ -20,6 +20,114 @@ function showcaseDaysLeft(publishedAt) {
   return Math.max(0, Math.ceil((end - Date.now()) / 86400000));
 }
 
+const VIEW_COOKIE = 'lootz_vid';
+const VIEW_IP_COOLDOWN = '12 hours';
+
+function ensureViewerCookie(req, res) {
+  let vid = req.cookies?.[VIEW_COOKIE];
+  if (!vid || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(vid)) {
+    vid = crypto.randomUUID();
+    res.cookie(VIEW_COOKIE, vid, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+  }
+  return vid;
+}
+
+function clientIp(req) {
+  const forwarded = String(req.headers['x-forwarded-for'] || '')
+    .split(',')[0]
+    .trim();
+  return forwarded || String(req.ip || '').trim() || '';
+}
+
+function hashIp(req) {
+  const ip = clientIp(req);
+  if (!ip) return null;
+  return crypto.createHash('sha256').update(ip).digest('hex').slice(0, 40);
+}
+
+function listingViewerKey(req, viewerCookie) {
+  if (req.user?.id) return `user:${req.user.id}`;
+  if (viewerCookie) return `vid:${viewerCookie}`;
+  const raw = `${clientIp(req)}|${req.get('user-agent') || ''}`;
+  const hash = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 40);
+  return `anon:${hash}`;
+}
+
+/**
+ * Count at most one view per viewer. Refresh / new tabs must not inflate.
+ * - Logged-in: unique by user id
+ * - Anonymous: stable httpOnly cookie + IP cooldown (covers cleared cookies)
+ * Owners never inflate their own counter.
+ */
+async function recordListingView(listingId, sellerId, req, res) {
+  if (req.user?.id && String(req.user.id) === String(sellerId)) return false;
+
+  const viewerCookie = ensureViewerCookie(req, res);
+  const viewerKey = listingViewerKey(req, viewerCookie);
+  const ip = hashIp(req);
+
+  try {
+    // Anonymous: same IP cannot add another view to this lot within the cooldown,
+    // even after clearing cookies / changing UA.
+    if (!req.user?.id && ip) {
+      const recent = await pool.query(
+        `SELECT 1 FROM listing_views
+         WHERE listing_id = $1
+           AND ip_hash = $2
+           AND created_at > NOW() - INTERVAL '${VIEW_IP_COOLDOWN}'
+         LIMIT 1`,
+        [listingId, ip]
+      );
+      if (recent.rows[0]) return false;
+    }
+
+    const { rows } = await pool.query(
+      `INSERT INTO listing_views (listing_id, viewer_key, user_id, ip_hash)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (listing_id, viewer_key) DO NOTHING
+       RETURNING listing_id`,
+      [listingId, viewerKey, req.user?.id || null, ip]
+    );
+    if (!rows[0]) return false;
+
+    await pool.query(
+      'UPDATE listings SET views_count = views_count + 1 WHERE id=$1',
+      [listingId]
+    );
+    return true;
+  } catch (err) {
+    // Older DBs without ip_hash — still enforce unique viewer_key
+    if (err.code === '42703') {
+      try {
+        const { rows } = await pool.query(
+          `INSERT INTO listing_views (listing_id, viewer_key, user_id)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (listing_id, viewer_key) DO NOTHING
+           RETURNING listing_id`,
+          [listingId, viewerKey, req.user?.id || null]
+        );
+        if (!rows[0]) return false;
+        await pool.query(
+          'UPDATE listings SET views_count = views_count + 1 WHERE id=$1',
+          [listingId]
+        );
+        return true;
+      } catch (err2) {
+        console.error('recordListingView fallback', err2.message);
+        return false;
+      }
+    }
+    console.error('recordListingView', err.message);
+    return false;
+  }
+}
+
 /** Keep list payloads to one image. Do not replace real photos with placeholder —
  * that hid valid JPEG data-URLs (~50–400KB) on home/catalog. Only drop pathological blobs. */
 function slimListingImages(images) {
@@ -37,32 +145,6 @@ function slimAvatar(url) {
   if (!url || typeof url !== 'string') return null;
   if (url.startsWith('data:') && url.length > 8_000) return null;
   return url;
-}
-
-function listingViewerKey(req) {
-  if (req.user?.id) return `user:${req.user.id}`;
-  const raw = `${req.ip || ''}|${req.get('user-agent') || ''}`;
-  const hash = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 40);
-  return `anon:${hash}`;
-}
-
-/** Count at most one view per viewer (user or anonymous fingerprint). Owners never inflate their own counter. */
-async function recordListingView(listingId, sellerId, req) {
-  if (req.user?.id && String(req.user.id) === String(sellerId)) return false;
-  const viewerKey = listingViewerKey(req);
-  const { rows } = await pool.query(
-    `INSERT INTO listing_views (listing_id, viewer_key, user_id)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (listing_id, viewer_key) DO NOTHING
-     RETURNING listing_id`,
-    [listingId, viewerKey, req.user?.id || null]
-  );
-  if (!rows[0]) return false;
-  await pool.query(
-    'UPDATE listings SET views_count = views_count + 1 WHERE id=$1',
-    [listingId]
-  );
-  return true;
 }
 
 const LISTING_TYPES = [
@@ -376,7 +458,7 @@ router.get('/:id', apiLimiter, authenticate(false), async (req, res) => {
     ).catch(() => {});
   }
 
-  const counted = await recordListingView(listing.id, listing.seller_id, req);
+  const counted = await recordListingView(listing.id, listing.seller_id, req, res);
   if (counted) listing.views_count = Number(listing.views_count || 0) + 1;
 
   const fee = calcPlatformFee(listing.price, {
