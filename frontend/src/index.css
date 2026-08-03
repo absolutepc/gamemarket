@@ -6,6 +6,10 @@
   * {
     box-sizing: border-box;
   }
+  html {
+    /* Reserve scrollbar space so modals don't shift centered layout */
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-dark-950 text-white font-sans antialiased;
     min-height: 100vh;

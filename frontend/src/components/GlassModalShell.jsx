@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock';
 
 /**
  * Glassmorphism shell (Guarantee / Status / Promote):
@@ -14,13 +15,13 @@ export function GlassModalShell({
 }) {
   useEffect(() => {
     if (!open) return undefined;
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     const onKey = (e) => {
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKey);
     return () => {
-      document.body.style.overflow = '';
+      unlockBodyScroll();
       document.removeEventListener('keydown', onKey);
     };
   }, [open, onClose]);
@@ -46,7 +47,6 @@ export function GlassModalShell({
         <div
           className="relative overflow-hidden rounded-[22px] px-6 pt-7 pb-6 sm:px-8 sm:pt-8 sm:pb-7"
           style={{
-            // Light frosted tint so listing/page colors show through (ref-style glass)
             background: 'linear-gradient(160deg, rgba(200, 230, 255, 0.22) 0%, rgba(255,255,255,0.12) 45%, rgba(180, 210, 255, 0.16) 100%)',
             backdropFilter: 'blur(40px) saturate(180%)',
             WebkitBackdropFilter: 'blur(40px) saturate(180%)',
@@ -58,7 +58,6 @@ export function GlassModalShell({
             ].join(', '),
           }}
         >
-          {/* Soft inner sheen — glass edge, not a heavy dark fill */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-[22px]"
