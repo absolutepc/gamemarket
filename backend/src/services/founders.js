@@ -387,10 +387,16 @@ async function getPlatformStats(pool) {
   try {
     const { rows } = await pool.query(
       `SELECT
-         COUNT(*) FILTER (WHERE COALESCE(account_type, 'buyer') = 'buyer')::int AS buyers_count,
-         COUNT(*) FILTER (WHERE account_type = 'seller')::int AS sellers_count,
+         COUNT(*) FILTER (WHERE COALESCE(account_type, 'buyer') = 'buyer'
+           AND COALESCE(is_founding_seller, FALSE) = FALSE)::int AS buyers_count,
+         COUNT(*) FILTER (
+           WHERE account_type = 'seller'
+              OR COALESCE(is_founding_seller, FALSE) = TRUE
+              OR role = 'admin'
+         )::int AS sellers_count,
          COUNT(*) FILTER (WHERE is_founding_seller = TRUE)::int AS founders_joined,
-         COUNT(*)::int AS users_total`
+         COUNT(*)::int AS users_total
+       FROM users`
     );
     const r = rows[0] || {};
     const joined = r.founders_joined || 0;
@@ -417,25 +423,46 @@ async function getPlatformStats(pool) {
     };
   } catch (err) {
     if (err.code !== '42703') throw err;
-    const { rows } = await pool.query(
-      `SELECT
-         COUNT(*) FILTER (WHERE COALESCE(account_type, 'buyer') = 'buyer')::int AS buyers_count,
-         COUNT(*) FILTER (WHERE account_type = 'seller')::int AS sellers_count,
-         COUNT(*)::int AS users_total`
-    );
-    const r = rows[0] || {};
-    return {
-      buyers_count: r.buyers_count || 0,
-      sellers_count: r.sellers_count || 0,
-      users_total: r.users_total || 0,
-      founders: {
-        joined: 0,
-        limit: FOUNDERS_LIMIT,
-        remaining: FOUNDERS_LIMIT,
-        open: true,
-        pending_applications: 0,
-      },
-    };
+    // Columns may be partially migrated — count what we can
+    try {
+      const { rows } = await pool.query(
+        `SELECT
+           COUNT(*) FILTER (WHERE COALESCE(account_type, 'buyer') = 'buyer')::int AS buyers_count,
+           COUNT(*) FILTER (WHERE account_type = 'seller' OR role = 'admin')::int AS sellers_count,
+           COUNT(*)::int AS users_total
+         FROM users`
+      );
+      const r = rows[0] || {};
+      return {
+        buyers_count: r.buyers_count || 0,
+        sellers_count: r.sellers_count || 0,
+        users_total: r.users_total || 0,
+        founders: {
+          joined: 0,
+          limit: FOUNDERS_LIMIT,
+          remaining: FOUNDERS_LIMIT,
+          open: true,
+          pending_applications: 0,
+        },
+      };
+    } catch (err2) {
+      if (err2.code !== '42703') throw err2;
+      const { rows } = await pool.query(
+        `SELECT COUNT(*)::int AS users_total FROM users`
+      );
+      return {
+        buyers_count: 0,
+        sellers_count: 0,
+        users_total: rows[0]?.users_total || 0,
+        founders: {
+          joined: 0,
+          limit: FOUNDERS_LIMIT,
+          remaining: FOUNDERS_LIMIT,
+          open: true,
+          pending_applications: 0,
+        },
+      };
+    }
   }
 }
 
