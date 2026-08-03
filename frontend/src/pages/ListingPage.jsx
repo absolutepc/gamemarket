@@ -250,7 +250,18 @@ export default function ListingPage() {
   const descLong = plainDesc.length > 280;
   const descShown = descExpanded || !descLong ? plainDesc : `${plainDesc.slice(0, 280).trimEnd()}…`;
   const attrEntries = listing.attributes && typeof listing.attributes === 'object'
-    ? Object.entries(listing.attributes).filter(([, v]) => v != null && String(v).trim() !== '')
+    ? Object.entries(listing.attributes).filter(([key, v]) => {
+      // Hide import bookkeeping — never show on storefront
+      if (
+        key === 'imported_from'
+        || key === 'source_seller'
+        || key === 'source_url'
+        || key === 'external_id'
+        || key === '_import'
+        || String(key).startsWith('_')
+      ) return false;
+      return v != null && String(v).trim() !== '';
+    })
     : [];
   const sellerRating = parseFloat(listing.seller_rating || 0);
   const deliveryLabel = listing.delivery_method === 'auto' ? 'Автоматическая выдача' : 'Вручную через чат сделки';

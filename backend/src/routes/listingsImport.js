@@ -57,6 +57,23 @@ function normalizeImages(raw) {
     .slice(0, 5);
 }
 
+/** Only real product attrs for storefront; import provenance goes under _import */
+function storeAttributes(rawAttrs, importMeta) {
+  const out = {};
+  if (rawAttrs && typeof rawAttrs === 'object' && !Array.isArray(rawAttrs)) {
+    for (const [key, value] of Object.entries(rawAttrs)) {
+      if (!key || key.startsWith('_')) continue;
+      if (['imported_from', 'source_seller', 'source_url', 'external_id'].includes(key)) continue;
+      const v = value == null ? '' : String(value).trim().slice(0, 80);
+      if (v) out[key] = v;
+    }
+  }
+  if (importMeta && typeof importMeta === 'object') {
+    out._import = importMeta;
+  }
+  return out;
+}
+
 router.post(
   '/preview',
   authenticate(),
@@ -119,14 +136,23 @@ router.post(
         if (!game) throw new Error('Укажите игру или сервис');
 
         const discount = calcDiscount(price, d.original_price);
+        // Do not invent category icons for missing photos — leave empty / seller URL only.
+        // Existing lots on the site are never rewritten by import.
         const images = normalizeImages(d.images);
         const categoryId = await categoryIdForType(listingType);
-        const attrs = {
-          imported_from: d.provider || 'manual',
-          ...(d.source_url ? { source_url: String(d.source_url).slice(0, 300) } : {}),
-          ...(d.external_id ? { external_id: String(d.external_id).slice(0, 80) } : {}),
-          ...(d.attributes && typeof d.attributes === 'object' ? d.attributes : {}),
+        const importMeta = {
+          provider: d.provider || d._import?.provider || 'manual',
+          ...(d.source_url || d._import?.source_url
+            ? { source_url: String(d.source_url || d._import.source_url).slice(0, 300) }
+            : {}),
+          ...(d.external_id || d._import?.external_id
+            ? { external_id: String(d.external_id || d._import.external_id).slice(0, 80) }
+            : {}),
+          ...(d._import?.source_seller
+            ? { source_seller: String(d._import.source_seller).slice(0, 80) }
+            : {}),
         };
+        const attrs = storeAttributes(d.attributes, importMeta);
 
         const { rows } = await pool.query(
           `INSERT INTO listings

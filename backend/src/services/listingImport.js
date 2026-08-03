@@ -168,9 +168,13 @@ function toDraft(raw, index, { provider, profile }) {
     delivery_method: 'manual',
     images,
     tags: Array.isArray(raw.tags) ? raw.tags.slice(0, 12) : [],
-    attributes: {
-      imported_from: provider,
+    // Public attributes stay empty — import meta is private (_import)
+    attributes: {},
+    _import: {
+      provider,
       ...(profile?.username ? { source_seller: profile.username } : {}),
+      ...(raw.source_url || raw.url ? { source_url: String(raw.source_url || raw.url).slice(0, 300) } : {}),
+      ...(raw.external_id || raw.id ? { external_id: String(raw.external_id || raw.id).slice(0, 80) } : {}),
     },
     warnings,
   };
