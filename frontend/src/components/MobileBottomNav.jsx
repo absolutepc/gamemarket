@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { MessageCircle, ShoppingBag, Plus } from 'lucide-react';
 import useAuthStore from '../store/authStore';
+import { sellPathForUser } from '../utils/sellPath';
 
 export default function MobileBottomNav() {
   const { user } = useAuthStore();
@@ -9,11 +10,12 @@ export default function MobileBottomNav() {
   const profileTo = user?.username ? `/users/${user.username}` : '/login';
   const chatsTo = user ? '/chats' : '/login';
   const dealsTo = user ? '/transactions' : '/login';
-  const sellTo = user ? '/listings/create' : '/login';
-
+  const sellTo = sellPathForUser(user);
   const isChats = pathname.startsWith('/chats');
   const isDeals = pathname.startsWith('/transactions');
-  const isSell = pathname.startsWith('/listings/create') || /\/listings\/[^/]+\/edit/.test(pathname);
+  const isSell = pathname.startsWith('/listings/create')
+    || pathname.startsWith('/become-seller')
+    || /\/listings\/[^/]+\/edit/.test(pathname);
   const isProfile = user
     ? pathname === `/users/${user.username}` || pathname.startsWith('/wallet')
     : pathname === '/login' || pathname === '/register';

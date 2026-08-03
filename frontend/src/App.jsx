@@ -27,7 +27,9 @@ import AppsPage from './pages/AppsPage';
 import GameLandingPage from './pages/GameLandingPage';
 import AboutPage from './pages/AboutPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import SellerRoute from './components/SellerRoute';
 import AdminRoute from './components/AdminRoute';
+import BecomeSellerPage from './pages/BecomeSellerPage';
 import useAuthStore from './store/authStore';
 
 /** /users without username → own profile or login */
@@ -64,13 +66,16 @@ export default function App() {
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="user-agreement" element={<UserAgreementPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="listings/create" element={<CreateListingPage />} />
-          <Route path="listings/:id/edit" element={<CreateListingPage />} />
+          <Route path="become-seller" element={<BecomeSellerPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="transactions/:id" element={<TransactionPage />} />
           <Route path="wallet" element={<WalletPage />} />
           <Route path="chats" element={<ChatsPage />} />
           <Route path="chats/:id" element={<ChatPage />} />
+        </Route>
+        <Route element={<SellerRoute />}>
+          <Route path="listings/create" element={<CreateListingPage />} />
+          <Route path="listings/:id/edit" element={<CreateListingPage />} />
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="admin/disputes" element={<AdminDisputesPage />} />

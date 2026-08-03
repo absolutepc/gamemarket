@@ -190,6 +190,13 @@ ON CONFLICT (slug) DO NOTHING;
 
 const alters = `
 ALTER TABLE users ADD COLUMN IF NOT EXISTS purchases_count INT DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) NOT NULL DEFAULT 'buyer';
+UPDATE users SET account_type = 'seller'
+WHERE account_type IS DISTINCT FROM 'seller'
+  AND (
+    COALESCE(sales_count, 0) > 0
+    OR EXISTS (SELECT 1 FROM listings l WHERE l.seller_id = users.id AND l.status != 'deleted')
+  );
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS original_price DECIMAL(12,2);
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS vk_id BIGINT UNIQUE;

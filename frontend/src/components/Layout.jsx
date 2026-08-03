@@ -7,6 +7,7 @@ import MobileBottomNav from './MobileBottomNav';
 import ThemeToggle from './ThemeToggle';
 import BrandJsonLd from './BrandJsonLd';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
+import { sellPathForUser } from '../utils/sellPath';
 
 /** Product detail: /listings/:id (not create/edit) */
 function isListingDetailPath(pathname) {
@@ -75,7 +76,7 @@ export default function Layout() {
               <div className="hidden lg:flex items-center gap-1 sm:gap-2">
                 {user ? (
                   <>
-                    <Link to="/listings/create" className="btn-primary text-sm flex items-center gap-1.5 h-11 px-4">
+                    <Link to={sellPathForUser(user)} className="btn-primary text-sm flex items-center gap-1.5 h-11 px-4">
                       <Plus size={16} /> Продать
                     </Link>
                     <Link to="/chats" className="btn-ghost p-2.5" title="Чаты">

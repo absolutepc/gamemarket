@@ -40,6 +40,41 @@ router.get('/me/listings', authenticate(), async (req, res) => {
   }));
 });
 
+/** Upgrade buyer → seller after accepting seller criteria/terms */
+router.post('/me/become-seller',
+  authenticate(),
+  strictLimiter,
+  [
+    body('accept_seller_terms').custom((v) => v === true || v === 'true'),
+  ],
+  validate,
+  async (req, res) => {
+    if (req.user.account_type === 'seller') {
+      return res.json({
+        user: {
+          id: req.user.id,
+          username: req.user.username,
+          email: req.user.email,
+          role: req.user.role,
+          account_type: 'seller',
+          balance: req.user.balance,
+          avatar_url: req.user.avatar_url,
+          rating: req.user.rating,
+          sales_count: req.user.sales_count,
+          auth_provider: req.user.auth_provider,
+        },
+      });
+    }
+    const { rows } = await pool.query(
+      `UPDATE users SET account_type = 'seller', updated_at = NOW()
+       WHERE id = $1
+       RETURNING id, username, email, role, account_type, balance, avatar_url, rating, sales_count, auth_provider`,
+      [req.user.id]
+    );
+    res.json({ user: rows[0] });
+  }
+);
+
 const RESERVED_USERNAMES = new Set([
   'admin', 'administrator', 'api', 'auth', 'login', 'register', 'logout',
   'me', 'settings', 'support', 'help', 'faq', 'wallet', 'chats', 'chat',

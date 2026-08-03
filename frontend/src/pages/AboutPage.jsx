@@ -62,7 +62,7 @@ export default function AboutPage() {
 
       <div className="flex flex-wrap gap-3 pt-2">
         <Link to="/catalog" className="btn-primary">Смотреть лоты</Link>
-        <Link to="/listings/create" className="btn-secondary">Стать продавцом</Link>
+        <Link to="/become-seller" className="btn-secondary">Стать продавцом</Link>
         <Link to="/support" className="btn-ghost">Связаться с Lootz</Link>
       </div>
     </div>

@@ -11,6 +11,7 @@ import useAuthStore from '../store/authStore';
 import { formatDate, formatPrice } from '../utils/format';
 import { compressImageFile } from '../utils/imageCompress';
 import { labelsForCriteria } from '../utils/reviewCriteria';
+import { sellPathForUser } from '../utils/sellPath';
 
 function StarRow({ rating }) {
   return (
@@ -267,7 +268,7 @@ export default function ProfilePage() {
             Нет активных лотов
             {isOwn && (
               <div className="mt-3">
-                <Link to="/listings/create" className="btn-primary text-sm">Создать лот</Link>
+                <Link to={sellPathForUser(user)} className="btn-primary text-sm">Создать лот</Link>
               </div>
             )}
           </div>

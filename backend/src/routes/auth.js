@@ -55,10 +55,19 @@ router.post('/register',
     body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 8 }).matches(/(?=.*[A-Za-z])(?=.*\d)/),
+    body('account_type').optional().isIn(['buyer', 'seller']),
+    body('accept_seller_terms').optional().isBoolean(),
   ],
   validate,
   async (req, res) => {
     const { username, email, password } = req.body;
+    const accountType = req.body.account_type === 'seller' ? 'seller' : 'buyer';
+    if (accountType === 'seller' && req.body.accept_seller_terms !== true) {
+      return res.status(400).json({
+        error: 'Для регистрации продавца нужно принять правила продажи',
+        code: 'SELLER_TERMS_REQUIRED',
+      });
+    }
     const client = await pool.connect();
     try {
       const exists = await client.query(
@@ -70,9 +79,9 @@ router.post('/register',
       }
       const hash = await bcrypt.hash(password, 12);
       const { rows } = await client.query(
-        `INSERT INTO users (username, email, password_hash) VALUES ($1,$2,$3)
-         RETURNING id, username, email, role, balance, avatar_url`,
-        [username, email, hash]
+        `INSERT INTO users (username, email, password_hash, account_type) VALUES ($1,$2,$3,$4)
+         RETURNING id, username, email, role, balance, avatar_url, account_type`,
+        [username, email, hash, accountType]
       );
       const user = rows[0];
       const { accessToken, refreshToken } = generateTokens(user.id);
@@ -89,7 +98,7 @@ router.post('/register',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: REFRESH_EXPIRES_DAYS * 86400000,
       });
-      res.status(201).json({ accessToken, user });
+      res.status(201).json({ accessToken, user: publicUser(user) });
     } finally {
       client.release();
     }
@@ -174,6 +183,7 @@ function publicUser(user) {
     username: user.username,
     email: user.email,
     role: user.role,
+    account_type: user.account_type || 'buyer',
     balance: user.balance,
     avatar_url: user.avatar_url,
     rating: user.rating,

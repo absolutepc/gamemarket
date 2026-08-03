@@ -336,6 +336,12 @@ router.post('/',
   ],
   validate,
   async (req, res) => {
+    if (req.user.account_type !== 'seller' && req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Чтобы выставить лот, зарегистрируйтесь как продавец или перейдите в статус продавца',
+        code: 'SELLER_REQUIRED',
+      });
+    }
     const {
       title, description, price, original_price, game, listing_type,
       category_id, delivery_method, delivery_instructions, tags, buyer_fields,

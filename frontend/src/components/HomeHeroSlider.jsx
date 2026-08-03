@@ -15,7 +15,7 @@ const SLIDES = [
     subtitle:
       'Каждый месяц разыгрываем два ноутбука: один среди продавцов и один среди покупателей. Участвуйте в сделках на Lootz — чем активнее месяц, тем выше шанс.',
     cta: { to: '/catalog', label: 'Участвовать' },
-    secondary: { to: '/listings/create', label: 'Стать продавцом' },
+    secondary: { to: '/become-seller', label: 'Стать продавцом' },
     tone: 'contest',
   },
   {
