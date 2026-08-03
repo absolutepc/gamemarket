@@ -43,9 +43,7 @@ export default function AdminDisputesPage() {
       <div className="flex items-center gap-3 mb-6">
         <Scale className="text-brand-400" size={22} />
         <h1 className="text-2xl font-bold">Разбор споров</h1>
-        <Link to="/admin/stats" className="ml-auto btn-ghost text-sm">Статистика</Link>
-        <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
-        <Link to="/admin/founders" className="btn-ghost text-sm">Founders</Link>
+        <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
       </div>
 
       <div className="flex gap-2 mb-6">

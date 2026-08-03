@@ -62,11 +62,7 @@ export default function AdminContestPage() {
       <div className="flex flex-wrap items-center gap-3 mb-2">
         <Trophy className="text-amber-300" size={22} />
         <h1 className="text-2xl font-bold">Конкурс</h1>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <Link to="/admin/stats" className="btn-ghost text-sm">Статистика</Link>
-          <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
-          <Link to="/admin/founders" className="btn-ghost text-sm">Founders</Link>
-        </div>
+        <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
       </div>
       <p className="text-sm text-dark-400 mb-6 max-w-3xl">
         Участники — те, у кого за период конкурса есть завершённые сделки. Шансы видит только админ;

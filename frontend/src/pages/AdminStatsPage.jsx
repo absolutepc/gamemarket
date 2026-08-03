@@ -64,12 +64,7 @@ export default function AdminStatsPage() {
       <div className="flex flex-wrap items-center gap-3 mb-2">
         <Activity className="text-brand-400" size={22} />
         <h1 className="text-2xl font-bold">Статистика</h1>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <Link to="/admin/contest" className="btn-ghost text-sm">Конкурс</Link>
-          <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
-          <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
-          <Link to="/admin/founders" className="btn-ghost text-sm">Founders</Link>
-        </div>
+        <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
       </div>
       <p className="text-sm text-dark-400 mb-6 max-w-2xl">
         Онлайн — пользователи с активностью за последние {windowMin} мин (запросы к API / чаты).

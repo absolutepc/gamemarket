@@ -21,6 +21,7 @@ import ChatPage from './pages/ChatPage';
 import VkCallbackPage from './pages/VkCallbackPage';
 import AppleCallbackPage from './pages/AppleCallbackPage';
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
+import AdminHubPage from './pages/AdminHubPage';
 import AdminDisputesPage from './pages/AdminDisputesPage';
 import AdminAssortmentPage from './pages/AdminAssortmentPage';
 import AdminFoundersPage from './pages/AdminFoundersPage';
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="listings/:id/edit" element={<CreateListingPage />} />
         </Route>
         <Route element={<AdminRoute />}>
+          <Route path="admin" element={<AdminHubPage />} />
           <Route path="admin/stats" element={<AdminStatsPage />} />
           <Route element={<OwnerRoute />}>
             <Route path="admin/finance" element={<AdminFinancePage />} />

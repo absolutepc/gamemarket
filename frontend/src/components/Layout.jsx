@@ -9,7 +9,7 @@ import BrandJsonLd from './BrandJsonLd';
 import ScrollToTop from './ScrollToTop';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
 import { sellPathForUser } from '../utils/sellPath';
-import { isStaffAdmin, isPlatformOwner } from '../utils/roles';
+import { isStaffAdmin } from '../utils/roles';
 
 /** Product detail: /listings/:id (not create/edit) */
 function isListingDetailPath(pathname) {
@@ -78,18 +78,11 @@ export default function Layout() {
               <nav className="hidden lg:flex items-center gap-1">
                 <Link to="/about" className="btn-ghost text-sm">О Lootz</Link>
                 <Link to="/faq" className="btn-ghost text-sm">FAQ</Link>
-                {isStaffAdmin(user) && (
-                  <>
-                    <Link to="/admin/stats" className="btn-ghost text-sm">Статистика</Link>
-                    {isPlatformOwner(user) ? (
-                      <Link to="/admin/finance" className="btn-ghost text-sm">Финансы</Link>
-                    ) : null}
-                    <Link to="/admin/contest" className="btn-ghost text-sm">Конкурс</Link>
-                    <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
-                    <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
-                    <Link to="/admin/founders" className="btn-ghost text-sm">Founders</Link>
-                  </>
-                )}
+                {isStaffAdmin(user) ? (
+                  <Link to="/admin" className="btn-secondary text-sm h-11 px-4 inline-flex items-center">
+                    Админ-панель
+                  </Link>
+                ) : null}
               </nav>
 
               <div className="hidden lg:flex items-center gap-1 sm:gap-2">

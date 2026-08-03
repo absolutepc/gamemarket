@@ -6,6 +6,6 @@ import { isPlatformOwner } from '../utils/roles';
 export default function OwnerRoute() {
   const user = useAuthStore((s) => s.user);
   if (!user) return <Navigate to="/login" replace />;
-  if (!isPlatformOwner(user)) return <Navigate to="/admin/stats" replace />;
+  if (!isPlatformOwner(user)) return <Navigate to="/admin" replace />;
   return <Outlet />;
 }

@@ -175,12 +175,7 @@ export default function AdminFoundersPage() {
           {founders.joined ?? 0}/{founders.limit ?? 100}
           {founders.pending_applications != null ? ` · ожидают: ${founders.pending_applications}` : ''}
         </span>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <Link to="/admin/stats" className="btn-ghost text-sm">Статистика</Link>
-          <Link to="/admin/contest" className="btn-ghost text-sm">Конкурс</Link>
-          <Link to="/admin/assortment" className="btn-ghost text-sm">Каталог</Link>
-          <Link to="/admin/disputes" className="btn-ghost text-sm">Споры</Link>
-        </div>
+        <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
       </div>
       <p className="text-sm text-dark-400 mb-6 max-w-2xl">
         Нажмите на раздел, чтобы открыть список и действия. Вкладка «Все» убрана — каждый статус отдельно.
