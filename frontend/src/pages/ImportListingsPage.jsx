@@ -37,17 +37,76 @@ function guessSubscriptionAttributes(title, description = '') {
   return { duration, plan };
 }
 
+function buildSuggestedDescription({ title, game, listingType, attributes = {} }) {
+  const t = String(title || '').trim() || 'Товар';
+  const g = String(game || '').trim();
+  const plan = String(attributes.plan || '').trim();
+  const duration = String(attributes.duration || '').trim();
+  const lines = [];
+
+  switch (listingType) {
+    case 'subscription':
+    case 'premium': {
+      const who = [g && g !== 'Другое' ? g : null, plan || null].filter(Boolean).join(' · ');
+      if (who) {
+        lines.push(`Подписка ${who}${duration ? ` на ${duration}` : ''}.`);
+      } else {
+        lines.push(`${t}${t.endsWith('.') ? '' : '.'}`);
+        if (duration) lines.push(`Срок: ${duration}.`);
+      }
+      lines.push('Выдача вручную после оплаты в чате сделки на Lootz.');
+      lines.push('Полный доступ на указанный срок. Перед покупкой уточните способ активации.');
+      break;
+    }
+    case 'topup':
+    case 'donate':
+    case 'currency':
+    case 'stars':
+      lines.push(g && g !== 'Другое' ? `Пополнение ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Выдача вручную после оплаты в чате сделки на Lootz.');
+      break;
+    case 'account':
+    case 'game_account':
+    case 'clean_account':
+      lines.push(g && g !== 'Другое' ? `Аккаунт ${g}. ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Данные передаются после оплаты в чате сделки на Lootz.');
+      lines.push('Рекомендуем сменить пароль сразу после получения.');
+      break;
+    case 'keys':
+    case 'giftcard':
+      lines.push(g && g !== 'Другое' ? `Ключ / код для ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Выдача после оплаты в чате сделки на Lootz.');
+      break;
+    case 'boosting':
+    case 'services':
+    case 'training':
+      lines.push(g && g !== 'Другое' ? `Услуга для ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Детали и сроки выполнения — в чате сделки после оплаты на Lootz.');
+      break;
+    case 'skins':
+    case 'item':
+      lines.push(g && g !== 'Другое' ? `Предмет для ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Выдача после оплаты в чате сделки на Lootz.');
+      break;
+    default:
+      lines.push(`${t}${t.endsWith('.') ? '' : '.'}`);
+      if (g && g !== 'Другое') lines.push(`Игра / сервис: ${g}.`);
+      lines.push('Выдача вручную после оплаты в чате сделки на Lootz.');
+      lines.push('Проверьте условия перед покупкой.');
+  }
+
+  return lines.join('\n').slice(0, 5000);
+}
+
 const EXAMPLE_JSON = `[
   {
     "title": "Cursor Pro — подписка",
-    "description": "Что входит в подписку Cursor Pro. Выдача вручную после оплаты на Lootz.",
     "price": 2080,
     "listing_type": "subscription",
     "images": []
   },
   {
     "title": "Claude Pro 1 месяц",
-    "description": "Подписка Claude Pro, выдача вручную после оплаты на Lootz.",
     "price": 1990,
     "listing_type": "subscription",
     "images": []
@@ -72,6 +131,7 @@ function newLotForm() {
     id: `lot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title: '',
     description: '',
+    descriptionManual: false,
     price: '',
     game: '',
     gameManual: false,
@@ -109,7 +169,7 @@ function explainJsonError(err, text) {
 function enrichItemsWithAssortment(items) {
   return (items || []).map((item) => {
     const title = String(item.title || item.name || '').trim();
-    const description = String(item.description || item.desc || '').trim();
+    let description = String(item.description || item.desc || '').trim();
     const guessedGame = guessGameFromTitle(title);
     const game = String(item.game || '').trim() || guessedGame;
     const listingType = String(item.listing_type || item.type || '').trim()
@@ -125,6 +185,14 @@ function enrichItemsWithAssortment(items) {
       if (!attributes.plan) {
         attributes.plan = item.plan || guessedSub.plan || '';
       }
+    }
+    if (description.length < 20) {
+      description = buildSuggestedDescription({
+        title,
+        game: game || 'Другое',
+        listingType,
+        attributes,
+      });
     }
     return {
       ...item,
@@ -164,14 +232,41 @@ export default function ImportListingsPage() {
         next.game = guessGameFromTitle(title);
       }
       if (!f.typeManual) {
-        next.listing_type = guessTypeFromText(title, f.description);
+        next.listing_type = guessTypeFromText(title, f.descriptionManual ? f.description : '');
       }
       if (next.listing_type === 'subscription') {
         const guessed = guessSubscriptionAttributes(title, f.description);
         if (!f.duration) next.duration = guessed.duration;
         if (!f.plan) next.plan = guessed.plan;
       }
+      if (!f.descriptionManual) {
+        next.description = buildSuggestedDescription({
+          title: next.title,
+          game: next.game,
+          listingType: next.listing_type,
+          attributes: {
+            duration: next.duration || f.duration,
+            plan: next.plan || f.plan,
+          },
+        });
+      }
       return next;
+    }));
+  };
+
+  const applySuggestedDescription = (id) => {
+    setForms((prev) => prev.map((f) => {
+      if (f.id !== id) return f;
+      return {
+        ...f,
+        descriptionManual: false,
+        description: buildSuggestedDescription({
+          title: f.title,
+          game: f.game || guessGameFromTitle(f.title),
+          listingType: f.listing_type,
+          attributes: { duration: f.duration, plan: f.plan },
+        }),
+      };
     }));
   };
 
@@ -187,22 +282,33 @@ export default function ImportListingsPage() {
         for (let i = 0; i < forms.length; i += 1) {
           const form = forms[i];
           const title = form.title.trim();
-          const description = form.description.trim();
+          let description = form.description.trim();
           const price = parseFloat(String(form.price).replace(',', '.'));
           if (!title && !description && !form.price) continue; // skip empty rows
           if (title.length < 5) {
             toast.error(`Лот ${i + 1}: название от 5 символов`);
             return;
           }
+          const game = form.game.trim() || guessGameFromTitle(title);
+          const listingType = form.listing_type || guessTypeFromText(title, description);
+          const attributes = (listingType === 'subscription')
+            ? {
+              duration: form.duration || guessSubscriptionAttributes(title, description).duration,
+              plan: form.plan || guessSubscriptionAttributes(title, description).plan,
+            }
+            : {};
           if (description.length < 20) {
-            toast.error(`Лот ${i + 1}: описание — минимум 20 символов`);
-            return;
+            description = buildSuggestedDescription({
+              title,
+              game: game || 'Другое',
+              listingType,
+              attributes,
+            });
           }
           if (!Number.isFinite(price) || price < 1) {
             toast.error(`Лот ${i + 1}: укажите цену`);
             return;
           }
-          const game = form.game.trim() || guessGameFromTitle(title);
           if (!game) {
             toast.error(`Лот ${i + 1}: укажите игру / сервис (не удалось угадать по названию)`);
             return;
@@ -212,14 +318,9 @@ export default function ImportListingsPage() {
             description,
             price,
             game,
-            listing_type: form.listing_type || guessTypeFromText(title, description),
+            listing_type: listingType,
             images: form.image_url.trim() ? [form.image_url.trim()] : [],
-            attributes: (form.listing_type === 'subscription' || guessTypeFromText(title, description) === 'subscription')
-              ? {
-                duration: form.duration || guessSubscriptionAttributes(title, description).duration,
-                plan: form.plan || guessSubscriptionAttributes(title, description).plan,
-              }
-              : {},
+            attributes,
           });
         }
         if (!items.length) {
@@ -334,7 +435,8 @@ export default function ImportListingsPage() {
         <div>
           <h1 className="text-2xl font-bold">Импорт лотов</h1>
           <p className="text-sm text-dark-400 mt-1">
-            Можно перенести сразу несколько объявлений. Игра/сервис подставляется из названия, если есть в каталоге Lootz.
+            Можно перенести сразу несколько объявлений. Игра, тип, срок/план и описание
+            подставляются из названия — перед публикацией проверьте тексты.
           </p>
         </div>
       </div>
@@ -439,17 +541,30 @@ export default function ImportListingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-dark-300 mb-1">Описание</label>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <label className="block text-sm text-dark-300">Описание</label>
+                      <button
+                        type="button"
+                        className="text-xs text-[#5B8CFF] hover:underline"
+                        onClick={() => applySuggestedDescription(form.id)}
+                      >
+                        Подставить по названию
+                      </button>
+                    </div>
                     <textarea
                       className="input w-full min-h-[100px]"
-                      placeholder="Что входит, как выдаёте…"
+                      placeholder="Подставится из названия, или напишите своё…"
                       value={form.description}
                       onChange={(e) => {
                         const description = e.target.value.slice(0, 5000);
                         const listing_type = form.typeManual
                           ? form.listing_type
                           : guessTypeFromText(form.title, description);
-                        const patch = { description, listing_type };
+                        const patch = {
+                          description,
+                          descriptionManual: true,
+                          listing_type,
+                        };
                         if (listing_type === 'subscription') {
                           const guessed = guessSubscriptionAttributes(form.title, description);
                           if (!form.duration) patch.duration = guessed.duration;
@@ -458,6 +573,9 @@ export default function ImportListingsPage() {
                         updateForm(form.id, patch);
                       }}
                     />
+                    <p className="text-xs text-dark-500 mt-1">
+                      Можно оставить пустым — подставим шаблон по типу лота.
+                    </p>
                   </div>
                   <div className="grid sm:grid-cols-3 gap-2">
                     <div>
@@ -476,10 +594,19 @@ export default function ImportListingsPage() {
                         className="input w-full"
                         placeholder="Подставится из названия"
                         value={form.game}
-                        onChange={(e) => updateForm(form.id, {
-                          game: e.target.value,
-                          gameManual: true,
-                        })}
+                        onChange={(e) => {
+                          const game = e.target.value;
+                          const patch = { game, gameManual: true };
+                          if (!form.descriptionManual) {
+                            patch.description = buildSuggestedDescription({
+                              title: form.title,
+                              game,
+                              listingType: form.listing_type,
+                              attributes: { duration: form.duration, plan: form.plan },
+                            });
+                          }
+                          updateForm(form.id, patch);
+                        }}
                       />
                     </div>
                     <div>
@@ -494,6 +621,17 @@ export default function ImportListingsPage() {
                             const guessed = guessSubscriptionAttributes(form.title, form.description);
                             if (!form.duration) patch.duration = guessed.duration;
                             if (!form.plan) patch.plan = guessed.plan;
+                          }
+                          if (!form.descriptionManual) {
+                            patch.description = buildSuggestedDescription({
+                              title: form.title,
+                              game: form.game,
+                              listingType: listing_type,
+                              attributes: {
+                                duration: patch.duration || form.duration,
+                                plan: patch.plan || form.plan,
+                              },
+                            });
                           }
                           updateForm(form.id, patch);
                         }}
@@ -511,7 +649,19 @@ export default function ImportListingsPage() {
                         <select
                           className="input w-full"
                           value={form.duration}
-                          onChange={(e) => updateForm(form.id, { duration: e.target.value })}
+                          onChange={(e) => {
+                            const duration = e.target.value;
+                            const patch = { duration };
+                            if (!form.descriptionManual) {
+                              patch.description = buildSuggestedDescription({
+                                title: form.title,
+                                game: form.game,
+                                listingType: form.listing_type,
+                                attributes: { duration, plan: form.plan },
+                              });
+                            }
+                            updateForm(form.id, patch);
+                          }}
                         >
                           <option value="">Выберите…</option>
                           {SUB_DURATION_OPTIONS.map((o) => (
@@ -524,7 +674,19 @@ export default function ImportListingsPage() {
                         <select
                           className="input w-full"
                           value={form.plan}
-                          onChange={(e) => updateForm(form.id, { plan: e.target.value })}
+                          onChange={(e) => {
+                            const plan = e.target.value;
+                            const patch = { plan };
+                            if (!form.descriptionManual) {
+                              patch.description = buildSuggestedDescription({
+                                title: form.title,
+                                game: form.game,
+                                listingType: form.listing_type,
+                                attributes: { duration: form.duration, plan },
+                              });
+                            }
+                            updateForm(form.id, patch);
+                          }}
                         >
                           <option value="">Выберите…</option>
                           {SUB_PLAN_OPTIONS.map((o) => (
@@ -562,7 +724,12 @@ export default function ImportListingsPage() {
             <>
               {mode === 'json' && (
                 <p className="text-xs text-dark-500">
-                  Массив из нескольких объектов. Поле game можно не указывать — подставим из title, если игра есть в каталоге.
+                  Массив объектов. Поля game и description можно не указывать — подставим из title.
+                </p>
+              )}
+              {mode === 'csv' && (
+                <p className="text-xs text-dark-500">
+                  Колонка description необязательна — пустое описание заполним шаблоном по типу лота.
                 </p>
               )}
               <textarea
@@ -676,6 +843,23 @@ export default function ImportListingsPage() {
                         </select>
                       </div>
                     )}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-dark-500">Описание</span>
+                      <button
+                        type="button"
+                        className="text-xs text-[#5B8CFF] hover:underline"
+                        onClick={() => updateDraft(d.key, {
+                          description: buildSuggestedDescription({
+                            title: d.title,
+                            game: d.game,
+                            listingType: d.listing_type,
+                            attributes: d.attributes || {},
+                          }),
+                        })}
+                      >
+                        Подставить по названию
+                      </button>
+                    </div>
                     <textarea
                       className="input w-full min-h-[72px] text-sm"
                       value={d.description}

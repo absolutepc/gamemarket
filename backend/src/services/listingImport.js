@@ -102,12 +102,80 @@ function parsePrice(raw) {
   return Number.isFinite(n) ? n : null;
 }
 
-function ensureDescription(title, description) {
+function buildSuggestedDescription({ title, game, listingType, attributes = {} }) {
+  const t = String(title || '').trim() || 'Товар';
+  const g = String(game || '').trim();
+  const plan = String(attributes.plan || '').trim();
+  const duration = String(attributes.duration || '').trim();
+  const lines = [];
+
+  switch (listingType) {
+    case 'subscription':
+    case 'premium': {
+      const who = [g && g !== 'Другое' ? g : null, plan || null].filter(Boolean).join(' · ');
+      if (who) {
+        lines.push(`Подписка ${who}${duration ? ` на ${duration}` : ''}.`);
+      } else {
+        lines.push(`${t}${t.endsWith('.') ? '' : '.'}`);
+        if (duration) lines.push(`Срок: ${duration}.`);
+      }
+      lines.push('Выдача вручную после оплаты в чате сделки на Lootz.');
+      lines.push('Полный доступ на указанный срок. Перед покупкой уточните способ активации.');
+      break;
+    }
+    case 'topup':
+    case 'donate':
+    case 'currency':
+    case 'stars':
+      lines.push(g && g !== 'Другое' ? `Пополнение ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Выдача вручную после оплаты в чате сделки на Lootz.');
+      break;
+    case 'account':
+    case 'game_account':
+    case 'clean_account':
+      lines.push(g && g !== 'Другое' ? `Аккаунт ${g}. ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Данные передаются после оплаты в чате сделки на Lootz.');
+      lines.push('Рекомендуем сменить пароль сразу после получения.');
+      break;
+    case 'keys':
+    case 'giftcard':
+      lines.push(g && g !== 'Другое' ? `Ключ / код для ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Выдача после оплаты в чате сделки на Lootz.');
+      break;
+    case 'boosting':
+    case 'services':
+    case 'training':
+      lines.push(g && g !== 'Другое' ? `Услуга для ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Детали и сроки выполнения — в чате сделки после оплаты на Lootz.');
+      break;
+    case 'skins':
+    case 'item':
+      lines.push(g && g !== 'Другое' ? `Предмет для ${g}: ${t}.` : `${t}${t.endsWith('.') ? '' : '.'}`);
+      lines.push('Выдача после оплаты в чате сделки на Lootz.');
+      break;
+    default:
+      lines.push(`${t}${t.endsWith('.') ? '' : '.'}`);
+      if (g && g !== 'Другое') lines.push(`Игра / сервис: ${g}.`);
+      lines.push('Выдача вручную после оплаты в чате сделки на Lootz.');
+      lines.push('Проверьте условия перед покупкой.');
+  }
+
+  return lines.join('\n').slice(0, 5000);
+}
+
+function ensureDescription(title, description, meta = {}) {
   const d = String(description || '').trim();
   if (d.length >= 20) return d.slice(0, 5000);
-  const base = d || `Импортированный лот: ${String(title || 'Без названия').trim()}`;
-  if (base.length >= 20) return base.slice(0, 5000);
-  return `${base}. Перенесено продавцом на Lootz. Проверьте условия перед покупкой.`.slice(0, 5000);
+  const suggested = buildSuggestedDescription({
+    title,
+    game: meta.game,
+    listingType: meta.listingType || 'other',
+    attributes: meta.attributes || {},
+  });
+  if (!d) return suggested;
+  // Short pasted text — keep it and pad with template so publish validation passes
+  const merged = `${d}\n\n${suggested}`;
+  return merged.slice(0, 5000);
 }
 
 function normalizeImageList(raw) {
@@ -199,12 +267,20 @@ function toDraft(raw, index, { provider, profile }) {
     .slice(0, 100);
   const listingType = guessListingType(raw);
   const images = normalizeImageList(raw.images || raw.image || raw.photos);
-  const description = ensureDescription(title, raw.description || raw.desc);
-  const attributes = mergePublicAttributes(raw.attributes, listingType, title, description);
+  const rawDesc = raw.description || raw.desc || '';
+  const attributes = mergePublicAttributes(raw.attributes, listingType, title, rawDesc);
+  const description = ensureDescription(title, rawDesc, {
+    game,
+    listingType,
+    attributes,
+  });
   const warnings = [];
   if (!title || title.length < 5) warnings.push('Короткое или пустое название');
   if (price == null || price < 1) warnings.push('Нужна цена ≥ 1 ₽');
   if (!game) warnings.push('Не указана игра/сервис');
+  if (!(String(rawDesc || '').trim().length >= 20)) {
+    warnings.push('Описание подставлено автоматически — проверьте перед публикацией');
+  }
   if (listingType === 'subscription') {
     if (!attributes.duration) warnings.push('Укажите срок подписки');
     if (!attributes.plan) warnings.push('Укажите тип подписки');
@@ -341,4 +417,6 @@ module.exports = {
   guessSubscriptionAttributes,
   mergePublicAttributes,
   enrichListingAttributes,
+  buildSuggestedDescription,
+  ensureDescription,
 };
