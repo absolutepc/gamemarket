@@ -16,6 +16,7 @@ import { formatPrice, formatDate, formatReviewsCount } from '../utils/format';
 import { resolveAssortmentIcon, resolveAssortmentItem } from '../utils/assortmentIcons';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
 import { labelsForCriteria } from '../utils/reviewCriteria';
+import { getAttributeLabel, sortAttributeEntries } from '../utils/listingAttributes';
 
 const PLACEHOLDER = '/placeholder-listing.svg';
 
@@ -250,18 +251,21 @@ export default function ListingPage() {
   const descLong = plainDesc.length > 280;
   const descShown = descExpanded || !descLong ? plainDesc : `${plainDesc.slice(0, 280).trimEnd()}…`;
   const attrEntries = listing.attributes && typeof listing.attributes === 'object'
-    ? Object.entries(listing.attributes).filter(([key, v]) => {
-      // Hide import bookkeeping — never show on storefront
-      if (
-        key === 'imported_from'
-        || key === 'source_seller'
-        || key === 'source_url'
-        || key === 'external_id'
-        || key === '_import'
-        || String(key).startsWith('_')
-      ) return false;
-      return v != null && String(v).trim() !== '';
-    })
+    ? sortAttributeEntries(
+      listing.listing_type,
+      Object.entries(listing.attributes).filter(([key, v]) => {
+        // Hide import bookkeeping — never show on storefront
+        if (
+          key === 'imported_from'
+          || key === 'source_seller'
+          || key === 'source_url'
+          || key === 'external_id'
+          || key === '_import'
+          || String(key).startsWith('_')
+        ) return false;
+        return v != null && String(v).trim() !== '';
+      }),
+    )
     : [];
   const sellerRating = parseFloat(listing.seller_rating || 0);
   const deliveryLabel = listing.delivery_method === 'auto' ? 'Автоматическая выдача' : 'Вручную через чат сделки';
@@ -530,7 +534,9 @@ export default function ListingPage() {
             <div className="flex flex-col gap-3.5 mb-5">
               {attrEntries.map(([key, value]) => (
                 <div key={key} className="flex flex-col gap-1">
-                  <span className="text-dark-400 text-sm">{key}</span>
+                  <span className="text-dark-400 text-sm">
+                    {getAttributeLabel(listing.listing_type, key)}
+                  </span>
                   <span className="text-white text-base lg:text-lg">{String(value)}</span>
                 </div>
               ))}

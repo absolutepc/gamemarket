@@ -719,6 +719,56 @@ export function getAttributeSchema(listingType) {
   return LISTING_ATTRIBUTE_SCHEMAS[listingType] || LISTING_ATTRIBUTE_SCHEMAS.other;
 }
 
+/** Fallback Russian labels when key is not in the active type schema */
+const ATTRIBUTE_LABEL_FALLBACKS = {
+  duration: 'Срок подписки',
+  plan: 'Тип подписки',
+  platform: 'Платформа',
+  amount: 'Сумма',
+  email_access: 'Почта',
+  games_count: 'Количество игр',
+  rarity: 'Редкость',
+  tradable: 'Обмен',
+  delivery_speed: 'Скорость выдачи',
+  region: 'Регион',
+  service: 'Сервис',
+};
+
+/**
+ * Human-readable Russian label for an attribute key (Playerok-style).
+ */
+export function getAttributeLabel(listingType, key) {
+  const k = String(key || '').trim();
+  if (!k) return '';
+  const schema = getAttributeSchema(listingType);
+  const fromType = schema.find((g) => g.key === k);
+  if (fromType?.label) return fromType.label;
+
+  for (const groups of Object.values(LISTING_ATTRIBUTE_SCHEMAS)) {
+    const hit = groups.find((g) => g.key === k);
+    if (hit?.label) return hit.label;
+  }
+
+  if (ATTRIBUTE_LABEL_FALLBACKS[k]) return ATTRIBUTE_LABEL_FALLBACKS[k];
+
+  // Last resort: prettify unknown keys without showing raw english snake_case
+  return k
+    .replace(/_/g, ' ')
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
+/** Sort attribute entries in schema order when possible */
+export function sortAttributeEntries(listingType, entries) {
+  const schema = getAttributeSchema(listingType);
+  const order = new Map(schema.map((g, i) => [g.key, i]));
+  return [...entries].sort((a, b) => {
+    const ai = order.has(a[0]) ? order.get(a[0]) : 1000;
+    const bi = order.has(b[0]) ? order.get(b[0]) : 1000;
+    if (ai !== bi) return ai - bi;
+    return String(a[0]).localeCompare(String(b[0]));
+  });
+}
+
 export function validateAttributes(listingType, attributes = {}) {
   const schema = getAttributeSchema(listingType);
   for (const group of schema) {
