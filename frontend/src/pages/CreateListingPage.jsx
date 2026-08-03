@@ -391,8 +391,12 @@ export default function CreateListingPage() {
   };
 
   const pickGame = (item) => {
+    // Select on first click; second click on the same tile advances (Далее)
+    if (form.game === item.name) {
+      goNext();
+      return;
+    }
     patchForm('game', item.name);
-    setStep(1);
     setAssortmentQ('');
   };
 
@@ -406,10 +410,15 @@ export default function CreateListingPage() {
     setAttributes({});
     setAccessType('');
     setAssortmentQ('');
+    // Stay on flow: jump to delivery after game+type chosen via fee filter
     setStep(2);
   };
 
   const pickType = (value) => {
+    if (form.listing_type === value) {
+      goNext();
+      return;
+    }
     patchForm('listing_type', value);
   };
 
@@ -627,7 +636,9 @@ export default function CreateListingPage() {
 
             {feeFilterOn ? (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
-                {expandedFeeOffers.slice(0, 240).map(({ item, type }) => (
+                {expandedFeeOffers.map(({ item, type }) => {
+                  const selected = form.game === item.name && form.listing_type === type.value;
+                  return (
                   <button
                     key={`${item.name}:${type.value}`}
                     type="button"
@@ -635,11 +646,12 @@ export default function CreateListingPage() {
                     className="flex flex-col items-center gap-1.5 group text-left"
                   >
                     <div
-                      className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
-                                 ring-1 ring-white/10 transition-all duration-150
-                                 group-hover:ring-2 group-hover:ring-[#2B71F3]
-                                 group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]
-                                 group-active:scale-95"
+                      className={`relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
+                                 transition-all duration-150 group-active:scale-95 ${
+                                   selected
+                                     ? 'ring-2 ring-[#2B71F3] shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                     : 'ring-1 ring-white/10 group-hover:ring-2 group-hover:ring-[#2B71F3] group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                 }`}
                     >
                       <img
                         src={item.icon || FALLBACK_ICON}
@@ -652,30 +664,36 @@ export default function CreateListingPage() {
                         <FeeBadge percent={reducedFeePercent} className="rounded-none rounded-br-md" />
                       </span>
                     </div>
-                    <span className="text-[11px] text-white text-center line-clamp-1 leading-tight w-full font-medium group-hover:text-[#8EB6FF] transition-colors">
+                    <span className={`text-[11px] text-center line-clamp-1 leading-tight w-full font-medium transition-colors ${
+                      selected ? 'text-[#8EB6FF]' : 'text-white group-hover:text-[#8EB6FF]'
+                    }`}>
                       {item.name}
                     </span>
                     <span className="text-[10px] text-dark-400 text-center line-clamp-1 leading-tight w-full">
                       {type.label}
                     </span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
-                {filteredAssortment.slice(0, 80).map((item) => (
+                {filteredAssortment.map((item) => {
+                  const selected = form.game === item.name;
+                  return (
                   <button
-                    key={item.name}
+                    key={`${item.kind}-${item.name}`}
                     type="button"
                     onClick={() => pickGame(item)}
                     className="flex flex-col items-center gap-1.5 group"
                   >
                     <div
-                      className="relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
-                                 ring-1 ring-white/10 transition-all duration-150
-                                 group-hover:ring-2 group-hover:ring-[#2B71F3]
-                                 group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]
-                                 group-active:scale-95"
+                      className={`relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
+                                 transition-all duration-150 group-active:scale-95 ${
+                                   selected
+                                     ? 'ring-2 ring-[#2B71F3] shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                     : 'ring-1 ring-white/10 group-hover:ring-2 group-hover:ring-[#2B71F3] group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                 }`}
                     >
                       <img
                         src={item.icon || FALLBACK_ICON}
@@ -685,12 +703,22 @@ export default function CreateListingPage() {
                         onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
                       />
                     </div>
-                    <span className="text-[11px] text-dark-300 text-center line-clamp-2 leading-tight w-full group-hover:text-[#8EB6FF] transition-colors">
+                    <span className={`text-[11px] text-center line-clamp-2 leading-tight w-full transition-colors ${
+                      selected ? 'text-[#8EB6FF] font-medium' : 'text-dark-300 group-hover:text-[#8EB6FF]'
+                    }`}>
                       {item.name}
                     </span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
+            )}
+            {!!(feeFilterOn ? expandedFeeOffers.length : filteredAssortment.length) && (
+              <p className="text-center text-dark-500 text-xs mt-4">
+                {(feeFilterOn ? expandedFeeOffers.length : filteredAssortment.length).toLocaleString('ru-RU')}{' '}
+                {feeFilterOn ? 'вариантов' : 'позиций'}
+                {form.game && stepId === 'game' ? ' · нажмите «Далее» или ещё раз по выбранной иконке' : ''}
+              </p>
             )}
             {!(feeFilterOn ? expandedFeeOffers.length : filteredAssortment.length) && (
               <p className="text-center text-dark-400 text-sm py-10">Ничего не найдено</p>

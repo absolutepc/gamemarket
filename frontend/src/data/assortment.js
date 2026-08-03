@@ -805,10 +805,46 @@ export const ASSORTMENT_TABS = [
   { id: 'apps', label: 'Приложения' },
 ];
 
-/** All games = mobile + PC (not apps/services) */
-export function assortmentByTab(tabId) {
+/**
+ * Mix two lists by current remaining ratio into rows of `rowSize`.
+ * Example: 300 PC + 200 mobile → ~3 PC + 2 mobile per row of 5.
+ */
+export function interleaveByRatio(primary, secondary, rowSize = 5) {
+  const out = [];
+  let i = 0;
+  let j = 0;
+  while (i < primary.length || j < secondary.length) {
+    const remA = primary.length - i;
+    const remB = secondary.length - j;
+    const rem = remA + remB;
+    if (rem <= 0) break;
+
+    let aSlots = Math.round((remA / rem) * rowSize);
+    aSlots = Math.max(0, Math.min(aSlots, remA, rowSize));
+    let bSlots = Math.min(rowSize - aSlots, remB);
+    if (aSlots + bSlots < Math.min(rowSize, rem) && remA > aSlots) {
+      aSlots = Math.min(remA, rowSize - bSlots);
+    }
+    if (aSlots === 0 && remA > 0 && bSlots < rowSize) {
+      aSlots = Math.min(remA, rowSize - bSlots);
+      bSlots = Math.min(remB, rowSize - aSlots);
+    }
+    if (bSlots === 0 && remB > 0 && aSlots < rowSize) {
+      bSlots = Math.min(remB, rowSize - aSlots);
+    }
+
+    for (let k = 0; k < aSlots && i < primary.length; k += 1) out.push(primary[i++]);
+    for (let k = 0; k < bSlots && j < secondary.length; k += 1) out.push(secondary[j++]);
+  }
+  return out;
+}
+
+/** All games = mobile + PC (not apps/services). Games tab mixes PC/mobile by ratio. */
+export function assortmentByTab(tabId, { rowSize = 5 } = {}) {
   if (tabId === 'apps') return ASSORTMENT.filter((i) => i.kind === 'app');
   if (tabId === 'mobile') return ASSORTMENT.filter((i) => i.kind === 'mobile');
-  // games: absolutely all games
-  return ASSORTMENT.filter((i) => i.kind === 'mobile' || i.kind === 'pc');
+  const pc = ASSORTMENT.filter((i) => i.kind === 'pc');
+  const mobile = ASSORTMENT.filter((i) => i.kind === 'mobile');
+  // PC first in the ratio so denser catalog leads rows (e.g. 3 PC + 2 mobile)
+  return interleaveByRatio(pc, mobile, rowSize);
 }

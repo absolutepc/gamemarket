@@ -147,7 +147,7 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
               <div className="text-center text-dark-400 text-sm py-8">Ничего не найдено</div>
             ) : (
               <ul className="space-y-0.5">
-                {filtered.slice(0, 80).map((item) => {
+                {filtered.map((item) => {
                   const active = selected?.name === item.name;
                   return (
                     <li key={`${item.kind}-${item.name}`}>
@@ -186,11 +186,6 @@ export default function AssortmentPicker({ value, onChange, required = true }) {
                   );
                 })}
               </ul>
-            )}
-            {filtered.length > 80 && (
-              <p className="text-[11px] text-dark-500 text-center py-2">
-                Показаны первые 80 · уточните поиск
-              </p>
             )}
           </div>
         </div>
