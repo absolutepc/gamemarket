@@ -11,10 +11,10 @@ import useAuthStore from '../store/authStore';
 import Seo from '../components/Seo';
 import {
   resolveFeePercent,
+  resolveReducedFeePercent,
   formatFeePercent,
   calcSellerReceives,
   isReducedFeeListingType,
-  FEE_REDUCED,
 } from '../utils/fees';
 import { formatPrice } from '../utils/format';
 import { LISTING_TYPE_OPTIONS } from '../utils/listingTypes';
@@ -61,7 +61,8 @@ const ACCESS_OPTIONS = [
   },
 ];
 
-function FeeBadge({ percent = FEE_REDUCED, className = '' }) {
+function FeeBadge({ percent, className = '' }) {
+  if (percent == null) return null;
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-md bg-emerald-500/95 text-dark-950
@@ -189,10 +190,12 @@ export default function CreateListingPage() {
   );
 
   const user = useAuthStore((s) => s.user);
+  const isFoundingSeller = Boolean(user?.is_founding_seller);
+  const reducedFeePercent = resolveReducedFeePercent(isFoundingSeller);
   const feePercent = resolveFeePercent({
     categorySlug: selectedCategory?.slug,
     listingType: form.listing_type,
-    isFoundingSeller: Boolean(user?.is_founding_seller),
+    isFoundingSeller,
   });
   const feePreview = calcSellerReceives(form.price, feePercent);
 
@@ -215,7 +218,7 @@ export default function CreateListingPage() {
     );
   }, [assortmentQ, tabItems, visibleAssortment]);
 
-  /** When 7.5% toggle is on: expand each app into reduced-fee listing types */
+  /** When reduced-fee toggle is on: expand each app into reduced-fee listing types */
   const expandedFeeOffers = useMemo(() => {
     if (!feeFilterOn) return [];
     const offers = [];
@@ -598,13 +601,13 @@ export default function CreateListingPage() {
             <div className="flex items-center gap-2.5 mb-4 px-0.5">
               <div className="flex items-center gap-1.5 text-sm text-emerald-400 font-medium">
                 <Tag size={14} />
-                Платёж {formatFeePercent(FEE_REDUCED)}
+                Платёж {formatFeePercent(reducedFeePercent)}
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={feeFilterOn}
-                aria-label={`Показать типы лотов с комиссией ${formatFeePercent(FEE_REDUCED)}`}
+                aria-label={`Показать типы лотов с комиссией ${formatFeePercent(reducedFeePercent)}`}
                 onClick={() => setFeeFilterOn((v) => !v)}
                 className={`relative w-11 h-6 rounded-full transition-colors ${
                   feeFilterOn ? 'bg-[#2B71F3]' : 'bg-dark-700'
@@ -636,7 +639,7 @@ export default function CreateListingPage() {
                         onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
                       />
                       <span className="absolute top-0 left-0">
-                        <FeeBadge className="rounded-none rounded-br-md" />
+                        <FeeBadge percent={reducedFeePercent} className="rounded-none rounded-br-md" />
                       </span>
                     </div>
                     <span className="text-[11px] text-white text-center line-clamp-1 leading-tight w-full font-medium">
@@ -698,7 +701,7 @@ export default function CreateListingPage() {
                     <span className="sell-type-label min-w-0 flex-1 text-xl sm:text-2xl font-semibold">
                       {opt.label}
                     </span>
-                    {reduced && <FeeBadge />}
+                    {reduced && <FeeBadge percent={reducedFeePercent} />}
                     <span
                       className={`sell-type-radio w-5 h-5 rounded-full border-2 shrink-0 transition-colors ${
                         active ? 'is-active' : ''

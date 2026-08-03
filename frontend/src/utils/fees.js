@@ -72,9 +72,23 @@ function isReducedTier({ categorySlug, listingType } = {}) {
   return false;
 }
 
+function isFoundingFlag(isFoundingSeller) {
+  return isFoundingSeller === true || isFoundingSeller === 't' || isFoundingSeller === 1;
+}
+
+/** Reduced-tier rate only (7.5% or Founders 5%) — for badges / «Платёж» filter. */
+export function resolveReducedFeePercent(isFoundingSeller) {
+  return isFoundingFlag(isFoundingSeller) ? FEE_FOUNDERS_REDUCED : FEE_REDUCED;
+}
+
+/** Standard-tier rate (17.5% or Founders 13%). */
+export function resolveStandardFeePercent(isFoundingSeller) {
+  return isFoundingFlag(isFoundingSeller) ? FEE_FOUNDERS_STANDARD : FEE_STANDARD;
+}
+
 export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
   const reduced = isReducedTier({ categorySlug, listingType });
-  const founding = isFoundingSeller === true || isFoundingSeller === 't' || isFoundingSeller === 1;
+  const founding = isFoundingFlag(isFoundingSeller);
   if (founding) {
     return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
   }
