@@ -167,6 +167,11 @@ const { startAutoReleaseJob } = require('./services/escrow');
 const { startListingExpiryJob } = require('./services/listingExpiry');
 
 async function start() {
+  // Bind port first so deploys/healthchecks are not blocked by DDL locks
+  server.listen(PORT, HOST, () => {
+    logger.info(`Server running on http://${HOST}:${PORT}`);
+  });
+
   try {
     await migrate();
   } catch (err) {
@@ -177,10 +182,6 @@ async function start() {
 
   startAutoReleaseJob(60_000);
   startListingExpiryJob(300_000);
-
-  server.listen(PORT, HOST, () => {
-    logger.info(`Server running on http://${HOST}:${PORT}`);
-  });
 }
 
 start();

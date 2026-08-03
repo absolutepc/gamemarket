@@ -60,16 +60,19 @@ export default function ProfilePage() {
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileRef = useRef(null);
 
-  const { data: profile, isLoading, isError } = useQuery({
+  const { data: profile, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['profile', username],
-    queryFn: () => api.get(`/users/${username}`).then((r) => r.data),
+    queryFn: () => api.get(`/users/${encodeURIComponent(username)}`).then((r) => r.data),
     enabled: Boolean(username),
+    retry: 1,
+    staleTime: 15_000,
   });
 
   const { data: myListings, isLoading: myListingsLoading } = useQuery({
     queryKey: ['my-listings'],
     queryFn: () => api.get('/users/me/listings').then((r) => r.data),
     enabled: isOwn,
+    retry: 1,
   });
 
   const deleteMutation = useMutation({
@@ -144,7 +147,21 @@ export default function ProfilePage() {
     </div>
   );
 
-  if (isError || !profile) return <div className="text-center py-20 text-dark-400">Пользователь не найден</div>;
+  if (isError || !profile) {
+    return (
+      <div className={`${PAGE_WIDTH_CLASS} py-20 text-center`}>
+        <p className="text-dark-400 mb-4">Не удалось загрузить профиль</p>
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={isFetching}
+          onClick={() => refetch()}
+        >
+          {isFetching ? 'Загрузка...' : 'Повторить'}
+        </button>
+      </div>
+    );
+  }
 
   const rating = parseFloat(profile.rating) || 0;
   const avatarUrl = isOwn ? (currentUser?.avatar_url || profile.avatar_url) : profile.avatar_url;

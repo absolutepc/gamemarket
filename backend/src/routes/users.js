@@ -433,14 +433,30 @@ router.post('/reviews',
 );
 
 router.get('/:username', apiLimiter, async (req, res) => {
-  const { rows } = await pool.query(
-    `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
-            COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified,
-            COALESCE(is_founding_seller, FALSE) AS is_founding_seller,
-            founding_seller_number
-     FROM users WHERE LOWER(username)=LOWER($1) AND is_banned=FALSE`,
-    [req.params.username]
-  );
+  let rows;
+  try {
+    ({ rows } = await pool.query(
+      `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
+              COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified,
+              COALESCE(is_founding_seller, FALSE) AS is_founding_seller,
+              founding_seller_number
+       FROM users WHERE LOWER(username)=LOWER($1) AND is_banned=FALSE`,
+      [req.params.username]
+    ));
+  } catch (err) {
+    // Fallback if founders columns are not migrated yet
+    if (err.code === '42703') {
+      ({ rows } = await pool.query(
+        `SELECT id, username, avatar_url, bio, rating, reviews_count, sales_count,
+                COALESCE(purchases_count, 0) AS purchases_count, created_at, is_verified,
+                FALSE AS is_founding_seller, NULL::int AS founding_seller_number
+         FROM users WHERE LOWER(username)=LOWER($1) AND is_banned=FALSE`,
+        [req.params.username]
+      ));
+    } else {
+      throw err;
+    }
+  }
   if (!rows[0]) return res.status(404).json({ error: 'User not found' });
   const user = rows[0];
 
@@ -475,6 +491,8 @@ router.get('/:username', apiLimiter, async (req, res) => {
     sales_count: user.sales_count || 0,
     purchases_count: user.purchases_count || 0,
     deals_count: dealsRes.rows[0].deals_count || 0,
+    is_founding_seller: Boolean(user.is_founding_seller),
+    founding_seller_number: user.founding_seller_number || null,
     listings: listingsRes.rows,
     reviews: reviewsRes.rows,
   });

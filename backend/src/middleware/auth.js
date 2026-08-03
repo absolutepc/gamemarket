@@ -21,15 +21,25 @@ function authenticate(required = true) {
         `SELECT id, username, email, role, is_banned, balance, frozen_balance, avatar_url, rating, sales_count,
                 COALESCE(account_type, 'buyer') AS account_type,
                 COALESCE(account_type_chosen, TRUE) AS account_type_chosen,
-                COALESCE(is_founding_seller, FALSE) AS is_founding_seller,
-                founding_seller_number,
-                is_verified,
-                auth_provider, vk_id, apple_id, google_id, last_seen_at
+                auth_provider, vk_id, apple_id, google_id, last_seen_at, is_verified
          FROM users WHERE id = $1`,
         [payload.sub]
       );
       if (!rows[0]) return res.status(401).json({ error: 'User not found' });
       if (rows[0].is_banned) return res.status(403).json({ error: 'Account suspended' });
+      // Founders fields may be absent before migration finishes
+      try {
+        const founders = await pool.query(
+          `SELECT COALESCE(is_founding_seller, FALSE) AS is_founding_seller, founding_seller_number
+           FROM users WHERE id = $1`,
+          [payload.sub]
+        );
+        rows[0].is_founding_seller = Boolean(founders.rows[0]?.is_founding_seller);
+        rows[0].founding_seller_number = founders.rows[0]?.founding_seller_number || null;
+      } catch {
+        rows[0].is_founding_seller = false;
+        rows[0].founding_seller_number = null;
+      }
       req.user = rows[0];
       // Presence heartbeat (throttled by DB cheap update)
       pool.query('UPDATE users SET last_seen_at=NOW() WHERE id=$1', [rows[0].id]).catch(() => {});
