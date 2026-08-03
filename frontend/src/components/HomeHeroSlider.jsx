@@ -141,7 +141,7 @@ function ContestVisual() {
   );
 }
 
-function FoundersVisual({ buyersCount, foundersJoined, foundersLimit }) {
+function FoundersVisual({ sellersCount, foundersJoined, foundersLimit }) {
   const joined = foundersJoined ?? 0;
   const limit = foundersLimit || 100;
   const pct = Math.min(100, Math.round((joined / limit) * 100));
@@ -170,9 +170,9 @@ function FoundersVisual({ buyersCount, foundersJoined, foundersLimit }) {
 
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="rounded-xl bg-dark-950/70 border border-dark-700 px-2.5 py-2">
-            <div className="text-[10px] text-dark-400 mb-0.5">Покупатели</div>
+            <div className="text-[10px] text-dark-400 mb-0.5">Продавцы</div>
             <div className="text-lg font-extrabold text-white tabular-nums leading-none">
-              {formatCount(buyersCount)}
+              {formatCount(sellersCount)}
             </div>
           </div>
           <div className="rounded-xl bg-dark-950/70 border border-dark-700 px-2.5 py-2">
@@ -327,7 +327,7 @@ export default function HomeHeroSlider() {
   else if (slide.tone === 'founders') {
     VisualNode = (
       <FoundersVisual
-        buyersCount={stats?.buyers_count}
+        sellersCount={stats?.sellers_count}
         foundersJoined={stats?.founders?.joined}
         foundersLimit={stats?.founders?.limit}
       />
@@ -408,8 +408,8 @@ export default function HomeHeroSlider() {
                   {slide.tone === 'founders' && (
                     <>
                       <div className="inline-flex items-center gap-1.5 rounded-full bg-dark-900/80 border border-amber-500/30 px-2.5 py-1 text-[11px] text-amber-100">
-                        <ShoppingBag size={12} className="text-emerald-400" />
-                        Покупателей: {formatCount(stats?.buyers_count)}
+                        <Store size={12} className="text-[#2B71F3]" />
+                        Продавцов: {formatCount(stats?.sellers_count)}
                       </div>
                       <div className="inline-flex items-center gap-1.5 rounded-lg bg-dark-900/90 border border-amber-500/30 px-2.5 py-1.5 text-[11px] font-medium text-amber-100">
                         <Crown size={12} className="text-amber-300 shrink-0" />

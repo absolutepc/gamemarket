@@ -397,7 +397,11 @@ export default function ListingPage() {
 
       {isOwner && listing.platform_fee_percent != null && (
         <div className="text-sm text-dark-400">
-          Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}% ·
+          Комиссия {(listing.platform_fee_percent * 100).toFixed(1).replace(/\.0$/, '')}%
+          {listing.seller_is_founding ? (
+            <span className="text-amber-300"> (Founders)</span>
+          ) : null}
+          {' · '}
           вы получите{' '}
           <span className="text-emerald-400 font-medium">
             {formatPrice(listing.seller_receives)}
