@@ -14,13 +14,15 @@ function showcaseDaysLeft(publishedAt) {
   return Math.max(0, Math.ceil((end - Date.now()) / 86400000));
 }
 
-/** Keep list payloads small — huge data: URLs were breaking home/catalog on mobile */
+/** Keep list payloads to one image. Do not replace real photos with placeholder —
+ * that hid valid JPEG data-URLs (~50–400KB) on home/catalog. Only drop pathological blobs. */
 function slimListingImages(images) {
   if (!Array.isArray(images) || !images.length) return [];
   const first = images[0];
-  if (typeof first !== 'string') return [];
-  if (first.startsWith('data:') && first.length > 12_000) {
-    return ['/placeholder-listing.svg'];
+  if (typeof first !== 'string' || !first.trim()) return [];
+  // ~1MB data-URL is already oversized for a card grid; skip those edge cases only
+  if (first.startsWith('data:') && first.length > 1_000_000) {
+    return [];
   }
   return [first];
 }
