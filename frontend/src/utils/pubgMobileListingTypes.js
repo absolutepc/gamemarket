@@ -37,15 +37,18 @@ export function isPubgMobile(name, search = '') {
     .toLowerCase()
     .replace(/ё/g, 'е')
     .trim();
-  // Exclude PC PUBG and New State
+  // Exclude New State first
   if (n.includes('new state') || s.includes('new state')) return false;
-  if (n === 'pubg' || n.startsWith('pubg ')) return false;
-  return (
+  // Positive matches BEFORE excluding bare "pubg" ("pubg mobile".startsWith("pubg ") is true)
+  if (
     n === 'pubg mobile'
     || n.startsWith('pubg mobile')
     || n === 'pubgm'
     || n.includes('пабг мобайл')
     || n.includes('пабг мобил')
     || (s.includes('pubg mobile') && !s.includes('new state'))
-  );
+  ) {
+    return true;
+  }
+  return false;
 }
