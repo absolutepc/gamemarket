@@ -148,7 +148,7 @@ function FoundersVisual({ sellersCount, foundersJoined, foundersLimit }) {
   const pct = Math.min(100, Math.round((joined / limit) * 100));
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center px-2">
+    <div className="relative w-full h-full flex items-center justify-center px-2 py-3 lg:py-0">
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[260px] h-[260px] rounded-full pointer-events-none"
         style={{
@@ -365,17 +365,9 @@ export default function HomeHeroSlider() {
           className={`relative ${PAGE_WIDTH_CLASS} py-5 sm:py-7 lg:py-8
                       h-[520px] sm:h-[480px] lg:h-[420px] flex flex-col`}
         >
-          <div
-            className={`flex-1 grid lg:grid-cols-[1.05fr_0.95fr] items-stretch min-h-0 ${
-              isFounders ? 'gap-3 sm:gap-4 lg:gap-6' : 'gap-4 lg:gap-6'
-            }`}
-          >
+          <div className="flex-1 grid lg:grid-cols-[1.05fr_0.95fr] gap-4 lg:gap-6 items-stretch min-h-0">
             <div className="order-2 lg:order-1 min-h-0 flex flex-col">
-              <div
-                className={`flex-1 min-h-0 flex flex-col ${
-                  isFounders ? 'justify-start lg:justify-center' : 'justify-center'
-                }`}
-              >
+              <div className="flex-1 min-h-0 flex flex-col justify-center">
                 <div
                   className={`inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3 w-fit ${
                     isFounders ? 'hidden lg:inline-flex' : ''
@@ -456,10 +448,10 @@ export default function HomeHeroSlider() {
             </div>
 
             <div
-              className={`order-1 lg:order-2 h-[210px] sm:h-[240px] lg:h-auto min-h-0 flex justify-center ${
+              className={`order-1 lg:order-2 min-h-0 flex items-center justify-center ${
                 isFounders
-                  ? 'items-stretch pt-3 pb-3 sm:pt-3 sm:pb-3 lg:items-center lg:pt-0 lg:pb-0'
-                  : 'items-center'
+                  ? 'h-auto sm:h-auto lg:h-auto py-3 lg:py-0'
+                  : 'h-[210px] sm:h-[240px] lg:h-auto'
               }`}
             >
               {VisualNode}
