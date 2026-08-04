@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { formatRelative } from '../utils/format';
 import { PAGE_WIDTH_CLASS } from '../components/ListingCard';
+import { getFoundersInviteUrl } from '../utils/foundersInvite';
 import { GlassModalShell } from '../components/GlassModalShell';
 
 const SECTIONS = [
@@ -127,7 +128,7 @@ export default function AdminFoundersPage() {
       toast.success(n ? `Статус снят · было #${n}` : 'Статус Founders снят');
       invalidate();
     },
-    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка');
   });
 
   const renumberMutation = useMutation({
@@ -158,6 +159,16 @@ export default function AdminFoundersPage() {
     renumberMutation.mutate();
   };
 
+  const copyInvite = async () => {
+    const url = getFoundersInviteUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Ссылка скопирована');
+    } catch {
+      toast.error('Не удалось скопировать');
+    }
+  };
+
   const sectionMeta = SECTIONS.find((s) => s.id === openSection);
   const sectionItems =
     openSection === 'members'
@@ -175,10 +186,18 @@ export default function AdminFoundersPage() {
           {founders.joined ?? 0}/{founders.limit ?? 100}
           {founders.pending_applications != null ? ` · ожидают: ${founders.pending_applications}` : ''}
         </span>
+        <button
+          type="button"
+          className="btn-secondary h-9 px-3 text-sm"
+          onClick={copyInvite}
+        >
+          Копировать invite-ссылку
+        </button>
         <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
       </div>
       <p className="text-sm text-dark-400 mb-6 max-w-2xl">
-        Нажмите на раздел, чтобы открыть список и действия. Вкладка «Все» убрана — каждый статус отдельно.
+        Нажмите на раздел, чтобы открыть список и действия. Invite-ссылка открывает регистрацию продавца
+        с переходом к заявке Founders.
       </p>
 
       {isLoading ? (
