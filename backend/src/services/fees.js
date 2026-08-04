@@ -5,6 +5,10 @@
  *
  * 7.5% (5% founders): донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
  * 17.5% (13% founders): всё остальное
+ *
+ * Game overrides:
+ * Arena Breakout (mobile, not Infinite): boosting + item → standard 17.5%
+ * (only bonds, subscription, packs stay reduced for that game).
  */
 
 const { FEE_FOUNDERS_REDUCED, FEE_FOUNDERS_STANDARD } = require('./founders');
@@ -67,14 +71,33 @@ const REDUCED_LISTING_TYPES = new Set([
   'bonds',
 ]);
 
-function isReducedTier({ categorySlug, listingType } = {}) {
+/** For Arena Breakout only: these types force standard fee even if globally reduced. */
+const ARENA_BREAKOUT_FORCE_STANDARD = new Set(['boosting', 'item']);
+
+function isArenaBreakoutGame(game) {
+  const n = String(game || '')
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .trim();
+  if (!n || n.includes('infinite')) return false;
+  return n === 'arena breakout' || n.startsWith('arena breakout ');
+}
+
+function isReducedTier({ categorySlug, listingType, game } = {}) {
+  if (
+    listingType
+    && isArenaBreakoutGame(game)
+    && ARENA_BREAKOUT_FORCE_STANDARD.has(listingType)
+  ) {
+    return false;
+  }
   if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return true;
   if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return true;
   return false;
 }
 
-function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
-  const reduced = isReducedTier({ categorySlug, listingType });
+function resolveFeePercent({ categorySlug, listingType, isFoundingSeller, game } = {}) {
+  const reduced = isReducedTier({ categorySlug, listingType, game });
   const founding = isFoundingSeller === true || isFoundingSeller === 't' || isFoundingSeller === 1;
   if (founding) {
     return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
@@ -108,6 +131,8 @@ module.exports = {
   PLATFORM_FEE_PERCENT: FEE_REDUCED, // legacy default (reduced tier)
   REDUCED_CATEGORY_SLUGS,
   REDUCED_LISTING_TYPES,
+  ARENA_BREAKOUT_FORCE_STANDARD,
+  isArenaBreakoutGame,
   isReducedTier,
   resolveFeePercent,
   calcPlatformFee,
