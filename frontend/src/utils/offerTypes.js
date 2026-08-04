@@ -74,6 +74,11 @@ export const OFFER_PATH_BY_TYPE = {
   decorations: 'decorations',
   nintendo_switch_online: 'nintendo-switch-online',
   bonds: 'bonds',
+  // PUBG Mobile
+  uc: 'uc',
+  metro_royale: 'metro-royale',
+  escort: 'escort',
+  popularity: 'popularity',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -168,6 +173,10 @@ export function offerSectionLabel(listingType) {
     decorations: 'украшения',
     nintendo_switch_online: 'Nintendo Switch Online',
     bonds: 'Bonds',
+    uc: 'UC',
+    metro_royale: 'Metro Royale',
+    escort: 'сопровождение',
+    popularity: 'популярность',
   };
   return map[type] || 'товары';
 }
