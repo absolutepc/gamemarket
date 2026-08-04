@@ -103,6 +103,21 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'metro_royale', label: 'Metro Royale' },
   { value: 'escort', label: 'Сопровождение' },
   { value: 'popularity', label: 'Популярность' },
+  // COD Mobile / FC Mobile / Standoff / MLBB / Brawl / BR / CoC / CR
+  { value: 'cp', label: 'CP' },
+  { value: 'battle_pass', label: 'Пропуск' },
+  { value: 'points', label: 'Points' },
+  { value: 'gems', label: 'Гемы' },
+  { value: 'gold_pass', label: 'Gold Pass' },
+  { value: 'clans', label: 'Кланы' },
+  { value: 'charisma', label: 'Харизма' },
+  { value: 'promo_actions', label: 'Промоакции' },
+  { value: 'friends', label: 'Друзья' },
+  { value: 'virts', label: 'Вирты' },
+  { value: 'bc', label: 'BC' },
+  { value: 'account_virts', label: 'Аккаунты с виртами' },
+  { value: 'callbacks', label: 'Обзвоны' },
+  { value: 'capital_gold', label: 'Золото столицы' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);
