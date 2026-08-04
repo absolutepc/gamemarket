@@ -39,6 +39,7 @@ import OwnerRoute from './components/OwnerRoute';
 import BecomeSellerPage from './pages/BecomeSellerPage';
 import CompleteAccountTypePage from './pages/CompleteAccountTypePage';
 import FoundersPage from './pages/FoundersPage';
+import FoundersInviteRedirect from './pages/FoundersInviteRedirect';
 import ImportListingsPage from './pages/ImportListingsPage';
 import useAuthStore from './store/authStore';
 
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="faq" element={<FaqPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="founders" element={<FoundersPage />} />
+        <Route path="invite/founders" element={<FoundersInviteRedirect />} />
         <Route path="contest" element={<ContestPage />} />
         <Route path="support" element={<SupportPage />} />
         <Route path="terms-of-sale" element={<TermsOfSalePage />} />
