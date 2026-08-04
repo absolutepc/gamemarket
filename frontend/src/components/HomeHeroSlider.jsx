@@ -149,7 +149,7 @@ function FoundersVisual({ sellersCount, foundersJoined, foundersLimit }) {
   const pct = Math.min(100, Math.round((joined / limit) * 100));
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center px-2">
+    <div className="relative w-full h-full flex items-center justify-center px-2 pt-1 lg:pt-0">
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                    w-[260px] h-[260px] rounded-full pointer-events-none"
@@ -370,7 +370,12 @@ export default function HomeHeroSlider() {
           <div className="flex-1 grid lg:grid-cols-[1.05fr_0.95fr] gap-4 lg:gap-6 items-stretch min-h-0">
             <div className="order-2 lg:order-1 min-h-0 flex flex-col">
               <div className="flex-1 min-h-0 flex flex-col justify-center">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3 w-fit">
+                {/* Founders: hide eyebrow on mobile — card already shows branding */}
+                <div
+                  className={`inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs sm:text-sm text-dark-200 mb-2.5 sm:mb-3 w-fit ${
+                    slide.tone === 'founders' ? 'hidden lg:inline-flex' : ''
+                  }`}
+                >
                   {slide.tone === 'contest' ? (
                     <>
                       <Trophy size={14} className="text-amber-300" />
@@ -445,7 +450,7 @@ export default function HomeHeroSlider() {
               </div>
             </div>
 
-            <div className="order-1 lg:order-2 h-[210px] sm:h-[240px] lg:h-auto min-h-0 flex items-center justify-center">
+            <div className="order-1 lg:order-2 h-[210px] sm:h-[240px] lg:h-auto min-h-0 flex items-center justify-center pt-2 sm:pt-3 lg:pt-0">
               {VisualNode}
             </div>
           </div>
