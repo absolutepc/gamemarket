@@ -66,6 +66,17 @@ export const REDUCED_LISTING_TYPES = new Set([
   'bonds',
   // PUBG Mobile currency
   'uc',
+  // COD / FC / Standoff / MLBB / Brawl / BR / CoC / CR
+  'cp',
+  'battle_pass',
+  'points',
+  'gems',
+  'gold_pass',
+  'virts',
+  'bc',
+  'account_virts',
+  'capital_gold',
+  'promo_actions',
 ]);
 
 /** For Arena Breakout only: force standard fee even if type is globally reduced. */
