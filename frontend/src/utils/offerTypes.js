@@ -79,6 +79,21 @@ export const OFFER_PATH_BY_TYPE = {
   metro_royale: 'metro-royale',
   escort: 'escort',
   popularity: 'popularity',
+  // COD / FC / Standoff / MLBB / Brawl / BR / CoC / CR
+  cp: 'cp',
+  battle_pass: 'battle-pass',
+  points: 'points',
+  gems: 'gems',
+  gold_pass: 'gold-pass',
+  clans: 'clans',
+  charisma: 'charisma',
+  promo_actions: 'promo-actions',
+  friends: 'friends',
+  virts: 'virts',
+  bc: 'bc',
+  account_virts: 'account-virts',
+  callbacks: 'callbacks',
+  capital_gold: 'capital-gold',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
@@ -163,7 +178,7 @@ export function offerSectionLabel(listingType) {
     design_packs: 'паки для дизайна',
     mochi: 'Mochi',
     servers: 'сервера',
-    gold: 'GOLD',
+    gold: 'голда',
     sounds: 'звуки',
     elixir: 'элексир',
     trovo_ace: 'Trovo Ace',
@@ -177,6 +192,20 @@ export function offerSectionLabel(listingType) {
     metro_royale: 'Metro Royale',
     escort: 'сопровождение',
     popularity: 'популярность',
+    cp: 'CP',
+    battle_pass: 'пропуск',
+    points: 'Points',
+    gems: 'гемы',
+    gold_pass: 'Gold Pass',
+    clans: 'кланы',
+    charisma: 'харизму',
+    promo_actions: 'промоакции',
+    friends: 'друзья',
+    virts: 'вирты',
+    bc: 'BC',
+    account_virts: 'аккаунты с виртами',
+    callbacks: 'обзвоны',
+    capital_gold: 'золото столицы',
   };
   return map[type] || 'товары';
 }
