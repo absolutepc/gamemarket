@@ -186,11 +186,7 @@ export default function AdminFoundersPage() {
           {founders.joined ?? 0}/{founders.limit ?? 100}
           {founders.pending_applications != null ? ` · ожидают: ${founders.pending_applications}` : ''}
         </span>
-        <button
-          type="button"
-          className="btn-secondary h-9 px-3 text-sm"
-          onClick={copyInvite}
-        >
+        <button type="button" className="btn-secondary h-9 px-3 text-sm" onClick={copyInvite}>
           Копировать invite-ссылку
         </button>
         <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
@@ -284,10 +280,7 @@ export default function AdminFoundersPage() {
             </div>
           ) : openSection === 'members' ? (
             sectionItems.map((m) => (
-              <div
-                key={m.id}
-                className="rounded-2xl border border-white/15 bg-black/30 p-4 text-white"
-              >
+              <div key={m.id} className="rounded-2xl border border-white/15 bg-black/30 p-4 text-white">
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                   <div>
                     <Link to={`/users/${m.username}`} className="font-semibold hover:text-brand-300">
@@ -321,10 +314,7 @@ export default function AdminFoundersPage() {
             ))
           ) : (
             sectionItems.map((a) => (
-              <div
-                key={a.id}
-                className="rounded-2xl border border-white/15 bg-black/30 p-4 text-white"
-              >
+              <div key={a.id} className="rounded-2xl border border-white/15 bg-black/30 p-4 text-white">
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                   <div>
                     <Link to={`/users/${a.username}`} className="font-semibold hover:text-brand-300">
