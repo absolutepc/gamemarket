@@ -107,7 +107,9 @@ export default function AdminFoundersPage() {
       toast.success(res.data?.number ? `Одобрено · Founding Seller #${res.data.number}` : 'Одобрено');
       invalidate();
     },
-    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Ошибка');
+    },
   });
 
   const rejectMutation = useMutation({
@@ -117,7 +119,9 @@ export default function AdminFoundersPage() {
       toast.success('Заявка отклонена');
       invalidate();
     },
-    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Ошибка');
+    },
   });
 
   const revokeMutation = useMutation({
@@ -128,7 +132,9 @@ export default function AdminFoundersPage() {
       toast.success(n ? `Статус снят · было #${n}` : 'Статус Founders снят');
       invalidate();
     },
-    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Ошибка');
+    },
   });
 
   const renumberMutation = useMutation({
@@ -138,7 +144,9 @@ export default function AdminFoundersPage() {
       toast.success(n ? `Номера сжаты: 1…${n}` : 'Нет участников для нумерации');
       invalidate();
     },
-    onError: (err) => toast.error(err.response?.data?.error || 'Ошибка'),
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Ошибка');
+    },
   });
 
   const revokeUser = (userId, noteKey) => {
@@ -189,7 +197,9 @@ export default function AdminFoundersPage() {
         <button type="button" className="btn-secondary h-9 px-3 text-sm" onClick={copyInvite}>
           Копировать invite-ссылку
         </button>
-        <Link to="/admin" className="ml-auto btn-ghost text-sm">← Админ-панель</Link>
+        <Link to="/admin" className="ml-auto btn-ghost text-sm">
+          ← Админ-панель
+        </Link>
       </div>
       <p className="text-sm text-dark-400 mb-6 max-w-2xl">
         Нажмите на раздел, чтобы открыть список и действия. Invite-ссылка открывает регистрацию продавца
