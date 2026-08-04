@@ -123,6 +123,8 @@ const LISTING_TYPES = [
   'plugins','guides','zems','packs','product_design','images','design_packs','mochi','servers','gold',
   'sounds','elixir','trovo_ace','mana','addons','nitro','decorations','nintendo_switch_online','ps_plus',
   'ea_play','youtube_music','youtube_tv','game_pass','ubisoft_plus','bonds',
+  // PUBG Mobile
+  'uc','metro_royale','escort','popularity',
 ];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [{ key: 'player_id', label: 'ID / ник', required: true }];
