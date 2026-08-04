@@ -10,6 +10,8 @@ const SELLER_EXPR = `(
   OR role IN ('admin', 'owner')
 )`;
 
+const ADMIN_EXPR = `role IN ('admin', 'owner')`;
+
 const PURCHASER_EXPR = `COALESCE(purchases_count, 0) > 0`;
 
 const ONLINE_EXPR = `last_seen_at IS NOT NULL AND last_seen_at >= NOW() - ($1::int * INTERVAL '1 minute')`;
@@ -32,7 +34,10 @@ async function getAdminAudienceStats(pool, { onlineMinutes = ONLINE_WINDOW_MINUT
          )::int AS founders_online,
 
          COUNT(*) FILTER (WHERE ${PURCHASER_EXPR})::int AS purchasers_total,
-         COUNT(*) FILTER (WHERE ${PURCHASER_EXPR} AND ${ONLINE_EXPR})::int AS purchasers_online
+         COUNT(*) FILTER (WHERE ${PURCHASER_EXPR} AND ${ONLINE_EXPR})::int AS purchasers_online,
+
+         COUNT(*) FILTER (WHERE ${ADMIN_EXPR})::int AS admins_total,
+         COUNT(*) FILTER (WHERE ${ADMIN_EXPR} AND ${ONLINE_EXPR})::int AS admins_online
        FROM users`,
       [minutes]
     );
@@ -45,6 +50,7 @@ async function getAdminAudienceStats(pool, { onlineMinutes = ONLINE_WINDOW_MINUT
       sellers: { total: r.sellers_total || 0, online: r.sellers_online || 0 },
       founders: { total: r.founders_total || 0, online: r.founders_online || 0 },
       purchasers: { total: r.purchasers_total || 0, online: r.purchasers_online || 0 },
+      admins: { total: r.admins_total || 0, online: r.admins_online || 0 },
     };
   } catch (err) {
     // Columns may be partially migrated — degrade gracefully
@@ -60,6 +66,7 @@ async function getAdminAudienceStats(pool, { onlineMinutes = ONLINE_WINDOW_MINUT
       sellers: { ...empty },
       founders: { ...empty },
       purchasers: { ...empty },
+      admins: { ...empty },
       partial: true,
     };
   }

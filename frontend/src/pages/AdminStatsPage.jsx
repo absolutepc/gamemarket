@@ -5,6 +5,7 @@ import {
   Store,
   Crown,
   ShoppingBag,
+  Shield,
   Activity,
   RefreshCw,
 } from 'lucide-react';
@@ -43,6 +44,14 @@ const CARDS = [
     icon: ShoppingBag,
     accent: 'text-violet-300',
     ring: 'ring-violet-500/20',
+  },
+  {
+    key: 'admins',
+    title: 'Админы',
+    hint: 'Роли admin и owner',
+    icon: Shield,
+    accent: 'text-rose-300',
+    ring: 'ring-rose-500/20',
   },
 ];
 
@@ -94,7 +103,7 @@ export default function AdminStatsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {CARDS.map((c) => (
             <div key={c.key} className="card h-36 animate-pulse" />
           ))}
@@ -109,7 +118,7 @@ export default function AdminStatsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {CARDS.map((c) => {
             const Icon = c.icon;
             const row = data?.[c.key] || { total: 0, online: 0 };
