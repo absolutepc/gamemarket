@@ -29,6 +29,8 @@ export default function Layout() {
   const listingWizard = isListingWizardPath(pathname);
   // Product detail + sell wizard: hide site header on mobile only (desktop keeps Playerok-style nav)
   const hideHeaderMobile = listingDetail || listingWizard;
+  // Profile & admin: hide search bar on mobile (keeps header, just no search)
+  const hideSearchMobile = pathname.startsWith('/users/') || pathname.startsWith('/admin');
 
   useEffect(() => {
     if (accessToken) hydrateUser();
@@ -125,8 +127,14 @@ export default function Layout() {
             </div>
           </div>
 
-          {/* Search — full width below brand on mobile; center on desktop */}
-          <form onSubmit={handleSearch} className="w-full lg:flex-1 lg:max-w-2xl lg:mx-auto relative order-last lg:order-none">
+          {/* Search — full width below brand on mobile; center on desktop.
+              Hidden on mobile for profile (/users/...) and admin panel. */}
+          <form
+            onSubmit={handleSearch}
+            className={`w-full lg:flex-1 lg:max-w-2xl lg:mx-auto relative order-last lg:order-none ${
+              hideSearchMobile ? 'hidden lg:block' : ''
+            }`}
+          >
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
             <input
               className="input pl-10 h-11 text-sm lg:text-base rounded-full lg:rounded-xl"
