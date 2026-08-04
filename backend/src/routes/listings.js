@@ -125,6 +125,9 @@ const LISTING_TYPES = [
   'ea_play','youtube_music','youtube_tv','game_pass','ubisoft_plus','bonds',
   // PUBG Mobile
   'uc','metro_royale','escort','popularity',
+  // COD / FC / Standoff / MLBB / Brawl / BR / CoC / CR
+  'cp','battle_pass','points','gems','gold_pass','clans','charisma','promo_actions',
+  'friends','virts','bc','account_virts','callbacks','capital_gold',
 ];
 
 const DEFAULT_AUTO_BUYER_FIELDS = [{ key: 'player_id', label: 'ID / ник', required: true }];
