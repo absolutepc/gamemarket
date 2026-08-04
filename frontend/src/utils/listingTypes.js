@@ -64,7 +64,7 @@ export const LISTING_TYPE_OPTIONS = [
   // ZEPETO
   { value: 'zems', label: 'Земы' },
   { value: 'packs', label: 'Наборы' },
-  // Дизайн
+  // Design catalog
   { value: 'product_design', label: 'Оформление товара' },
   { value: 'images', label: 'Изображения' },
   { value: 'design_packs', label: 'Паки для дизайна' },
@@ -72,9 +72,9 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'mochi', label: 'Mochi' },
   // TeamSpeak
   { value: 'servers', label: 'Сервера' },
-  // Clip Studio Paint
+  // Clip Studio
   { value: 'gold', label: 'GOLD' },
-  // Аудиоредакторы
+  // Audio
   { value: 'sounds', label: 'Звуки' },
   // Trovo
   { value: 'elixir', label: 'Элексир' },
@@ -82,20 +82,22 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'mana', label: 'Мана' },
   // Ahrefs
   { value: 'addons', label: 'Аддоны' },
-  // Discord
+  // Discord-ish
   { value: 'nitro', label: 'Nitro' },
   { value: 'decorations', label: 'Украшения' },
   // Nintendo
   { value: 'nintendo_switch_online', label: 'Nintendo Switch Online' },
-  // PlayStation
+  // Console
   { value: 'ps_plus', label: 'PS Plus' },
   { value: 'ea_play', label: 'EA Play' },
   // YouTube
   { value: 'youtube_music', label: 'YouTube Music' },
   { value: 'youtube_tv', label: 'YouTube TV' },
-  // Xbox
+  // Xbox / Ubisoft
   { value: 'game_pass', label: 'Game Pass' },
   { value: 'ubisoft_plus', label: 'Ubisoft+' },
+  // Arena Breakout
+  { value: 'bonds', label: 'Bonds' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);
@@ -103,3 +105,7 @@ export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);
 export const LISTING_TYPE_LABEL_BY_VALUE = Object.fromEntries(
   LISTING_TYPE_OPTIONS.map((o) => [o.value, o.label])
 );
+
+export function listingTypeLabel(value) {
+  return LISTING_TYPE_LABEL_BY_VALUE[value] || value || '—';
+}
