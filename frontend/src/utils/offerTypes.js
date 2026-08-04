@@ -180,3 +180,7 @@ export function offerSectionLabel(listingType) {
   };
   return map[type] || 'товары';
 }
+
+/** Aliases used by GameLandingPage and older imports */
+export const offerTypeLabel = offerSectionLabel;
+export const typeFromOfferPath = listingTypeFromOfferPath;
