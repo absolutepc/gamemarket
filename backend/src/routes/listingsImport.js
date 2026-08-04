@@ -194,6 +194,7 @@ router.post(
         const fee = calcPlatformFee(listing.price, {
           listingType,
           isFoundingSeller: req.user.is_founding_seller,
+          game,
         });
         created.push({
           ...listing,
