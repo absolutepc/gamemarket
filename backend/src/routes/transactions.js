@@ -74,6 +74,7 @@ router.post('/',
         categorySlug: listing.category_slug,
         listingType: listing.listing_type,
         isFoundingSeller: Boolean(listing.seller_is_founding),
+        game: listing.game,
       });
 
       await client.query(
