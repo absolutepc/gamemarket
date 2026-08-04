@@ -64,6 +64,8 @@ export const REDUCED_LISTING_TYPES = new Set([
   'decorations',
   'nintendo_switch_online',
   'bonds',
+  // PUBG Mobile currency
+  'uc',
 ]);
 
 /** For Arena Breakout only: force standard fee even if type is globally reduced. */

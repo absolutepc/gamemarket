@@ -98,6 +98,11 @@ export const LISTING_TYPE_OPTIONS = [
   { value: 'ubisoft_plus', label: 'Ubisoft+' },
   // Arena Breakout
   { value: 'bonds', label: 'Bonds' },
+  // PUBG Mobile
+  { value: 'uc', label: 'UC' },
+  { value: 'metro_royale', label: 'Metro Royale' },
+  { value: 'escort', label: 'Сопровождение' },
+  { value: 'popularity', label: 'Популярность' },
 ];
 
 export const LISTING_TYPE_VALUES = LISTING_TYPE_OPTIONS.map((o) => o.value);
