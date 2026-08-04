@@ -122,6 +122,21 @@ export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller,
   return reduced ? FEE_REDUCED : FEE_STANDARD;
 }
 
+/** Format decimal rate (0.075) as "7.5%". */
+export function formatFeePercent(percent) {
+  if (percent == null || Number.isNaN(Number(percent))) return '';
+  return `${(Number(percent) * 100).toFixed(1)}%`;
+}
+
+/** Seller payout from price + known fee rate (for create-wizard preview). */
+export function calcSellerReceives(price, feePercent) {
+  const amount = parseFloat(price) || 0;
+  const percent = Number(feePercent) || 0;
+  const fee = parseFloat((amount * percent).toFixed(2));
+  const sellerReceives = parseFloat((amount - fee).toFixed(2));
+  return { fee, sellerReceives, feePercent: percent };
+}
+
 export function calcPlatformFee(price, opts = {}) {
   const percent = resolveFeePercent(opts);
   const amount = parseFloat(price) || 0;
@@ -129,7 +144,7 @@ export function calcPlatformFee(price, opts = {}) {
   const sellerReceives = parseFloat((amount - fee).toFixed(2));
   return {
     feePercent: percent,
-    feePercentLabel: `${(percent * 100).toFixed(1)}%`,
+    feePercentLabel: formatFeePercent(percent),
     fee,
     sellerReceives,
     isFoundingSeller: Boolean(opts.isFoundingSeller),
