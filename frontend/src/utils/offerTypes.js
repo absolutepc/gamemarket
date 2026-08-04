@@ -73,97 +73,19 @@ export const OFFER_PATH_BY_TYPE = {
   nitro: 'nitro',
   decorations: 'decorations',
   nintendo_switch_online: 'nintendo-switch-online',
+  bonds: 'bonds',
 };
 
 export const TYPE_BY_OFFER_PATH = Object.fromEntries(
   Object.entries(OFFER_PATH_BY_TYPE).map(([type, path]) => [path, type])
 );
 
-export function offerPathForType(type) {
-  if (!type) return null;
-  return OFFER_PATH_BY_TYPE[type] || null;
+export function offerPathForType(listingType) {
+  if (!listingType) return null;
+  return OFFER_PATH_BY_TYPE[listingType] || null;
 }
 
-export function typeFromOfferPath(pathSeg) {
-  if (!pathSeg) return '';
-  return TYPE_BY_OFFER_PATH[String(pathSeg).toLowerCase()] || null;
-}
-
-export function offerTypeLabel(type) {
-  const map = {
-    subscription: 'подписку',
-    donate: 'донат',
-    account: 'аккаунты',
-    item: 'предметы',
-    topup: 'пополнение',
-    keys: 'ключи',
-    other: 'товары',
-    currency: 'игровую валюту',
-    game_account: 'аккаунты с играми',
-    clean_account: 'чистые аккаунты',
-    boosting: 'бусты',
-    services: 'услуги',
-    skins: 'скины',
-    games: 'игры',
-    media: 'медиа',
-    rental: 'аренду',
-    region_change: 'смену региона',
-    mods: 'моды',
-    design: 'дизайн',
-    training: 'обучение',
-    license: 'лицензию',
-    software: 'ПО',
-    giftcard: 'подарочные карты',
-    steam_rewards: 'награды Steam',
-    stars: 'звёзды',
-    premium: 'премиум',
-    nft_gifts: 'подарки NFT',
-    channels: 'каналы',
-    usernames: 'юзернеймы',
-    advertising: 'рекламу',
-    bots: 'ботов',
-    groups: 'группы',
-    stickers: 'стикеры',
-    clickers: 'кликеры',
-    coins: 'монеты',
-    promotion: 'продвижение',
-    montage: 'монтаж',
-    ps_plus: 'PS Plus',
-    ea_play: 'EA Play',
-    youtube_music: 'YouTube Music',
-    youtube_tv: 'YouTube TV',
-    game_pass: 'Game Pass',
-    ubisoft_plus: 'Ubisoft+',
-    voices: 'голоса',
-    vk_music: 'VK Music',
-    vk_play: 'VK Play',
-    gifts: 'подарки',
-    twitch_drops: 'Twitch Drops',
-    bits: 'Bits',
-    tariff: 'тариф',
-    tokens: 'токены',
-    diamonds: 'алмазы',
-    superlikes: 'суперлайки',
-    beans: 'бобы',
-    promocodes: 'промокоды',
-    plugins: 'плагины',
-    guides: 'руководства',
-    zems: 'земы',
-    packs: 'наборы',
-    product_design: 'оформление товара',
-    images: 'изображения',
-    design_packs: 'паки для дизайна',
-    mochi: 'Mochi',
-    servers: 'сервера',
-    gold: 'GOLD',
-    sounds: 'звуки',
-    elixir: 'элексир',
-    trovo_ace: 'Trovo Ace',
-    mana: 'ману',
-    addons: 'аддоны',
-    nitro: 'Nitro',
-    decorations: 'украшения',
-    nintendo_switch_online: 'Nintendo Switch Online',
-  };
-  return map[type] || 'товары';
+export function listingTypeFromOfferPath(pathSegment) {
+  if (!pathSegment) return null;
+  return TYPE_BY_OFFER_PATH[String(pathSegment).toLowerCase()] || null;
 }
