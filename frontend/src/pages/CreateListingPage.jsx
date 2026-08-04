@@ -225,6 +225,7 @@ export default function CreateListingPage() {
     );
   }, [assortmentQ, tabItems, visibleAssortment]);
 
+  /** When reduced-fee toggle is on: expand each app into reduced-fee listing types */
   const expandedFeeOffers = useMemo(() => {
     if (!feeFilterOn) return [];
     const offers = [];
@@ -255,6 +256,7 @@ export default function CreateListingPage() {
     });
   };
 
+  // Drop preselected type if it is not valid for the chosen game/app
   useEffect(() => {
     if (!form.game || !form.listing_type) return;
     const allowed = listingTypeOptionsForAssortment(form.game);
@@ -396,6 +398,7 @@ export default function CreateListingPage() {
   };
 
   const pickGame = (item) => {
+    // Select on first click; second click on the same tile advances (Далее)
     if (form.game === item.name) {
       goNext();
       return;
@@ -414,6 +417,7 @@ export default function CreateListingPage() {
     setAttributes({});
     setAccessType('');
     setAssortmentQ('');
+    // Stay on flow: jump to delivery after game+type chosen via fee filter
     setStep(2);
   };
 
@@ -485,6 +489,7 @@ export default function CreateListingPage() {
     try {
       const next = [];
       for (const file of files.slice(0, room)) {
+        // eslint-disable-next-line no-await-in-loop
         const dataUrl = await compressImageFile(file);
         next.push(dataUrl);
       }
@@ -533,6 +538,7 @@ export default function CreateListingPage() {
         path={isEdit ? `/listings/${id}/edit` : '/listings/create'}
         noindex
       />
+
       <div className="sticky top-0 lg:top-20 z-40 bg-dark-950/95 backdrop-blur">
         <div className={PAGE_WIDTH_CLASS}>
           <div className="h-12 flex items-center gap-2">
@@ -551,7 +557,9 @@ export default function CreateListingPage() {
           </div>
         </div>
       </div>
+
       <div className={`flex-1 ${PAGE_WIDTH_CLASS} w-full py-4 pb-28`}>
+        {/* Context chip after game picked */}
         {step > 0 && selectedGame && (
           <div className="flex items-center gap-3 mb-3">
             <img
@@ -571,6 +579,161 @@ export default function CreateListingPage() {
             )}
           </div>
         )}
+
+        {/* STEP: game */}
+        {stepId === 'game' && (
+          <div>
+            <div className="relative mb-3">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400" />
+              <input
+                className="input pl-10 h-11 rounded-full"
+                placeholder="Поиск игр и приложений"
+                value={assortmentQ}
+                onChange={(e) => setAssortmentQ(e.target.value)}
+              />
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto mb-3" style={{ scrollbarWidth: 'none' }}>
+              {ASSORTMENT_TABS.map((tab) => {
+                const active = assortmentTab === tab.id;
+                const Icon = TAB_ICONS[tab.id] || Layers;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => { setAssortmentTab(tab.id); setAssortmentQ(''); }}
+                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-colors duration-150 ${
+                      active
+                        ? 'bg-[#2B71F3] text-white'
+                        : 'bg-dark-900 text-dark-300 border border-dark-800 hover:bg-[#2B71F3]/25 hover:border-[#2B71F3]/60 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {tab.label}
+                    <span className={`text-xs ${active ? 'text-white/70' : 'text-dark-500'}`}>
+                      {tabCounts[tab.id] || 0}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-2.5 mb-4 px-0.5">
+              <div className="flex items-center gap-1.5 text-sm text-emerald-400 font-medium">
+                <Tag size={14} />
+                Платёж {formatFeePercent(reducedFeePercent)}
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={feeFilterOn}
+                aria-label={`Показать типы лотов с комиссией ${formatFeePercent(reducedFeePercent)}`}
+                onClick={() => setFeeFilterOn((v) => !v)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${
+                  feeFilterOn ? 'bg-[#2B71F3]' : 'bg-dark-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                    feeFilterOn ? 'translate-x-5' : ''
+                  }`}
+                />
+              </button>
+            </div>
+
+            {feeFilterOn ? (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
+                {expandedFeeOffers.map(({ item, type }) => {
+                  const selected = form.game === item.name && form.listing_type === type.value;
+                  return (
+                  <button
+                    key={`${item.name}:${type.value}`}
+                    type="button"
+                    onClick={() => pickExpandedOffer(item, type.value)}
+                    className="flex flex-col items-center gap-1.5 group text-left"
+                  >
+                    <div
+                      className={`relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
+                                 transition-all duration-150 group-active:scale-95 ${
+                                   selected
+                                     ? 'ring-2 ring-[#2B71F3] shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                     : 'ring-1 ring-white/10 group-hover:ring-2 group-hover:ring-[#2B71F3] group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                 }`}
+                    >
+                      <img
+                        src={item.icon || FALLBACK_ICON}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
+                      />
+                      <span className="absolute top-0 left-0">
+                        <FeeBadge percent={reducedFeePercent} className="rounded-none rounded-br-md" />
+                      </span>
+                    </div>
+                    <span className={`text-[11px] text-center line-clamp-1 leading-tight w-full font-medium transition-colors ${
+                      selected ? 'text-[#8EB6FF]' : 'text-white group-hover:text-[#8EB6FF]'
+                    }`}>
+                      {item.name}
+                    </span>
+                    <span className="text-[10px] text-dark-400 text-center line-clamp-1 leading-tight w-full">
+                      {type.label}
+                    </span>
+                  </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
+                {filteredAssortment.map((item) => {
+                  const selected = form.game === item.name;
+                  return (
+                  <button
+                    key={`${item.kind}-${item.name}`}
+                    type="button"
+                    onClick={() => pickGame(item)}
+                    className="flex flex-col items-center gap-1.5 group"
+                  >
+                    <div
+                      className={`relative w-full aspect-square rounded-2xl overflow-hidden bg-dark-800
+                                 transition-all duration-150 group-active:scale-95 ${
+                                   selected
+                                     ? 'ring-2 ring-[#2B71F3] shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                     : 'ring-1 ring-white/10 group-hover:ring-2 group-hover:ring-[#2B71F3] group-hover:shadow-[0_0_0_3px_rgba(43,113,243,0.35)]'
+                                 }`}
+                    >
+                      <img
+                        src={item.icon || FALLBACK_ICON}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_ICON; }}
+                      />
+                    </div>
+                    <span className={`text-[11px] text-center line-clamp-2 leading-tight w-full transition-colors ${
+                      selected ? 'text-[#8EB6FF] font-medium' : 'text-dark-300 group-hover:text-[#8EB6FF]'
+                    }`}>
+                      {item.name}
+                    </span>
+                  </button>
+                  );
+                })}
+              </div>
+            )}
+            {!!(feeFilterOn ? expandedFeeOffers.length : filteredAssortment.length) && (
+              <p className="text-center text-dark-500 text-xs mt-4">
+                {(feeFilterOn ? expandedFeeOffers.length : filteredAssortment.length).toLocaleString('ru-RU')}{' '}
+                {feeFilterOn ? 'вариантов' : 'позиций'}
+                {form.game && stepId === 'game' ? ' · нажмите «Далее» или ещё раз по выбранной иконке' : ''}
+              </p>
+            )}
+            {!(feeFilterOn ? expandedFeeOffers.length : filteredAssortment.length) && (
+              <p className="text-center text-dark-400 text-sm py-10">Ничего не найдено</p>
+            )}
+          </div>
+        )}
+
+        {/* STEP: type */}
         {stepId === 'type' && (
           <div>
             <div className="flex flex-col gap-1">
@@ -601,30 +764,296 @@ export default function CreateListingPage() {
             </div>
           </div>
         )}
-        {stepId !== 'type' && stepId !== 'game' && (
-          <p className="text-dark-400 text-sm">Продолжите заполнение формы (шаг: {STEPS[step]?.title})</p>
-        )}
-        {stepId === 'game' && (
-          <div>
-            <p className="text-dark-300 mb-4">Выберите игру или приложение</p>
-            <div className="grid grid-cols-4 gap-3">
-              {filteredAssortment.slice(0, 48).map((item) => (
+
+        {/* STEP: delivery */}
+        {stepId === 'delivery' && (
+          <div className="flex flex-col gap-3">
+            {needsAccessType(form.listing_type) && (
+              <>
+                {ACCESS_OPTIONS.map((opt) => {
+                  const active = accessType === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setAccessType(opt.value)}
+                      className={`flex items-start gap-3 w-full rounded-2xl px-4 py-3.5 text-left border ${
+                        active ? 'border-[#2B71F3] bg-[#2B71F3]/10' : 'border-dark-800 bg-dark-900'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-white">{opt.title}</p>
+                        <p className="text-sm text-dark-400 mt-0.5">{opt.description}</p>
+                      </div>
+                      <span
+                        className={`mt-1 w-5 h-5 rounded-full border-2 shrink-0 ${
+                          active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-600'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+                <div className="h-px bg-dark-800 my-1" />
+              </>
+            )}
+
+            {[
+              {
+                value: 'manual',
+                title: 'Вручную через чат',
+                description: 'Передадите товар покупателю в чате сделки после оплаты',
+              },
+              {
+                value: 'auto',
+                title: 'Автовыдача',
+                description: 'Покупатель укажет данные, товар выдаётся по инструкции',
+              },
+            ].map((opt) => {
+              const active = form.delivery_method === opt.value;
+              return (
                 <button
-                  key={`${item.kind}-${item.name}`}
+                  key={opt.value}
                   type="button"
-                  onClick={() => pickGame(item)}
-                  className="flex flex-col items-center gap-1.5"
+                  onClick={() => patchForm('delivery_method', opt.value)}
+                  className={`flex items-start gap-3 w-full rounded-2xl px-4 py-3.5 text-left border ${
+                    active ? 'border-[#2B71F3] bg-[#2B71F3]/10' : 'border-dark-800 bg-dark-900'
+                  }`}
                 >
-                  <div className="w-full aspect-square rounded-2xl overflow-hidden bg-dark-800 ring-1 ring-white/10">
-                    <img src={item.icon || FALLBACK_ICON} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <Package size={18} className="text-dark-300 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-white">{opt.title}</p>
+                    <p className="text-sm text-dark-400 mt-0.5">{opt.description}</p>
                   </div>
-                  <span className="text-[11px] text-center line-clamp-2 text-dark-300">{item.name}</span>
+                  <span
+                    className={`mt-1 w-5 h-5 rounded-full border-2 shrink-0 ${
+                      active ? 'border-[#2B71F3] bg-[#2B71F3]' : 'border-dark-600'
+                    }`}
+                  />
                 </button>
-              ))}
+              );
+            })}
+          </div>
+        )}
+
+        {/* STEP: attributes */}
+        {stepId === 'attributes' && (
+          <div className="flex flex-col gap-5">
+            {attributeSchema.map((group) => (
+              <ChipGroup
+                key={group.key}
+                label={group.label}
+                options={group.options}
+                value={attributes[group.key] || ''}
+                onChange={(v) => setAttributes((prev) => ({ ...prev, [group.key]: v }))}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* STEP: images */}
+        {stepId === 'images' && (
+          <div className="flex flex-col items-center">
+            <label className="w-full max-w-sm aspect-[4/3] rounded-2xl border border-dashed border-dark-600
+                              bg-dark-900 flex flex-col items-center justify-center gap-3 cursor-pointer
+                              hover:border-[#2B71F3]/50 transition-colors">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                className="hidden"
+                onChange={onPickImages}
+                disabled={compressing || images.length >= MAX_IMAGES}
+              />
+              <div className="w-14 h-14 rounded-full bg-dark-800 flex items-center justify-center text-[#2B71F3]">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                  <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
+                  <path d="M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
+                </svg>
+              </div>
+              <span className="text-[#2B71F3] font-medium">
+                {compressing ? 'Сжимаем…' : 'Загрузить'}
+              </span>
+            </label>
+            <p className="text-sm text-dark-400 mt-4 text-center">
+              Загрузите фото 4:3 в порядке выбора на устройстве
+            </p>
+            {images.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 w-full mt-5">
+                {images.map((src, i) => (
+                  <div key={`${i}-${src.slice(0, 24)}`} className="relative aspect-[4/3] rounded-xl overflow-hidden">
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP: about */}
+        {stepId === 'about' && (
+          <div className="flex flex-col gap-3">
+            <input
+              className="input h-12"
+              placeholder="Название товара"
+              value={form.title}
+              onChange={(e) => patchForm('title', e.target.value)}
+            />
+            <textarea
+              className="input min-h-[160px] resize-none py-3"
+              placeholder="Описание товара"
+              value={form.description}
+              onChange={(e) => patchForm('description', e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* STEP: price */}
+        {stepId === 'price' && (
+          <div>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-2">
+              <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3">
+                <p className="text-xs text-dark-400 mb-1">Цена товара</p>
+                <div className="flex items-baseline gap-1">
+                  <input
+                    className="bg-transparent text-2xl font-bold text-white w-full outline-none"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={form.price}
+                    onChange={(e) => patchForm('price', e.target.value.replace(/[^\d.]/g, ''))}
+                  />
+                  <span className="text-dark-400 shrink-0">₽</span>
+                </div>
+              </div>
+              <div className="flex items-center text-dark-500 px-0.5">↔</div>
+              <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3">
+                <p className="text-xs text-dark-400 mb-1">Доход</p>
+                <p className="text-2xl font-bold text-emerald-400 truncate">
+                  {form.price ? Math.round(feePreview.sellerReceives) : '—'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-sm text-emerald-400">
+              <Tag size={14} />
+              Платёж {formatFeePercent(feePercent)}
+            </div>
+            <p className="text-xs text-dark-500 mt-2">
+              Комиссия площадки удерживается при выплате. За вывод средств комиссию не берём.
+            </p>
+          </div>
+        )}
+
+        {/* STEP: product data */}
+        {stepId === 'product' && (
+          <div className="flex flex-col gap-3">
+            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3">
+              <p className="text-sm font-medium text-white flex items-center gap-2 mb-1">
+                <Package size={16} /> Способ передачи
+              </p>
+              <p className="text-sm text-white">
+                {form.delivery_method === 'auto' ? 'Автовыдача' : 'Вручную через чат'}
+                {accessType ? ` · ${accessType === 'full' ? 'Полный доступ' : 'Общий доступ'}` : ''}
+              </p>
+              <p className="text-xs text-dark-400 mt-0.5">
+                {form.delivery_method === 'auto'
+                  ? 'Покупатель заполнит поля при покупке'
+                  : 'Передадите данные в чате после оплаты'}
+              </p>
+            </div>
+
+            {form.delivery_method === 'auto' ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-dark-300">Что должен указать покупатель</p>
+                {buyerFields.map((field, idx) => (
+                  <input
+                    key={idx}
+                    className="input"
+                    placeholder="Например: ID / ник"
+                    value={field.label}
+                    onChange={(e) => {
+                      const next = [...buyerFields];
+                      next[idx] = { ...next[idx], label: e.target.value };
+                      setBuyerFields(next);
+                    }}
+                  />
+                ))}
+                {buyerFields.length < 5 && (
+                  <button
+                    type="button"
+                    className="btn-ghost text-sm self-start"
+                    onClick={() => setBuyerFields((prev) => [...prev, { key: `field_${prev.length}`, label: '', required: true }])}
+                  >
+                    + Поле
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div>
+                  <input
+                    className={`input ${triedNext && !productLogin.trim() ? 'border-red-500/60 bg-red-500/10' : ''}`}
+                    placeholder="Логин"
+                    value={productLogin}
+                    onChange={(e) => setProductLogin(e.target.value)}
+                    autoComplete="off"
+                  />
+                  {triedNext && !productLogin.trim() && needsAccessType(form.listing_type) && (
+                    <p className="text-xs text-red-400 mt-1">Обязательное поле</p>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    className={`input pr-10 ${triedNext && !productPassword.trim() ? 'border-red-500/60 bg-red-500/10' : ''}`}
+                    placeholder="Пароль"
+                    type={showPassword ? 'text' : 'password'}
+                    value={productPassword}
+                    onChange={(e) => setProductPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400"
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                  {triedNext && !productPassword.trim() && needsAccessType(form.listing_type) && (
+                    <p className="text-xs text-red-400 mt-1">Обязательное поле</p>
+                  )}
+                </div>
+                <textarea
+                  className="input min-h-[88px] resize-none py-3"
+                  placeholder="Комментарий"
+                  value={productComment}
+                  onChange={(e) => setProductComment(e.target.value)}
+                />
+              </>
+            )}
+
+            <button type="button" className="flex items-center gap-2 text-sm text-yellow-400/90 self-start mt-1">
+              <Shield size={14} /> Данные защищены
+            </button>
+
+            <div className="rounded-2xl bg-dark-900 border border-dark-800 px-4 py-3 mt-1">
+              <p className="text-sm font-medium text-white flex items-center gap-2 mb-2">
+                <Info size={14} /> Инструкция после продажи
+              </p>
+              <ul className="text-sm text-[#5B8CFF] space-y-1.5 list-disc pl-4">
+                <li>Удержание средств: оплата держится на стороне площадки до подтверждения.</li>
+                <li>Выполнение заказа: откройте чат сделки и передайте товар покупателю.</li>
+              </ul>
             </div>
           </div>
         )}
       </div>
+
+      {/* Footer CTA */}
       <div className="fixed inset-x-0 bottom-0 z-40 bg-dark-950/95 backdrop-blur border-t border-dark-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className={`${PAGE_WIDTH_CLASS} py-3`}>
           {stepId === 'product' ? (
@@ -632,7 +1061,8 @@ export default function CreateListingPage() {
               type="button"
               onClick={onPublish}
               disabled={mutation.isPending || !canPrimary}
-              className="w-full h-12 rounded-2xl font-semibold text-white bg-[#2B71F3] hover:bg-[#3d7ff5] disabled:opacity-40"
+              className="w-full h-12 rounded-2xl font-semibold text-white transition-colors disabled:opacity-40
+                         bg-[#2B71F3] hover:bg-[#3d7ff5]"
             >
               {mutation.isPending ? 'Публикуем…' : isEdit ? 'Сохранить' : 'Опубликовать'}
             </button>
@@ -641,7 +1071,8 @@ export default function CreateListingPage() {
               type="button"
               onClick={goNext}
               disabled={stepId === 'images' ? false : !canPrimary}
-              className="w-full h-12 rounded-2xl font-semibold text-white bg-[#2B71F3] hover:bg-[#3d7ff5] disabled:opacity-40 disabled:bg-dark-700"
+              className="w-full h-12 rounded-2xl font-semibold text-white transition-colors disabled:opacity-40
+                         disabled:bg-dark-700 bg-[#2B71F3] hover:bg-[#3d7ff5]"
             >
               Далее
             </button>
