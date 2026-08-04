@@ -1,6 +1,9 @@
 /**
  * Lootz fees: like Playerok, but 2.5% lower.
  * 7.5% / 17.5% standard; Founders: 5% / 13%.
+ *
+ * Game overrides:
+ * Arena Breakout (mobile, not Infinite): boosting + item → standard 17.5%.
  */
 
 export const FEE_REDUCED = 0.075;
@@ -63,11 +66,37 @@ export const REDUCED_LISTING_TYPES = new Set([
   'bonds',
 ]);
 
-export function isReducedFeeListingType(listingType) {
+/** For Arena Breakout only: force standard fee even if type is globally reduced. */
+export const ARENA_BREAKOUT_FORCE_STANDARD = new Set(['boosting', 'item']);
+
+export function isArenaBreakoutGame(game) {
+  const n = String(game || '')
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .trim();
+  if (!n || n.includes('infinite')) return false;
+  return n === 'arena breakout' || n.startsWith('arena breakout ');
+}
+
+export function isReducedFeeListingType(listingType, game) {
+  if (
+    listingType
+    && isArenaBreakoutGame(game)
+    && ARENA_BREAKOUT_FORCE_STANDARD.has(listingType)
+  ) {
+    return false;
+  }
   return REDUCED_LISTING_TYPES.has(listingType);
 }
 
-function isReducedTier({ categorySlug, listingType } = {}) {
+function isReducedTier({ categorySlug, listingType, game } = {}) {
+  if (
+    listingType
+    && isArenaBreakoutGame(game)
+    && ARENA_BREAKOUT_FORCE_STANDARD.has(listingType)
+  ) {
+    return false;
+  }
   if (listingType && REDUCED_LISTING_TYPES.has(listingType)) return true;
   if (categorySlug && REDUCED_CATEGORY_SLUGS.has(categorySlug)) return true;
   return false;
@@ -82,8 +111,8 @@ export function resolveReducedFeePercent(isFoundingSeller) {
   return isFoundingFlag(isFoundingSeller) ? FEE_FOUNDERS_REDUCED : FEE_REDUCED;
 }
 
-export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
-  const reduced = isReducedTier({ categorySlug, listingType });
+export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller, game } = {}) {
+  const reduced = isReducedTier({ categorySlug, listingType, game });
   const founding = isFoundingFlag(isFoundingSeller);
   if (founding) {
     return reduced ? FEE_FOUNDERS_REDUCED : FEE_FOUNDERS_STANDARD;
