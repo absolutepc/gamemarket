@@ -142,8 +142,8 @@ export default function FoundersPage() {
         <div className="card p-6 text-center">
           <p className="text-dark-300 mb-4">Войдите, чтобы подать заявку в Founders</p>
           <div className="flex flex-wrap justify-center gap-2">
-            <Link to="/login" className="btn-primary">Войти</Link>
-            <Link to="/register" className="btn-secondary">Регистрация</Link>
+            <Link to="/login?next=/founders" className="btn-primary">Войти</Link>
+            <Link to="/invite/founders" className="btn-secondary">Регистрация продавца</Link>
           </div>
         </div>
       )}
