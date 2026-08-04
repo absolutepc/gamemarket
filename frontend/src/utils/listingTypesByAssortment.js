@@ -10,6 +10,7 @@ import {
   PUBG_MOBILE_LABELS,
   isPubgMobile,
 } from './pubgMobileListingTypes';
+import { resolveMobileGameOverride } from './mobileGamesListingTypes';
 
 /**
  * Allowed listing types by assortment kind.
@@ -37,13 +38,14 @@ function resolveContext(gameOrItem) {
 
 export function allowedListingTypesForAssortment(gameOrItem) {
   const { raw, itemName, itemSearch, kind } = resolveContext(gameOrItem);
-  // Match on resolved catalog name AND raw form.game string
   if (isArenaBreakout(itemName, itemSearch) || isArenaBreakout(raw, '')) {
     return ARENA_BREAKOUT_TYPES;
   }
   if (isPubgMobile(itemName, itemSearch) || isPubgMobile(raw, '')) {
     return PUBG_MOBILE_TYPES;
   }
+  const mobileOverride = resolveMobileGameOverride(itemName, itemSearch, raw);
+  if (mobileOverride) return mobileOverride.types;
   return TYPES_BY_KIND[kind] || TYPES_BY_KIND.app;
 }
 
@@ -56,6 +58,9 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
     labelMap = ARENA_BREAKOUT_LABELS;
   } else if (isPubgMobile(itemName, itemSearch) || isPubgMobile(raw, '')) {
     labelMap = PUBG_MOBILE_LABELS;
+  } else {
+    const mobileOverride = resolveMobileGameOverride(itemName, itemSearch, raw);
+    if (mobileOverride) labelMap = mobileOverride.labels;
   }
   return allowed
     .filter((value) => Boolean(byValue[value]))
