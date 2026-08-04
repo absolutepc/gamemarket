@@ -1,6 +1,6 @@
 /**
- * Lootz fees: Playerok-like tiers, ~2.5% lower.
- * Playerok ~10% / ~20%  →  Lootz 7.5% / 17.5%
+ * Lootz fees: like Playerok, but 2.5% lower.
+ * Standard: 7.5% / 17.5%
  * Founders: 5% / 13%
  *
  * 7.5% (5% founders): донат, подписки, пополнение, ключи, валюта, карты, премиум-тиры и т.п.
@@ -64,6 +64,7 @@ const REDUCED_LISTING_TYPES = new Set([
   'nitro',
   'decorations',
   'nintendo_switch_online',
+  'bonds',
 ]);
 
 function isReducedTier({ categorySlug, listingType } = {}) {

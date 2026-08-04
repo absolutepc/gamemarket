@@ -60,6 +60,7 @@ export const REDUCED_LISTING_TYPES = new Set([
   'nitro',
   'decorations',
   'nintendo_switch_online',
+  'bonds',
 ]);
 
 export function isReducedFeeListingType(listingType) {
@@ -81,11 +82,6 @@ export function resolveReducedFeePercent(isFoundingSeller) {
   return isFoundingFlag(isFoundingSeller) ? FEE_FOUNDERS_REDUCED : FEE_REDUCED;
 }
 
-/** Standard-tier rate (17.5% or Founders 13%). */
-export function resolveStandardFeePercent(isFoundingSeller) {
-  return isFoundingFlag(isFoundingSeller) ? FEE_FOUNDERS_STANDARD : FEE_STANDARD;
-}
-
 export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller } = {}) {
   const reduced = isReducedTier({ categorySlug, listingType });
   const founding = isFoundingFlag(isFoundingSeller);
@@ -95,15 +91,20 @@ export function resolveFeePercent({ categorySlug, listingType, isFoundingSeller 
   return reduced ? FEE_REDUCED : FEE_STANDARD;
 }
 
-export function formatFeePercent(percent) {
-  return `${(percent * 100).toFixed(1).replace(/\.0$/, '')}%`;
+export function calcPlatformFee(price, opts = {}) {
+  const percent = resolveFeePercent(opts);
+  const amount = parseFloat(price) || 0;
+  const fee = parseFloat((amount * percent).toFixed(2));
+  const sellerReceives = parseFloat((amount - fee).toFixed(2));
+  return {
+    feePercent: percent,
+    feePercentLabel: `${(percent * 100).toFixed(1)}%`,
+    fee,
+    sellerReceives,
+    isFoundingSeller: Boolean(opts.isFoundingSeller),
+  };
 }
 
-export function calcSellerReceives(price, percent) {
-  const amount = parseFloat(price) || 0;
-  const fee = amount * percent;
-  return {
-    fee,
-    sellerReceives: amount - fee,
-  };
+export function feePercentForCategorySlug(slug) {
+  return resolveFeePercent({ categorySlug: slug });
 }
