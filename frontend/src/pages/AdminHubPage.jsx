@@ -17,7 +17,7 @@ const SECTIONS = [
   {
     to: '/admin/stats',
     title: 'Статистика',
-    hint: 'Пользователи, продавцы, Founders, онлайн',
+    hint: 'Пользователи, продавцы, Founders, админы, онлайн',
     icon: Activity,
     accent: 'text-sky-300',
     ring: 'ring-sky-500/20',
