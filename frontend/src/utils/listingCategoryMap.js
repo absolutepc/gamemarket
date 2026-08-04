@@ -73,6 +73,12 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   nitro: 'subscriptions',
   decorations: 'other',
   nintendo_switch_online: 'subscriptions',
+  bonds: 'topups',
+  // PUBG Mobile
+  uc: 'topups',
+  metro_royale: 'items',
+  escort: 'boosting',
+  popularity: 'boosting',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
