@@ -1,4 +1,5 @@
 import { getDeviceFingerprint } from './deviceFingerprint';
+import { clearFoundersInvite, hasFoundersInvite } from './foundersInvite';
 
 const STORAGE_KEY = 'oauth_account_choice';
 
@@ -52,8 +53,15 @@ export function pathAfterOAuth(data) {
   if (data?.needs_account_type || data?.user?.needs_account_type) {
     return '/complete-account-type';
   }
+  const foundersInvite = hasFoundersInvite();
+  if (foundersInvite) {
+    clearFoundersInvite();
+    if (data?.user?.account_type === 'seller' || data?.created) {
+      return '/founders';
+    }
+  }
   if (data?.created && data?.user?.account_type === 'seller') {
-    return '/listings/create';
+    return '/founders';
   }
   return '/';
 }
