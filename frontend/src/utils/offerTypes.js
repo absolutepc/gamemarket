@@ -95,7 +95,7 @@ export function listingTypeFromOfferPath(pathSegment) {
   return TYPE_BY_OFFER_PATH[String(pathSegment).toLowerCase()] || null;
 }
 
-/** Human-readable offer section for SEO / UI (genitive / nominative as needed) */
+/** Human-readable offer section for SEO / UI */
 export function offerSectionLabel(listingType) {
   const type = listingType;
   const map = {
@@ -181,6 +181,6 @@ export function offerSectionLabel(listingType) {
   return map[type] || 'товары';
 }
 
-/** Aliases for existing call sites */
+/** Aliases used by GameLandingPage and older imports */
 export const offerTypeLabel = offerSectionLabel;
 export const typeFromOfferPath = listingTypeFromOfferPath;
