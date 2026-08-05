@@ -10,61 +10,25 @@ import {
   PUBG_MOBILE_LABELS,
   isPubgMobile,
 } from './pubgMobileListingTypes';
-import { resolveMobileGameOverride } from './mobileGamesListingTypes';
 
 /**
  * Allowed listing types by assortment kind.
- * Apps must not offer game-only sections like skins/currency.
+ * State: before «Обнови типы лотов для этих игр» — Arena + PUBG Mobile + app-specific.
  */
 const TYPES_BY_KIND = {
   app: [
-    'subscription',
-    'account',
-    'topup',
-    'keys',
-    'services',
-    'media',
-    'rental',
-    'design',
-    'training',
-    'other',
+    'subscription', 'account', 'topup', 'keys', 'services', 'media',
+    'rental', 'design', 'training', 'other',
   ],
   mobile: [
-    'donate',
-    'subscription',
-    'account',
-    'item',
-    'topup',
-    'currency',
-    'skins',
-    'boosting',
-    'services',
-    'game_account',
-    'rental',
-    'other',
+    'donate', 'subscription', 'account', 'item', 'topup', 'currency',
+    'skins', 'boosting', 'services', 'game_account', 'rental', 'other',
   ],
   pc: [
-    'donate',
-    'account',
-    'item',
-    'topup',
-    'keys',
-    'currency',
-    'game_account',
-    'boosting',
-    'services',
-    'skins',
-    'games',
-    'rental',
-    'mods',
-    'other',
+    'donate', 'account', 'item', 'topup', 'keys', 'currency', 'game_account',
+    'boosting', 'services', 'skins', 'games', 'rental', 'mods', 'other',
   ],
 };
-
-const GAME_PLATFORM_TYPES = [
-  'donate', 'subscription', 'account', 'item', 'topup', 'keys', 'currency',
-  'game_account', 'boosting', 'services', 'skins', 'games', 'rental', 'mods', 'other',
-];
 
 const STEAM_TYPES = ['topup', 'games', 'region_change', 'game_account', 'clean_account', 'item', 'services', 'other', 'steam_rewards', 'rental'];
 const STEAM_LABELS = { topup: 'Пополнение', games: 'Игры', region_change: 'Смена региона', game_account: 'Аккаунты с играми', clean_account: 'Чистые аккаунты', item: 'Предметы', services: 'Услуги', other: 'Другое', steam_rewards: 'Награды Steam', rental: 'Аренда' };
@@ -138,8 +102,6 @@ export function allowedListingTypesForAssortment(gameOrItem) {
   if (isPubgMobile(item?.name || name, item?.search) || isPubgMobile(name, '')) {
     return PUBG_MOBILE_TYPES;
   }
-  const mobileOverride = resolveMobileGameOverride(item?.name || name, item?.search || '', name);
-  if (mobileOverride) return mobileOverride.types;
 
   if (isSteam(item?.name || name, item?.search)) return STEAM_TYPES;
   if (isTelegram(item?.name || name, item?.search)) return TELEGRAM_TYPES;
@@ -162,18 +124,14 @@ export function listingTypeOptionsForAssortment(gameOrItem) {
   let labelMap = null;
   if (isArenaBreakout(itemName, itemSearch)) labelMap = ARENA_BREAKOUT_LABELS;
   else if (isPubgMobile(itemName, itemSearch)) labelMap = PUBG_MOBILE_LABELS;
-  else {
-    const mobile = resolveMobileGameOverride(itemName, itemSearch, itemName);
-    if (mobile) labelMap = mobile.labels;
-    else if (isSteam(itemName, itemSearch)) labelMap = STEAM_LABELS;
-    else if (isTelegram(itemName, itemSearch)) labelMap = TELEGRAM_LABELS;
-    else if (isTiktok(itemName, itemSearch)) labelMap = TIKTOK_LABELS;
-    else if (isDiscord(itemName, itemSearch)) labelMap = DISCORD_LABELS;
-    else if (isNetflix(itemName, itemSearch)) labelMap = NETFLIX_LABELS;
-    else if (isSpotify(itemName, itemSearch)) labelMap = SPOTIFY_LABELS;
-    else if (isYoutube(itemName, itemSearch)) labelMap = YOUTUBE_LABELS;
-    else if (isApple(itemName, itemSearch)) labelMap = APPLE_LABELS;
-  }
+  else if (isSteam(itemName, itemSearch)) labelMap = STEAM_LABELS;
+  else if (isTelegram(itemName, itemSearch)) labelMap = TELEGRAM_LABELS;
+  else if (isTiktok(itemName, itemSearch)) labelMap = TIKTOK_LABELS;
+  else if (isDiscord(itemName, itemSearch)) labelMap = DISCORD_LABELS;
+  else if (isNetflix(itemName, itemSearch)) labelMap = NETFLIX_LABELS;
+  else if (isSpotify(itemName, itemSearch)) labelMap = SPOTIFY_LABELS;
+  else if (isYoutube(itemName, itemSearch)) labelMap = YOUTUBE_LABELS;
+  else if (isApple(itemName, itemSearch)) labelMap = APPLE_LABELS;
 
   return allowed
     .filter((value) => Boolean(byValue[value]))
