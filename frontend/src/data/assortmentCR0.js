@@ -26,36 +26,85 @@ Rockstar Games|Rockstar|rockstar-games|a
 Kimi|Kimi|kimi|a
 ВКонтакте|ВКонтакте|vk|a
 Perplexity|Perplexity|perplexity|a
-Arena Breakout|Arena Breakout|arena-breakout|m
-PUBG Mobile|PUBG Mobile|pubg-mobile|m
-CoD Mobile|Call of Duty Mobile|cod-mobile|m
-Standoff 2|Standoff 2|standoff-2|m
-Brawl Stars|Brawl Stars|brawl-stars|m
-Clash of Clans|Clash of Clans|clash-of-clans|m
-Clash Royale|Clash Royale|clash-royale|m
-EA SPORTS FC Mobile|EA SPORTS FC Mobile FC Mobile|fc-mobile|m
-Black Russia|Black Russia|black-russia|m
-Mobile Legends|Mobile Legends|mobile-legends|m
-Free Fire|Free Fire|free-fire|m
-Genshin|Genshin|genshin|m
-Roblox|Roblox|roblox|m
-PUBG|PUBG|pubg|p
-CS2|CS2|cs2|p
-Dota 2|Dota 2|dota-2|p
-Valorant|Valorant|valorant|p
-GTA 5|GTA 5|gta-5|p
-Escape From Tarkov|Escape From Tarkov|escape-from-tarkov|p
-Arena Breakout: Infinite|Arena Breakout Infinite|arena-breakout-infinite|p
-Netflix|Netflix|netflix|a
+Нейросети|Нейросети|ai|a
+eSIM|eSIM|esim|a
+Soundcloud|SoundCloud|soundcloud|a
+EA Play|EA Play|ea-play|a
+Likee|Likee|likee|a
+ExitLag|ExitLag|exitlag|a
+ZEPETO|ZEPETO|zepeto|a
+Pax Historia|Pax Historia|pax-historia|a
+Razer Gold|Razer Gold|razer-gold|a
+Runway|Runway|runway|a
+FL Studio|FL Studio|fl-studio|a
 Twitch|Twitch|twitch|a
+Microsoft Store|Microsoft Store|microsoft-store|a
+PolyBuzz|PolyBuzz|polybuzz|a
+Oculus Quest|Oculus Quest|oculus-quest|a
+Voicemod|Voicemod|voicemod|a
+Kling|Kling AI|kling|a
+Duolingo|Duolingo|duolingo|a
+Figma|Figma|figma|a
+Netflix|Netflix|netflix|a
+Новое|Новое|new-apps|a
+Chai|Chai AI|chai|a
+Ubisoft|Ubisoft|ubisoft|a
+Autodesk|Autodesk|autodesk|a
+Higgsfield|Higgsfield|higgsfield|a
+Zoom|Zoom|zoom|a
+z.ai|z.ai|z-ai|a
+ElevenLabs|ElevenLabs|elevenlabs|a
 DeepSeek|DeepSeek|deepseek|a
-Midjourney|Midjourney|midjourney|a
+GearUP|GearUP Booster|gearup|a
+HeyGen|HeyGen|heygen|a
+Busuu|Busuu|busuu|a
+Midjourney|Midjourney|midjourney-sailboat|a
+Дизайн|Дизайн|design|a
+OpenRouter|OpenRouter|openrouter|a
+Character ai|Character.AI|character-ai|a
+Replit|Replit|replit|a
+Emochi|Emochi|emochi|a
+Gamma|Gamma AI|gamma|a
+iMazing|iMazing|imazing|a
+Copilot|Copilot|copilot|a
+GeoGuessr|GeoGuessr|geoguessr|a
+JetBrains|JetBrains|jetbrains|a
+Quizlet|Quizlet|quizlet|a
+Meshy|Meshy|meshy|a
+Tripo|Tripo AI|tripo|a
+Wallpaper Engine|Wallpaper Engine|wallpaper-engine|a
 Epic Games|Epic Games|epic-games|a
 Canva|Canva|canva|a
-GeForce NOW|GeForce NOW|geforce-now|a
-EA Play|EA Play|ea-play|a
-Ubisoft|Ubisoft|ubisoft|a
+Picsart|Picsart|picsart|a
+PICO|PICO|pico|a
+TeamSpeak|TeamSpeak|teamspeak|a
+Snapchat|Snapchat|snapchat|a
+Coursera|Coursera|coursera|a
+Ableton|Ableton|ableton|a
+Recraft|Recraft|recraft|a
+LagoFast|LagoFast|lagofast|a
+Splice|Splice|splice|a
+Manus|Manus AI|manus|a
+Notion|Notion|notion|a
+Bandicam|Bandicam|bandicam|a
+Dropbox|Dropbox|dropbox|a
+Bigo Live|Bigo Live|bigo-live|a
+Soundpad|Soundpad|soundpad|a
+Lovable|Lovable|lovable|a
+OBS Studio|OBS Studio|obs-studio|a
+Krea|Krea|krea|a
+Clip Studio Paint|Clip Studio Paint|clip-studio-paint|a
+Envato Elements|Envato|envato-elements|a
+Хостинг|Хостинг|hosting|a
+Prime Video|Prime Video|prime-video|a
+Дзен|Дзен|dzen|a
+Photoroom|Photoroom|photoroom|a
 Leonardo AI|Leonardo|leonardo-ai|a
-Discord|Discord|discord|a
-Spotify|Spotify|spotify|a
-`;
+Kick|Kick|kick|a
+Element|Element|element|a
+Magnific|Magnific AI|magnific|a
+Tidal|Tidal|tidal|a
+Deezer|Deezer|deezer|a
+Miro|Miro|miro|a
+PixVerse|PixVerse|pixverse|a
+GeForce NOW|GeForce NOW|geforce-now|a`;
