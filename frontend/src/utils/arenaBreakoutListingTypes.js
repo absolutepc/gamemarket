@@ -1,4 +1,4 @@
-/** Arena Breakout (mobile) + Arena Breakout: Infinite — same listing types */
+/** Arena Breakout (mobile only — not Infinite) */
 
 export const ARENA_BREAKOUT_TYPES = [
   'bonds',
@@ -26,40 +26,19 @@ export const ARENA_BREAKOUT_LABELS = {
   twitch_drops: 'Twitch Drops',
 };
 
-function norm(s) {
-  return String(s || '')
+export function isArenaBreakout(name, search = '') {
+  const n = String(name || '')
     .toLowerCase()
     .replace(/ё/g, 'е')
-    .replace(/:/g, ' ')
-    .replace(/\s+/g, ' ')
     .trim();
-}
-
-function hasInfinite(n) {
-  return n.includes('infinite') || n.includes('infiniti') || n.includes('инфинит');
-}
-
-function hasArenaBreakout(n) {
-  return n.includes('arena breakout') || n.includes('арена брейкаут') || n.includes('арена брейк');
-}
-
-/** Mobile Arena Breakout only (excludes Infinite). */
-export function isArenaBreakout(name, search = '') {
-  const n = norm(name);
-  const s = norm(search);
-  if (hasInfinite(n) || hasInfinite(s)) return false;
-  return hasArenaBreakout(n) || hasArenaBreakout(s);
-}
-
-/** Arena Breakout: Infinite (PC). */
-export function isArenaBreakoutInfinite(name, search = '') {
-  const n = norm(name);
-  const s = norm(search);
-  const hit = (x) => hasArenaBreakout(x) && hasInfinite(x);
-  return hit(n) || hit(s);
-}
-
-/** Either mobile or Infinite — use same listing types. */
-export function isArenaBreakoutFamily(name, search = '') {
-  return isArenaBreakout(name, search) || isArenaBreakoutInfinite(name, search);
+  const s = String(search || '')
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .trim();
+  if (n.includes('infinite') || s.includes('infinite')) return false;
+  return (
+    n === 'arena breakout'
+    || n.startsWith('arena breakout ')
+    || (s.includes('arena breakout') && !s.includes('infinite'))
+  );
 }

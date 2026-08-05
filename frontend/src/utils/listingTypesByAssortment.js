@@ -3,7 +3,7 @@ import { resolveAssortmentItem } from './assortmentIcons';
 import {
   ARENA_BREAKOUT_TYPES,
   ARENA_BREAKOUT_LABELS,
-  isArenaBreakoutFamily,
+  isArenaBreakout,
 } from './arenaBreakoutListingTypes';
 import {
   PUBG_MOBILE_TYPES,
@@ -36,40 +36,31 @@ function resolveContext(gameOrItem) {
   return { raw, item, itemName, itemSearch, kind };
 }
 
-function isArenaFamilyContext(ctx) {
-  return (
-    isArenaBreakoutFamily(ctx.itemName, ctx.itemSearch)
-    || isArenaBreakoutFamily(ctx.raw, '')
-    || isArenaBreakoutFamily(ctx.itemName, '')
-    || isArenaBreakoutFamily(ctx.itemSearch, '')
-  );
-}
-
 export function allowedListingTypesForAssortment(gameOrItem) {
-  const ctx = resolveContext(gameOrItem);
-  if (isArenaFamilyContext(ctx)) {
+  const { raw, itemName, itemSearch, kind } = resolveContext(gameOrItem);
+  if (isArenaBreakout(itemName, itemSearch) || isArenaBreakout(raw, '')) {
     return ARENA_BREAKOUT_TYPES;
   }
-  if (isPubgMobile(ctx.itemName, ctx.itemSearch) || isPubgMobile(ctx.raw, '')) {
+  if (isPubgMobile(itemName, itemSearch) || isPubgMobile(raw, '')) {
     return PUBG_MOBILE_TYPES;
   }
-  const mobile = resolveMobileGameOverride(ctx.itemName, ctx.itemSearch, ctx.raw);
-  if (mobile) return mobile.types;
-  return TYPES_BY_KIND[ctx.kind] || TYPES_BY_KIND.app;
+  const mobileOverride = resolveMobileGameOverride(itemName, itemSearch, raw);
+  if (mobileOverride) return mobileOverride.types;
+  return TYPES_BY_KIND[kind] || TYPES_BY_KIND.app;
 }
 
 export function listingTypeOptionsForAssortment(gameOrItem) {
   const allowed = allowedListingTypesForAssortment(gameOrItem);
   const byValue = Object.fromEntries(LISTING_TYPE_OPTIONS.map((o) => [o.value, o]));
-  const ctx = resolveContext(gameOrItem);
+  const { raw, itemName, itemSearch } = resolveContext(gameOrItem);
   let labelMap = null;
-  if (isArenaFamilyContext(ctx)) {
+  if (isArenaBreakout(itemName, itemSearch) || isArenaBreakout(raw, '')) {
     labelMap = ARENA_BREAKOUT_LABELS;
-  } else if (isPubgMobile(ctx.itemName, ctx.itemSearch) || isPubgMobile(ctx.raw, '')) {
+  } else if (isPubgMobile(itemName, itemSearch) || isPubgMobile(raw, '')) {
     labelMap = PUBG_MOBILE_LABELS;
   } else {
-    const mobile = resolveMobileGameOverride(ctx.itemName, ctx.itemSearch, ctx.raw);
-    if (mobile) labelMap = mobile.labels;
+    const mobileOverride = resolveMobileGameOverride(itemName, itemSearch, raw);
+    if (mobileOverride) labelMap = mobileOverride.labels;
   }
   return allowed
     .filter((value) => Boolean(byValue[value]))
