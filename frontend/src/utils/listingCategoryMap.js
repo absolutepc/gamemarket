@@ -64,7 +64,7 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   design_packs: 'items',
   mochi: 'topups',
   servers: 'social',
-  gold: 'topups',
+  gold: 'subscriptions',
   sounds: 'items',
   elixir: 'topups',
   trovo_ace: 'subscriptions',
@@ -79,21 +79,6 @@ export const LISTING_TYPE_CATEGORY_SLUG = {
   metro_royale: 'items',
   escort: 'boosting',
   popularity: 'boosting',
-  // COD / FC / Standoff / MLBB / Brawl / BR / CoC / CR
-  cp: 'topups',
-  battle_pass: 'subscriptions',
-  points: 'topups',
-  gems: 'topups',
-  gold_pass: 'subscriptions',
-  clans: 'other',
-  charisma: 'boosting',
-  promo_actions: 'social',
-  friends: 'other',
-  virts: 'topups',
-  bc: 'topups',
-  account_virts: 'accounts',
-  callbacks: 'other',
-  capital_gold: 'topups',
 };
 
 export function categoryIdForListingType(listingType, categories = []) {
