@@ -1,1 +1,32 @@
-PLACEHOLDER_INDEX
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="application-name" content="Lootz" />
+    <meta name="apple-mobile-web-app-title" content="Lootz" />
+    <meta name="description" content="Покупайте и продавайте аккаунты, игровую валюту, предметы и бусты. Безопасные сделки между игроками с гарантией эскроу." />
+    <meta name="theme-color" content="#18181f" />
+    <meta name="lootz-build" content="2026-08-05-catalog-parts-v1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Lootz — маркетплейс игровых товаров и услуг</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('gm_theme');
+          if (t === 'light') {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+          } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-surface text-ink antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
