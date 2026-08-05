@@ -1,4 +1,4 @@
-/** Full assortment catalog (restored after revert) */
+/** Full assortment catalog */
 import { CATALOG_RAW_0 } from './assortmentCR0';
 import { CATALOG_RAW_1 } from './assortmentCR1';
 import { CATALOG_RAW_2 } from './assortmentCR2';
@@ -7,13 +7,33 @@ import { CATALOG_RAW_4 } from './assortmentCR4';
 import { CATALOG_RAW_5 } from './assortmentCR5';
 
 const _KIND = { a: 'app', m: 'mobile', p: 'pc' };
-const _RAW = [CATALOG_RAW_0, CATALOG_RAW_1, CATALOG_RAW_2, CATALOG_RAW_3, CATALOG_RAW_4, CATALOG_RAW_5]
-  .join('\n').trim().split('\n').filter(Boolean);
 
-export const ASSORTMENT = _RAW.map((line) => {
-  const [n, s, i, k] = line.split('|');
-  return { name: n, search: s, icon: '/assortment/' + i + '.png', kind: _KIND[k] || 'app' };
-});
+const _RAW = [CATALOG_RAW_0, CATALOG_RAW_1, CATALOG_RAW_2, CATALOG_RAW_3, CATALOG_RAW_4, CATALOG_RAW_5]
+  .join('\n')
+  .trim()
+  .split('\n')
+  .filter(Boolean);
+
+/** Parse pipe rows; trim kind so trailing spaces never fall back to app. Dedupe by name (first wins). */
+function parseCatalog(lines) {
+  const seen = new Set();
+  const out = [];
+  for (const line of lines) {
+    const parts = line.split('|');
+    if (parts.length < 4) continue;
+    const n = (parts[0] || '').trim();
+    const s = (parts[1] || '').trim();
+    const i = (parts[2] || '').trim();
+    const k = (parts[3] || '').trim().toLowerCase().charAt(0);
+    if (!n || seen.has(n.toLowerCase())) continue;
+    seen.add(n.toLowerCase());
+    const kind = _KIND[k] || 'app';
+    out.push({ name: n, search: s || n, icon: '/assortment/' + i + '.png', kind });
+  }
+  return out;
+}
+
+export const ASSORTMENT = parseCatalog(_RAW);
 
 export const HOME_CAROUSEL_PINNED = [
   { catalog: 'Claude', name: 'Claude AI' },
@@ -67,7 +87,7 @@ export function buildHomeCarousel(items, popularNames = []) {
   return out;
 }
 
-export const ASSORTMENT_ICON_VERSION = '20260805-good-state';
+export const ASSORTMENT_ICON_VERSION = '20260805-apps-tab-fix';
 export const ASSORTMENT_PREVIEW_COUNT = HOME_CAROUSEL_PINNED.length;
 
 export const ASSORTMENT_TABS = [
