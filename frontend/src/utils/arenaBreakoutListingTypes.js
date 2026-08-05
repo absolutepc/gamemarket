@@ -30,31 +30,33 @@ function norm(s) {
   return String(s || '')
     .toLowerCase()
     .replace(/ё/g, 'е')
+    .replace(/:/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
+}
+
+function hasInfinite(n) {
+  return n.includes('infinite') || n.includes('infiniti') || n.includes('инфинит');
+}
+
+function hasArenaBreakout(n) {
+  return n.includes('arena breakout') || n.includes('арена брейкаут') || n.includes('арена брейк');
 }
 
 /** Mobile Arena Breakout only (excludes Infinite). */
 export function isArenaBreakout(name, search = '') {
   const n = norm(name);
   const s = norm(search);
-  if (n.includes('infinite') || s.includes('infinite')) return false;
-  return (
-    n === 'arena breakout'
-    || n.startsWith('arena breakout ')
-    || (s.includes('arena breakout') && !s.includes('infinite'))
-  );
+  if (hasInfinite(n) || hasInfinite(s)) return false;
+  return hasArenaBreakout(n) || hasArenaBreakout(s);
 }
 
 /** Arena Breakout: Infinite (PC). */
 export function isArenaBreakoutInfinite(name, search = '') {
   const n = norm(name);
   const s = norm(search);
-  return (
-    n.includes('arena breakout') && n.includes('infinite')
-  ) || (
-    s.includes('arena breakout') && s.includes('infinite')
-  ) || n === 'arena breakout infinite'
-    || n === 'arena breakout: infinite';
+  const hit = (x) => hasArenaBreakout(x) && hasInfinite(x);
+  return hit(n) || hit(s);
 }
 
 /** Either mobile or Infinite — use same listing types. */

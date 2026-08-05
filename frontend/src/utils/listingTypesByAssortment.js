@@ -35,26 +35,34 @@ function resolveContext(gameOrItem) {
   return { raw, item, itemName, itemSearch, kind };
 }
 
+function isArenaFamilyContext(ctx) {
+  return (
+    isArenaBreakoutFamily(ctx.itemName, ctx.itemSearch)
+    || isArenaBreakoutFamily(ctx.raw, '')
+    || isArenaBreakoutFamily(ctx.itemName, '')
+    || isArenaBreakoutFamily(ctx.itemSearch, '')
+  );
+}
+
 export function allowedListingTypesForAssortment(gameOrItem) {
-  const { raw, itemName, itemSearch, kind } = resolveContext(gameOrItem);
-  // Match on resolved catalog name AND raw form.game string
-  if (isArenaBreakoutFamily(itemName, itemSearch) || isArenaBreakoutFamily(raw, '')) {
+  const ctx = resolveContext(gameOrItem);
+  if (isArenaFamilyContext(ctx)) {
     return ARENA_BREAKOUT_TYPES;
   }
-  if (isPubgMobile(itemName, itemSearch) || isPubgMobile(raw, '')) {
+  if (isPubgMobile(ctx.itemName, ctx.itemSearch) || isPubgMobile(ctx.raw, '')) {
     return PUBG_MOBILE_TYPES;
   }
-  return TYPES_BY_KIND[kind] || TYPES_BY_KIND.app;
+  return TYPES_BY_KIND[ctx.kind] || TYPES_BY_KIND.app;
 }
 
 export function listingTypeOptionsForAssortment(gameOrItem) {
   const allowed = allowedListingTypesForAssortment(gameOrItem);
   const byValue = Object.fromEntries(LISTING_TYPE_OPTIONS.map((o) => [o.value, o]));
-  const { raw, itemName, itemSearch } = resolveContext(gameOrItem);
+  const ctx = resolveContext(gameOrItem);
   let labelMap = null;
-  if (isArenaBreakoutFamily(itemName, itemSearch) || isArenaBreakoutFamily(raw, '')) {
+  if (isArenaFamilyContext(ctx)) {
     labelMap = ARENA_BREAKOUT_LABELS;
-  } else if (isPubgMobile(itemName, itemSearch) || isPubgMobile(raw, '')) {
+  } else if (isPubgMobile(ctx.itemName, ctx.itemSearch) || isPubgMobile(ctx.raw, '')) {
     labelMap = PUBG_MOBILE_LABELS;
   }
   return allowed
