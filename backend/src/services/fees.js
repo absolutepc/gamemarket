@@ -3,16 +3,16 @@
  * Standard: 7.5% / 17.5%
  * Founders: 5% / 13%
  *
- * Game overrides (force standard even if type is globally reduced):
- * - Arena Breakout: boosting, item
- * - Brawl Stars: boosting, promo_actions
- * - Clash of Clans: boosting, promo_actions, capital_gold
- * - Standoff 2: boosting, promocodes
- * - Clash Royale: boosting, promo_actions
- * - EA SPORTS FC Mobile: promocodes, boosting, game_account
- * - Black Russia: item, promocodes, boosting
+ * Game overrides (force standard 17.5% even if type is globally reduced):
+ * - Arena Breakout (mobile, not Infinite): boosting + item
+ * - Brawl Stars: boosting + promotion / promo_actions
+ * - Clash of Clans: boosting + promotion / promo_actions + capital_gold
+ * - Standoff 2: boosting + promocodes
+ * - Clash Royale: boosting + promotion / promo_actions
+ * - EA SPORTS FC Mobile: promocodes + boosting + account
+ * - Black Russia: item + promocodes + boosting
  * - Mobile Legends: boosting
- * - CoD Mobile: item, boosting
+ * - CoD Mobile: item + boosting
  */
 
 const { FEE_FOUNDERS_REDUCED, FEE_FOUNDERS_STANDARD } = require('./founders');
@@ -73,15 +73,20 @@ const REDUCED_LISTING_TYPES = new Set([
   'decorations',
   'nintendo_switch_online',
   'bonds',
+  // PUBG Mobile currency
   'uc',
+  // mobile game currencies / extras (stay reduced unless forced)
   'cp',
   'battle_pass',
   'points',
   'gems',
   'gold_pass',
+  'charisma',
+  'friends',
   'virts',
   'bc',
   'account_virts',
+  'callbacks',
   'capital_gold',
   'promo_actions',
 ]);
@@ -90,6 +95,7 @@ function normGame(game) {
   return String(game || '')
     .toLowerCase()
     .replace(/ё/g, 'е')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -101,87 +107,65 @@ function isArenaBreakoutGame(game) {
   return n === 'arena breakout' || n.startsWith('arena breakout ');
 }
 
-const FORCE_STANDARD_BY_GAME = [
+const FORCE_STANDARD_RULES = [
   {
-    match: (n) =>
-      n === 'brawl stars'
-      || n.startsWith('brawl stars')
-      || n === 'бравл старс'
-      || n.startsWith('бравл старс'),
-    types: new Set(['boosting', 'promo_actions']),
+    match: (n) => n === 'arena breakout' || n.startsWith('arena breakout '),
+    exclude: (n) => n.includes('infinite'),
+    types: new Set(['boosting', 'item']),
   },
   {
-    match: (n) =>
-      n === 'clash of clans'
-      || n.includes('clash of clans')
-      || n.includes('клеш оф клан')
-      || n.includes('клэш оф клан'),
-    types: new Set(['boosting', 'promo_actions', 'capital_gold']),
+    match: (n) => n === 'brawl stars' || n.includes('brawl stars'),
+    types: new Set(['boosting', 'promotion', 'promo_actions']),
   },
   {
-    match: (n) =>
-      n === 'standoff 2'
-      || n === 'standoff2'
-      || n.startsWith('standoff 2')
-      || n === 'стандофф 2'
-      || n.startsWith('стандофф 2'),
+    match: (n) => n === 'clash of clans' || n.includes('clash of clans'),
+    types: new Set(['boosting', 'promotion', 'promo_actions', 'capital_gold']),
+  },
+  {
+    match: (n) => n === 'standoff 2' || n.startsWith('standoff 2') || n === 'standoff2',
     types: new Set(['boosting', 'promocodes']),
   },
   {
-    match: (n) =>
-      n === 'clash royale'
-      || n.includes('clash royale')
-      || n.includes('клеш рояль')
-      || n.includes('клэш рояль'),
-    types: new Set(['boosting', 'promo_actions']),
+    match: (n) => n === 'clash royale' || n.includes('clash royale'),
+    types: new Set(['boosting', 'promotion', 'promo_actions']),
   },
   {
     match: (n) =>
       n === 'ea sports fc mobile'
       || n === 'fc mobile'
-      || n === 'fifa mobile'
-      || ((n.includes('fc mobile') || n.includes('fifa mobile')) && !n.includes('ultimate'))
-      || (n.includes('ea sports fc') && n.includes('mobile')),
-    types: new Set(['promocodes', 'boosting', 'game_account']),
+      || n.includes('ea sports fc mobile')
+      || (n.includes('fc mobile') && !n.includes('fc 2')),
+    types: new Set(['promocodes', 'boosting', 'account', 'account_virts', 'coins']),
   },
   {
-    match: (n) =>
-      n === 'black russia'
-      || n === 'br'
-      || n.includes('black russia')
-      || n.includes('блэк раша')
-      || n.includes('блек раша'),
+    match: (n) => n === 'black russia' || n.includes('black russia'),
     types: new Set(['item', 'promocodes', 'boosting']),
   },
   {
     match: (n) =>
       n === 'mobile legends'
       || n.includes('mobile legends')
-      || n.includes('мобайл легенд')
-      || n === 'mlbb',
+      || n === 'mlbb'
+      || n.includes('mobile legends bang bang'),
     types: new Set(['boosting']),
   },
   {
     match: (n) =>
-      n === 'call of duty: mobile'
+      n === 'cod mobile'
       || n === 'call of duty mobile'
-      || n === 'cod mobile'
-      || n === 'codm'
-      || (n.includes('call of duty') && n.includes('mobile') && !n.includes('warzone'))
-      || (n.includes('колл оф дьюти') && n.includes('мобайл')),
+      || n.includes('cod mobile')
+      || n.includes('call of duty mobile'),
     types: new Set(['item', 'boosting']),
   },
 ];
 
 function forcesStandardFee(listingType, game) {
-  if (!listingType) return false;
-  if (isArenaBreakoutGame(game) && ARENA_BREAKOUT_FORCE_STANDARD.has(listingType)) {
-    return true;
-  }
+  if (!listingType || !game) return false;
   const n = normGame(game);
   if (!n) return false;
-  for (const entry of FORCE_STANDARD_BY_GAME) {
-    if (entry.match(n) && entry.types.has(listingType)) return true;
+  for (const rule of FORCE_STANDARD_RULES) {
+    if (rule.exclude && rule.exclude(n)) continue;
+    if (rule.match(n) && rule.types.has(listingType)) return true;
   }
   return false;
 }
