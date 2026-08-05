@@ -46,4 +46,55 @@ Mistfall Hunter|Mistfall Hunter|mistfall-hunter|p
 Granblue Fantasy: Relink|Granblue Fantasy: Relink|granblue-fantasy-relink|p
 Shift At Midnight|Shift At Midnight|shift-at-midnight|p
 ARK: Survival Evolved|ARK: Survival Evolved|ark-survival-evolved|p
+Helldivers 2|Helldivers 2|helldivers-2|p
+Balatro|Balatro|balatro|p
+Black Myth: Wukong|Black Myth: Wukong|black-myth-wukong|p
+Palworld|Palworld|palworld|p
+Stardew Valley|Stardew Valley|stardew-valley|p
+Terraria|Terraria|terraria|p
+Valheim|Valheim|valheim|p
+Rust|Rust|rust|p
+DayZ|DayZ|dayz|p
+SCUM|SCUM|scum|p
+7 Days to Die|7 Days to Die|7-days-to-die|p
+Project Zomboid|Project Zomboid|project-zomboid|p
+Once Human|Once Human|once-human|p
+The First Descendant|The First Descendant|the-first-descendant|p
+Throne and Liberty|Throne and Liberty|throne-and-liberty|p
+New World|New World|new-world|p
+Lost Ark|Lost Ark|lost-ark|p
+Path of Exile 2|Path of Exile 2|path-of-exile-2|p
+Path of Exile|Path of Exile|path-of-exile|p
+Diablo IV|Diablo IV|diablo-iv|p
+Last Epoch|Last Epoch|last-epoch|p
+Hades II|Hades II|hades-ii|p
+Hades|Hades|hades|p
+Hollow Knight|Hollow Knight|hollow-knight|p
+Silksong|Silksong|silksong|p
+Celeste|Celeste|celeste|p
+Cuphead|Cuphead|cuphead|p
+Dead Cells|Dead Cells|dead-cells|p
+Risk of Rain 2|Risk of Rain 2|risk-of-rain-2|p
+Deep Rock Galactic|Deep Rock Galactic|deep-rock-galactic|p
+Satisfactory|Satisfactory|satisfactory|p
+Factorio|Factorio|factorio|p
+Dyson Sphere Program|Dyson Sphere Program|dyson-sphere-program|p
+Cities: Skylines II|Cities: Skylines II|cities-skylines-ii|p
+Cities: Skylines|Cities: Skylines|cities-skylines|p
+Euro Truck Simulator 2|Euro Truck Simulator 2|euro-truck-simulator-2|p
+American Truck Simulator|American Truck Simulator|american-truck-simulator|p
+Farming Simulator 25|Farming Simulator 25|farming-simulator-25|p
+The Sims 4|The Sims 4|the-sims-4|p
+Microsoft Flight Simulator|Microsoft Flight Simulator|microsoft-flight-simulator|p
+No Man's Sky|No Man's Sky|no-mans-sky|p
+Subnautica|Subnautica|subnautica|p
+Subnautica: Below Zero|Subnautica: Below Zero|subnautica-below-zero|p
+Grounded|Grounded|grounded|p
+Phasmophobia|Phasmophobia|phasmophobia|p
+Lethal Company|Lethal Company|lethal-company|p
+Content Warning|Content Warning|content-warning|p
+PEAK|PEAK|peak|p
+Schedule I|Schedule I|schedule-i|p
+Repo|Repo|repo|p
+AAR Labs|AAR Labs|aar-labs|p
 `;
