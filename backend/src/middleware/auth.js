@@ -10,6 +10,7 @@ const AUTH_USER_SQL_FULL = `
          COALESCE(is_founding_seller, FALSE) AS is_founding_seller,
          founding_seller_number,
          is_verified,
+         COALESCE(email_notifications, TRUE) AS email_notifications,
          auth_provider, vk_id, apple_id, google_id, last_seen_at
   FROM users WHERE id = $1
 `;
@@ -21,6 +22,7 @@ const AUTH_USER_SQL_BASE = `
          FALSE AS is_founding_seller,
          NULL::int AS founding_seller_number,
          is_verified,
+         TRUE AS email_notifications,
          auth_provider, vk_id, apple_id, google_id, last_seen_at
   FROM users WHERE id = $1
 `;
@@ -49,7 +51,6 @@ function authenticate(required = true) {
       if (!rows[0]) return res.status(401).json({ error: 'User not found' });
       if (rows[0].is_banned) return res.status(403).json({ error: 'Account suspended' });
       req.user = rows[0];
-      // Presence heartbeat (throttled by DB cheap update)
       pool.query('UPDATE users SET last_seen_at=NOW() WHERE id=$1', [rows[0].id]).catch(() => {});
       next();
     } catch (err) {
@@ -61,7 +62,6 @@ function authenticate(required = true) {
 
 function roleSatisfies(userRole, requiredRole) {
   if (userRole === requiredRole) return true;
-  // owner is a superset of admin
   if (requiredRole === 'admin' && userRole === 'owner') return true;
   return false;
 }
@@ -75,7 +75,6 @@ function requireRole(...roles) {
   };
 }
 
-/** Platform owner only — finance / treasury. */
 function requireOwner() {
   return requireRole('owner');
 }
