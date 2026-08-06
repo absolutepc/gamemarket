@@ -27,7 +27,6 @@ const io = new Server(server, {
   },
 });
 
-// Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -54,11 +53,11 @@ app.use(express.urlencoded({ extended: false, limit: '6mb' }));
 app.use(cookieParser());
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 
-// Trust proxy for rate limiting
 app.set('trust proxy', 1);
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/emailAuth'));
 app.use('/api/listings/import', require('./routes/listingsImport'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/transactions', require('./routes/transactions'));
@@ -74,7 +73,6 @@ app.use('/api', require('./routes/seo'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
 
-// Global error handler
 app.use((err, req, res, next) => {
   logger.error(err);
   const status = err.status || 500;
@@ -84,7 +82,6 @@ app.use((err, req, res, next) => {
   res.status(status).json({ error: message });
 });
 
-// WebSocket for real-time chat
 io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error('Authentication required'));
@@ -169,9 +166,9 @@ const { migrate } = require('./migrate');
 const { startAutoReleaseJob } = require('./services/escrow');
 const { startListingExpiryJob } = require('./services/listingExpiry');
 const { startContestRolloverJob } = require('./services/contest');
+const { ensureEmailSchema } = require('./services/ensureEmailSchema');
 
 async function start() {
-  // Bind port first so deploys/healthchecks are not blocked by DDL locks
   server.listen(PORT, HOST, () => {
     logger.info(`Server running on http://${HOST}:${PORT}`);
   });
@@ -182,6 +179,12 @@ async function start() {
     logger.error(`Migration failed: ${err.message || err}`);
     if (err.code) logger.error(`DB error code: ${err.code}`);
     if (err.detail) logger.error(`DB error detail: ${err.detail}`);
+  }
+
+  try {
+    await ensureEmailSchema(pool);
+  } catch (err) {
+    logger.error(`[email] schema: ${err.message || err}`);
   }
 
   startAutoReleaseJob(60_000);
