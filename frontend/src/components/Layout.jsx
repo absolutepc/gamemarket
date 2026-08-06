@@ -7,6 +7,7 @@ import MobileBottomNav from './MobileBottomNav';
 import ThemeToggle from './ThemeToggle';
 import BrandJsonLd from './BrandJsonLd';
 import ScrollToTop from './ScrollToTop';
+import VerifyEmailBanner from './VerifyEmailBanner';
 import { PAGE_WIDTH_CLASS } from './ListingCard';
 import { sellPathForUser } from '../utils/sellPath';
 import { isStaffAdmin } from '../utils/roles';
@@ -27,9 +28,7 @@ export default function Layout() {
   const [search, setSearch] = useState('');
   const listingDetail = isListingDetailPath(pathname);
   const listingWizard = isListingWizardPath(pathname);
-  // Product detail + sell wizard: hide site header on mobile only (desktop keeps Playerok-style nav)
   const hideHeaderMobile = listingDetail || listingWizard;
-  // Profile & admin: hide search bar on mobile (keeps header, just no search)
   const hideSearchMobile = pathname.startsWith('/users/') || pathname.startsWith('/admin');
 
   useEffect(() => {
@@ -55,13 +54,13 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       <ScrollToTop />
       <BrandJsonLd />
+      <VerifyEmailBanner />
       <header
         className={`sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl ${
           listingWizard ? '' : 'border-b border-dark-800'
         } ${hideHeaderMobile ? 'hidden lg:block' : ''}`}
       >
         <div className={`${PAGE_WIDTH_CLASS} py-3.5 lg:py-0 lg:h-20 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5`}>
-          {/* Top row: brand + theme; actions on the right */}
           <div className="flex items-center justify-between gap-3 lg:contents">
             <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               <Link
@@ -127,8 +126,6 @@ export default function Layout() {
             </div>
           </div>
 
-          {/* Search — full width below brand on mobile; center on desktop.
-              Hidden on mobile for profile (/users/...) and admin panel. */}
           <form
             onSubmit={handleSearch}
             className={`w-full lg:flex-1 lg:max-w-2xl lg:mx-auto relative order-last lg:order-none ${
